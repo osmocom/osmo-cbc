@@ -1,0 +1,11 @@
+[Unit]
+Description=Osmocom CBC (Cell Broadcasting Centre)
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=/usr/bin/osmo-cbc -c /etc/osmocom/osmo-cbc.cfg
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
