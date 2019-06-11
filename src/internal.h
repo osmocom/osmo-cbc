@@ -5,6 +5,7 @@
 
 enum {
 	DCBSP,
+	DREST,
 };
 
 extern struct osmo_fsm cbsp_server_fsm;
@@ -16,3 +17,8 @@ enum cbsp_server_event {
 	CBSP_SRV_E_RX_RESTART,
 	CBSP_SRV_E_CMD_RESET,
 };
+
+
+/* rest_api.c */
+int rest_api_init(uint16_t port);
+void rest_api_fin(void);
