@@ -34,38 +34,7 @@
 
 #include "internal.h"
 #include "charset.h"
-//#include "rest_api.h"
-
-/* a single SMSCB page of 82 user bytes (excluding any GSM specific header) */
-#define SMSCB_RAW_PAGE_LEN	82
-#define SMSCB_MAX_NUM_PAGES	15
-
-/* representation of a plain SMSCB message without any metadata such as cell lists */
-struct smscb_message {
-	uint16_t message_id;
-	uint16_t serial_nr;
-
-	bool is_etws;
-	union {
-		struct {
-			/* data coding scheme */
-			uint8_t dcs;
-			/* number of pages containing valid information */
-			unsigned int num_pages;
-			/* actual page data, concatenated */
-			uint8_t data[SMSCB_RAW_PAGE_LEN][SMSCB_MAX_NUM_PAGES];
-			/* FIXME: do we need information on the total length to
-			 * determine which is the last block used in [at least the last]
-			 * page? */
-		} cbs;
-		struct {
-			/* WarningType 16bit parameter as per 23.041 9.3.24 */
-			uint16_t warning_type;
-			uint8_t warning_sec_info[50];
-		} etws;
-	};
-};
-
+#include "cbc_data.h"
 
 /* get an integer value for field "key" in object "parent" */
 static int json_get_integer(int *out, json_t *parent, const char *key)

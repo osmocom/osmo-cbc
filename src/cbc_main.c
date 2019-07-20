@@ -46,8 +46,10 @@
 
 #include "internal.h"
 #include "cbsp_server.h"
+#include "cbc_data.h"
 
 static void *tall_cbc_ctx;
+struct cbc *g_cbc;
 
 static const struct log_info_cat log_info_cat[] = {
 	[DCBSP] = {
@@ -159,6 +161,10 @@ int main(int argc, char **argv)
 	osmo_init_logging2(tall_cbc_ctx, &log_info);
 	osmo_stats_init(tall_cbc_ctx);
 	vty_init(&vty_info);
+
+	g_cbc = talloc_zero(tall_cbc_ctx, struct cbc);
+	INIT_LLIST_HEAD(&g_cbc->peers);
+	INIT_LLIST_HEAD(&g_cbc->messages);
 
 	handle_options(argc, argv);
 
