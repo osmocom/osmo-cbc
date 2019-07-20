@@ -1,0 +1,129 @@
+{
+	"id": "http://api.osmocom.org/json-schema/smscb.schema.json#",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"description": "SMSCB (Cell Broadcast) data types",
+	"type": "object",
+	"definitions": {
+		"iso639-1": {
+			"enum": [ "al","aa","ab","ae","af","ak","am","an","ar","as","av","ay","az","ba","be","bg","bh","bi","bm","bn","bo","br","bs","ca","ce","ch","co","cr","cs","cu","cv","cy","da","de","dv","dz","ee","el","en","eo","es","et","eu","fa","ff","fi","fj","fo","fr","fy","ga","gd","gl","gn","gu","gv","ha","he","hi","ho","hr","ht","hu","hy","hz","ia","id","ie","ig","ii","ik","io","is","it","iu","ja","jv","ka","kg","ki","kj","kk","kl","km","kn","ko","kr","ks","ku","kv","kw","ky","la","lb","lg","li","ln","lo","lt","lu","lv","mg","mh","mi","mk","ml","mn","mr","ms","mt","my","na","nb","nd","ne","ng","nl","nn","no","nr","nv","ny","oc","oj","om","or","os","pa","pi","pl","ps","pt","qu","rm","rn","ro","ru","rw","sa","sc","sd","se","sg","si","sk","sl","sm","sn","so","sq","sr","ss","st","su","sv","sw","ta","te","tg","th","ti","tk","tl","tn","to","tr","ts","tt","tw","ty","ug","uk","ur","uz","ve","vi","vo","wa","wo","xh","yi","yo","za","zh","zu" ]
+		},
+		"message_id": {
+			"type": "integer",
+			"minimum": 0,
+			"maximum": 65535
+		},
+		"geographic_scope" : {
+			"enum": [ "cell_wide_immediate", "plmn_wide", "lac_sac_tac_wide", "cell_wide" ]
+		},
+		"message_code" : {
+			"type": "integer",
+			"minimum": 0,
+			"maximum": 1023
+		},
+		"update_number" : {
+			"type": "integer",
+			"minimum": 0,
+			"maximum": 15
+		},
+
+		"serial_nr_encoded": {
+			"type": "integer",
+			"minimum": 0,
+			"maximum": 65535
+		},
+		"serial_nr_decoded": {
+			"type": "object",
+			"properties": {
+				"geo_scope": { "$ref": "#/definitions/geographic_scope" },
+				"msg_code": { "$ref": "#/definitions/message_code" },
+				"update_nr": { "$ref": "#/definitions/update_number" }
+			},
+			"required": [ "geo_scope", "msg_code", "update_nr" ]
+		},
+		"serial_nr": {
+			"oneOf": [
+				{ "$ref":"#/definitions/serial_nr_encoded" },
+				{ "$ref":"#/definitions/serial_nr_decoded" }
+			]
+		},
+		"dcs_encoded": {
+			"type": "integer",
+			"minimum": 0,
+			"maximum": 255
+		},
+		"character_set": {
+			"enum": [ "gsm", "8bit", "ucs2" ]
+		},
+		"dcs_class": {
+			"type": "integer",
+			"minimum": 0,
+			"maximum": 3
+		},
+		"payload_decoded": {
+			"type": "object",
+			"properties": {
+				"character_set": { "$ref": "#/definitions/character_set" },
+				"language": { "$ref": "#/definitions/iso639-1" },
+				"dcs_class": { "$ref": "#/definitions/dcs_class" },
+				"data_utf8": { "type": "string" }
+			},
+			"required": [ "data" ]
+		},
+		"page": {
+			"type": "string"
+		},
+		"payload_encoded": {
+			"type": "object",
+			"properties": {
+				"dcs": { "$ref": "#/definitions/dcs_encoded" },
+				"pages": {
+					"type": "array",
+					"items": { "$ref": "#/definitions/page" }
+				},
+			"required": [ "dcs", "pages" ]
+			}
+		},
+		"warning_type_encoded": {
+			"type": "integer",
+			"minimum": 0,
+			"maximum": 255
+		},
+		"warning_type_decoded": {
+			"enum": [ "earthquake", "tsunami", "earthquake_and_tsunami", "test",
+				  "other", "rfu" ]
+		},
+		"warning_type": {
+			"oneOf": [
+				{ "$ref": "#/definitions/warning_type_encoded" },
+				{ "$ref": "#/definitions/warning_type_decoded" }
+			]
+		},
+		"warning_sec_info": {
+			"type": "string"
+		},
+		"payload_etws": {
+			"type": "object",
+			"properties": {
+				"warning_type": { "$ref": "#/definitions/warning_type" },
+				"warning_sec_info": { "$ref": "#/definitions/warning_sec_info" }
+			},
+			"required": [ "warning_type" ]
+		},
+		"payload": {
+			"oneOf": [
+				{ "$ref": "#/definitions/payload_encoded" },
+				{ "$ref": "#/definitions/payload_decoded" },
+				{ "$ref": "#/definitions/payload_etws" }
+			]
+		},
+		"smscb_message": {
+			"type": "object",
+			"properties": {
+				"serial_nr": { "$ref": "#/definitions/serial_nr" },
+				"message_id": { "$ref": "#/definitions/message_id" },
+				"payload": { "$ref": "#/definitions/payload" }
+			},
+			"required": [ "serial_nr", "message_id", "payload" ]
+		}
+	}
+}

@@ -1,0 +1,50 @@
+{
+	"id": "http://api.osmocom.org/json-schema/cbc.schema.json#",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"description": "OsmoCBC schema",
+	"type": "object",
+	"definitions": {
+		"category": {
+			"enum": [ "normal", "high_priority", "background" ]
+		},
+		"repetition_period": {
+			"type": "integer",
+			"minimum": 1,
+			"maximum": 4095
+		},
+		"channel_indicator": {
+			"enum": [ "basic", "extended" ]
+		},
+		"warning_period_sec": {
+			"type": "integer",
+			"minimum": 0,
+			"maximum": 3600
+		},
+		"number_of_broadcasts": {
+			"type": "integer",
+			"minimum": 0,
+			"maximum": 65535
+		},
+		"scope_plmn": {
+			"type": "object"
+		},
+		"scope": {
+			"oneOf": [
+				{ "$ref": "#/definitions/scope_plmn" }
+			]
+		},
+
+		"cbc_message": {
+			"type": "object",
+			"properties": {
+				"category": { "$ref": "#/definitions/category" },
+				"rep_period": { "$ref": "#/definitions/repetition_period" },
+				"num_of_bcast": { "$ref": "#/definitions/number_of_broadcasts" },
+				"scope": { "$ref": "#/definitions/scope" },
+				"warning_period_sec": { "$ref": "#/definitions/warning_period_sec" },
+				"smscb": { "$ref": "smscb.schema.json#definitions/smscb_message" }
+			},
+			"required": [ "scope", "smscb" }
+		}
+	}
+}
