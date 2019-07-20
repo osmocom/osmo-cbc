@@ -4,6 +4,8 @@ AM_CFLAGS=-Wall -g $(LIBOSMOCORE_CFLAGS) $(LIBOSMOGSM_CFLAGS) $(LIBOSMOVTY_CFLAG
 		   $(COVERAGE_CFLAGS)
 AM_LDFLAGS=$(COVERAGE_LDFLAGS)
 
+EXTRA_DIST = cbc_data.h cbsp_server.h charset.h internal.h
+
 bin_PROGRAMS = osmo-cbc
 
 osmo_cbc_SOURCES = cbc_main.c cbsp_server.c cbsp_server_fsm.c \
