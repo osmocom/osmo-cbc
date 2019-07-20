@@ -146,11 +146,15 @@ void cbsp_cbc_client_tx(struct osmo_cbsp_cbc_client *client, struct osmo_cbsp_de
 }
 
 /* initialize the CBC-side CBSP server */
-struct osmo_cbsp_cbc *cbsp_cbc_create(void *ctx, int (*rx_cb)(struct osmo_cbsp_cbc_client *client,
-							      struct osmo_cbsp_decoded *dec))
+struct osmo_cbsp_cbc *cbsp_cbc_create(void *ctx, const char *bind_ip, int bind_port,
+				      int (*rx_cb)(struct osmo_cbsp_cbc_client *client,
+						   struct osmo_cbsp_decoded *dec))
 {
 	struct osmo_cbsp_cbc *cbc = talloc_zero(ctx, struct osmo_cbsp_cbc);
 	int rc;
+
+	if (bind_port == -1)
+		bind_port = CBSP_TCP_PORT;
 
 	OSMO_ASSERT(cbc);
 	cbc->rx_cb = rx_cb;
@@ -158,7 +162,9 @@ struct osmo_cbsp_cbc *cbsp_cbc_create(void *ctx, int (*rx_cb)(struct osmo_cbsp_c
 	cbc->link = osmo_stream_srv_link_create(cbc);
 	osmo_stream_srv_link_set_data(cbc->link, cbc);
 	osmo_stream_srv_link_set_nodelay(cbc->link, true);
-	osmo_stream_srv_link_set_port(cbc->link, CBSP_TCP_PORT);
+	osmo_stream_srv_link_set_port(cbc->link, bind_port);
+	if (bind_ip)
+		osmo_stream_srv_link_set_addr(cbc->link, bind_ip);
 	osmo_stream_srv_link_set_accept_cb(cbc->link, cbsp_cbc_accept_cb);
 	rc = osmo_stream_srv_link_open(cbc->link);
 	OSMO_ASSERT(rc == 0);

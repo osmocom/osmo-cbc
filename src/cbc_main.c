@@ -178,7 +178,7 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	cbsp_cbc_create(tall_cbc_ctx, &cbc_client_rx_cb);
+	cbsp_cbc_create(tall_cbc_ctx, NULL, -1, &cbc_client_rx_cb);
 
 	signal(SIGUSR1, &signal_handler);
 	signal(SIGUSR2, &signal_handler);
