@@ -1,7 +1,7 @@
 AUTOMAKE_OPTIONS = foreign dist-bzip2 1.6
 
 AM_CPPFLAGS = $(all_includes) -I$(top_srcdir)/include
-SUBDIRS = src contrib
+SUBDIRS = src tests contrib
 
 EXTRA_DIST = .version git-version-gen doc/examples/osmo-cbc.cfg
 

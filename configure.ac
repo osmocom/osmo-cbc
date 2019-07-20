@@ -167,5 +167,6 @@ AC_MSG_RESULT([CPPFLAGS="$CPPFLAGS"])
 AC_OUTPUT(
     src/Makefile
     contrib/Makefile
+    tests/Makefile
     contrib/systemd/Makefile
     Makefile)

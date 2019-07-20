@@ -1,0 +1,5 @@
+
+
+DISTCLEANFILES = \
+	atconfig \
+	$(NULL)
