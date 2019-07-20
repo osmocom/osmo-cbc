@@ -167,7 +167,7 @@ static int cbsp_cbc_read_cb(struct osmo_stream_srv *conn)
 	LOGPCC(client, LOGL_DEBUG, "read_cb rx_msg=%p\n", client->rx_msg);
 
 	/* message de-segmentation */
-	rc = osmo_cbsp_recv_buffered(ofd->fd, &msg, &client->rx_msg);
+	rc = osmo_cbsp_recv_buffered(conn, ofd->fd, &msg, &client->rx_msg);
 	if (rc <= 0) {
 		if (rc == -EAGAIN || rc == -EINTR) {
 			/* more data needs to be read */
@@ -230,13 +230,14 @@ static int cbsp_cbc_accept_cb(struct osmo_stream_srv_link *link, int fd)
 	}
 	LOGPCC(client, LOGL_INFO, "New CBSP client connection\n");
 	llist_add_tail(&client->list, &cbc->clients);
+	osmo_fsm_inst_dispatch(client->fi, CBSP_SRV_E_CMD_RESET, NULL);
 
 	return 0;
 }
 
 void cbsp_cbc_client_tx(struct osmo_cbsp_cbc_client *client, struct osmo_cbsp_decoded *cbsp)
 {
-	struct msgb *msg = osmo_cbsp_encode(cbsp);
+	struct msgb *msg = osmo_cbsp_encode(client, cbsp);
 	LOGPCC(client, LOGL_INFO, "Transmitting %s\n",
 		get_value_string(cbsp_msg_type_names, cbsp->msg_type));
 	if (!msg) {
