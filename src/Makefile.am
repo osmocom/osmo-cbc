@@ -8,7 +8,7 @@ EXTRA_DIST = cbc_data.h cbsp_server.h charset.h internal.h
 
 bin_PROGRAMS = osmo-cbc
 
-osmo_cbc_SOURCES = cbc_main.c cbsp_server.c cbsp_server_fsm.c \
+osmo_cbc_SOURCES = cbc_main.c cbc_data.c cbsp_server.c cbsp_server_fsm.c \
 		   rest_api.c charset.c
 osmo_cbc_LDADD = $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS) $(LIBOSMOVTY_LIBS) \
 		 $(LIBOSMONETIF_LIBS) $(ULFIUS_LIBS) $(JANSSON_LIBS)
