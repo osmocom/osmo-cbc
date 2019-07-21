@@ -131,6 +131,7 @@ static int cbsp_cbc_accept_cb(struct osmo_stream_srv_link *link, int fd)
 		talloc_free(client);
 		return -1;
 	}
+	llist_add_tail(&client->list, &cbc->clients);
 
 	/* Match client to peer */
 	client->peer = cbc_peer_by_addr_proto(remote_ip, remote_port, CBC_PEER_PROTO_CBSP);
@@ -150,7 +151,6 @@ static int cbsp_cbc_accept_cb(struct osmo_stream_srv_link *link, int fd)
 	}
 
 	LOGPCC(client, LOGL_INFO, "New CBSP client connection\n");
-	llist_add_tail(&client->list, &cbc->clients);
 	osmo_fsm_inst_dispatch(client->fi, CBSP_SRV_E_CMD_RESET, NULL);
 
 	return 0;
