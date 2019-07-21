@@ -154,9 +154,11 @@ extern int cbc_client_rx_cb(struct osmo_cbsp_cbc_client *client, struct osmo_cbs
 
 int main(int argc, char **argv)
 {
+	void *tall_rest_ctx;
 	int rc;
 
 	tall_cbc_ctx = talloc_named_const(NULL, 1, "osmo-cbc");
+	tall_rest_ctx = talloc_named_const(tall_cbc_ctx, 0, "REST");
 	msgb_talloc_ctx_init(tall_cbc_ctx, 0);
 	osmo_init_logging2(tall_cbc_ctx, &log_info);
 	osmo_stats_init(tall_cbc_ctx);
@@ -187,6 +189,8 @@ int main(int argc, char **argv)
 	}
 
 	cbsp_cbc_create(tall_cbc_ctx, NULL, -1, &cbc_client_rx_cb);
+
+	rest_api_init(tall_rest_ctx, 12345);
 
 	signal(SIGUSR1, &signal_handler);
 	signal(SIGUSR2, &signal_handler);
