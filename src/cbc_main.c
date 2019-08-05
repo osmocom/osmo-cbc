@@ -166,6 +166,8 @@ int main(int argc, char **argv)
 	INIT_LLIST_HEAD(&g_cbc->peers);
 	INIT_LLIST_HEAD(&g_cbc->messages);
 
+	cbc_vty_init();
+
 	handle_options(argc, argv);
 
 	logging_vty_add_cmds();

@@ -22,3 +22,6 @@ enum cbsp_server_event {
 /* rest_api.c */
 int rest_api_init(uint16_t port);
 void rest_api_fin(void);
+
+/* cbc_vty.c */
+void cbc_vty_init(void);
