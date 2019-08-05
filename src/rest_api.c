@@ -32,6 +32,8 @@
 #include <osmocom/core/utils.h>
 #include <osmocom/core/linuxlist.h>
 
+#include <osmocom/gsm/protocol/gsm_48_049.h>
+
 #define PREFIX  "/api/ecbe/v1"
 
 #include "internal.h"

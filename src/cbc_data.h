@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <osmocom/core/linuxlist.h>
+#include <osmocom/gsm/protocol/gsm_48_049.h>
 
 struct osmo_cbsp_cbc_client;
 struct osmo_sabp_cbc_client;
@@ -65,12 +66,6 @@ struct smscb_message {
 	};
 };
 
-enum cbc_message_prio {
-	CBC_MSG_PRIO_NORMAL,
-	CBC_MSG_PRIO_HIGH,
-	CBC_MSG_PRIO_BACKGRROUND,
-};
-
 enum cbc_message_scope {
 	CBC_MSG_SCOPE_PLMN,
 	/* FIXME: more local/regional scopes than PLMN-wide */
@@ -87,7 +82,7 @@ struct cbc_message_peer {
 struct cbc_message {
 	struct llist_head list;		 /* global list of currently active CBCs */
 
-	enum cbc_message_prio priority;
+	enum cbsp_category priority;
 	uint16_t rep_period;		/* repetition period (1..4095) */
 	bool extended_cbch;		/* basic (false) or extended (true) CBCH */
 	uint16_t warning_period_sec;	/* warning period in seconds */
