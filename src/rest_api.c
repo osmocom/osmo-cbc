@@ -440,7 +440,8 @@ static int api_cb_message_post(const struct _u_request *req, struct _u_response 
 	if (rc < 0)
 		goto err;
 
-	/* FIXME: actually add the message */
+	/* actually add the message */
+	cbc_message_new(cbc_msg);
 
 	json_decref(json_req);
 	ulfius_set_empty_body_response(resp, 200);
@@ -454,30 +455,35 @@ err:
 
 static int api_cb_message_del(const struct _u_request *req, struct _u_response *resp, void *user_data)
 {
-	struct smscb_message message;
-	json_error_t json_err;
-	json_t *json_req = NULL;
-	int rc;
+	const char *message_id_str = u_map_get(req->map_url, "message_id");
+	struct cbc_message *cbc_msg;
+	uint16_t message_id;
+	int status = 404;
 
-	json_req = ulfius_get_json_body_request(req, &json_err);
-	if (!json_req) {
-		LOGP(DREST, LOGL_ERROR, "REST: No JSON Body\n");
+	if (!message_id_str) {
+		status = 400;
+		goto err;
+	}
+	message_id = atoi(message_id_str);
+	if (message_id < 0 || message_id > 65535) {
+		status = 400;
 		goto err;
 	}
 
-	rc = json2smscb_message(&message, json_req);
-	if (rc < 0)
-		goto err;
+	cbc_msg = cbc_message_by_id(message_id);
+	if (cbc_msg) {
+		status = 200;
+		/* FIXME: delete from all peers */
+		/* should we postpone this and rather translate into another state until we get
+		 * all the KILL ACK from the peers [and hence can update statistics] ? */
+		llist_del(&cbc_msg->list);
+		talloc_free(cbc_msg);
+	}
 
-	/* FIXME: actually look-up and delete the message */
-
-
-	json_decref(json_req);
-	ulfius_set_empty_body_response(resp, 200);
+	ulfius_set_empty_body_response(resp, status);
 	return U_CALLBACK_COMPLETE;
 err:
-	json_decref(json_req);
-	ulfius_set_empty_body_response(resp, 400);
+	ulfius_set_empty_body_response(resp, status);
 	return U_CALLBACK_COMPLETE;
 }
 
@@ -485,7 +491,7 @@ err:
 static const struct _u_endpoint api_endpoints[] = {
 	/* create/update a message */
 	{ "POST", PREFIX, "/message", 0, &api_cb_message_post, NULL },
-	{ "DELETE", PREFIX, "/message/:FIXME", 0, &api_cb_message_del, NULL },
+	{ "DELETE", PREFIX, "/message/:message_id", 0, &api_cb_message_del, NULL },
 };
 
 static struct _u_instance g_instance;
