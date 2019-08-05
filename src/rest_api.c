@@ -419,6 +419,7 @@ int rest_api_init(void *ctx, uint16_t port)
 		LOGP(DREST, LOGL_FATAL, "Cannot start REST API on port %u\n", port);
 		return -1;
 	}
+	LOGP(DREST, LOGL_NOTICE, "Started REST API on port %u\n", port);
 	return 0;
 }
 
