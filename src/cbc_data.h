@@ -52,7 +52,7 @@ struct smscb_message {
 			/* number of pages containing valid information */
 			unsigned int num_pages;
 			/* actual page data, concatenated */
-			uint8_t data[SMSCB_RAW_PAGE_LEN][SMSCB_MAX_NUM_PAGES];
+			uint8_t data[SMSCB_MAX_NUM_PAGES][SMSCB_RAW_PAGE_LEN];
 			/* FIXME: do we need information on the total length to
 			 * determine which is the last block used in [at least the last]
 			 * page? */
