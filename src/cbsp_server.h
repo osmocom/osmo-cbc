@@ -3,6 +3,8 @@
 #include <osmocom/gsm/cbsp.h>
 #include <osmocom/netif/stream.h>
 
+#include "cbc_data.h"
+
 #define LOGPCC(client, level, fmt, args...) \
 	LOGP(DCBSP, level, "%s: " fmt, cbsp_cbc_client_name(client), ## args)
 
@@ -31,10 +33,13 @@ struct osmo_cbsp_cbc_client {
 	struct msgb *rx_msg;
 
 	struct osmo_fsm_inst *fi;
+
+	struct cbc_peer *peer;
 };
 
 const char *cbsp_cbc_client_name(const struct osmo_cbsp_cbc_client *client);
 void cbsp_cbc_client_tx(struct osmo_cbsp_cbc_client *client, struct osmo_cbsp_decoded *cbsp);
+void cbsp_cbc_client_close(struct osmo_cbsp_cbc_client *client);
 struct osmo_cbsp_cbc *cbsp_cbc_create(void *ctx, const char *bind_ip, int bind_port,
 				      int (*rx_cb)(struct osmo_cbsp_cbc_client *client,
 						   struct osmo_cbsp_decoded *dec));

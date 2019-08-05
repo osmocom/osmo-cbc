@@ -6,6 +6,7 @@
 #include <osmocom/core/utils.h>
 
 #include "cbc_data.h"
+#include "cbsp_server.h"
 
 /* remove a peer from the message */
 int cbc_message_del_peer(struct cbc_message *cbcmsg, struct cbc_peer *peer)
@@ -45,6 +46,23 @@ struct cbc_peer *cbc_peer_by_name(const char *name)
 	llist_for_each_entry(peer, &g_cbc->peers, list) {
 		if (peer->name && !strcmp(name, peer->name))
 			return peer;
+	}
+	return NULL;
+}
+
+/* look-up of cbc_peer by tuple of (remote host, protocol) */
+struct cbc_peer *cbc_peer_by_addr_proto(const char *remote_host, uint16_t remote_port,
+					enum cbc_peer_protocol proto)
+{
+	struct cbc_peer *peer;
+
+	llist_for_each_entry(peer, &g_cbc->peers, list) {
+		if (!strcasecmp(remote_host, peer->remote_host)) {
+			if (peer->remote_port == -1)
+				return peer;
+			else if (remote_port == peer->remote_port)
+				return peer;
+		}
 	}
 	return NULL;
 }

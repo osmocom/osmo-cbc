@@ -19,6 +19,9 @@ struct cbc_peer {
 	struct llist_head list;		/* linked to cbc.peers */
 	const char *name;
 
+	char *remote_host;	/* remote IP address in string format */
+	int remote_port;		/* remote port number or -1 for random */
+
 	enum cbc_peer_protocol proto;
 	union {
 		struct osmo_cbsp_cbc_client *cbsp;
@@ -104,6 +107,7 @@ struct cbc_message {
 
 struct cbc {
 	struct {
+		bool permit_unknown_peers;
 	} config;
 
 	struct llist_head messages;	/* cbc_message.list */
@@ -111,3 +115,13 @@ struct cbc {
 };
 
 extern struct cbc *g_cbc;
+
+
+
+int cbc_message_del_peer(struct cbc_message *cbcmsg, struct cbc_peer *peer);
+int cbc_message_add_peer(struct cbc_message *cbcmsg, struct cbc_peer *peer);
+struct cbc_peer *cbc_peer_by_name(const char *name);
+struct cbc_peer *cbc_peer_by_addr_proto(const char *remote_host, uint16_t remote_port,
+					enum cbc_peer_protocol proto);
+struct cbc_peer *cbc_peer_create(const char *name, enum cbc_peer_protocol proto);
+void cbc_peer_remove(struct cbc_peer *peer);

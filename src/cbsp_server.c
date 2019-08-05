@@ -98,6 +98,7 @@ static int cbsp_cbc_closed_cb(struct osmo_stream_srv *conn)
 	struct osmo_cbsp_cbc_client *client = osmo_stream_srv_get_data(conn);
 	LOGPCC(client, LOGL_INFO, "connection closed\n");
 	llist_del(&client->list);
+	osmo_fsm_inst_term(client->fi, OSMO_FSM_TERM_REQUEST, NULL);
 	talloc_free(client);
 	return 0;
 }
@@ -107,12 +108,19 @@ static int cbsp_cbc_accept_cb(struct osmo_stream_srv_link *link, int fd)
 {
 	struct osmo_cbsp_cbc *cbc = osmo_stream_srv_link_get_data(link);
 	struct osmo_cbsp_cbc_client *client = talloc_zero(cbc, struct osmo_cbsp_cbc_client);
+	char remote_ip[INET6_ADDRSTRLEN], portbuf[6];
+	int remote_port;
 	OSMO_ASSERT(client);
+
+	remote_ip[0] = '\0';
+	portbuf[0] = '\0';
+	osmo_sock_get_ip_and_port(fd, remote_ip, sizeof(remote_ip), portbuf, sizeof(portbuf), false);
+	remote_port = atoi(portbuf);
 
 	client->conn = osmo_stream_srv_create(link, link, fd, cbsp_cbc_read_cb, cbsp_cbc_closed_cb, client);
 	if (!client->conn) {
-		LOGP(DCBSP, LOGL_ERROR, "Unable to create stream server for %s\n",
-		     osmo_sock_get_name2(fd));
+		LOGP(DCBSP, LOGL_ERROR, "Unable to create stream server for %s:%d\n",
+			remote_ip, remote_port);
 		talloc_free(client);
 		return -1;
 	}
@@ -123,6 +131,24 @@ static int cbsp_cbc_accept_cb(struct osmo_stream_srv_link *link, int fd)
 		talloc_free(client);
 		return -1;
 	}
+
+	/* Match client to peer */
+	client->peer = cbc_peer_by_addr_proto(remote_ip, remote_port, CBC_PEER_PROTO_CBSP);
+	if (!client->peer) {
+		if (g_cbc->config.permit_unknown_peers) {
+			LOGPCC(client, LOGL_INFO, "Accepting unknown CBSP peer %s:%d\n",
+				remote_ip, remote_port);
+			client->peer = cbc_peer_create(NULL, CBC_PEER_PROTO_CBSP);
+			OSMO_ASSERT(client->peer);
+		} else {
+			LOGPCC(client, LOGL_NOTICE, "Rejecting unknown CBSP peer %s:%d (not permitted)\n",
+				remote_ip, remote_port);
+			osmo_stream_srv_destroy(client->conn);
+			/* FIXME: further cleanup needed? or does close_cb handle everything? */
+			return -1;
+		}
+	}
+
 	LOGPCC(client, LOGL_INFO, "New CBSP client connection\n");
 	llist_add_tail(&client->list, &cbc->clients);
 	osmo_fsm_inst_dispatch(client->fi, CBSP_SRV_E_CMD_RESET, NULL);
@@ -143,6 +169,12 @@ void cbsp_cbc_client_tx(struct osmo_cbsp_cbc_client *client, struct osmo_cbsp_de
 	}
 	talloc_free(cbsp);
 	osmo_stream_srv_send(client->conn, msg);
+}
+
+void cbsp_cbc_client_close(struct osmo_cbsp_cbc_client *client)
+{
+	osmo_stream_srv_destroy(client->conn);
+	/* FIXME: do we need to unlink/free the client? */
 }
 
 /* initialize the CBC-side CBSP server */
