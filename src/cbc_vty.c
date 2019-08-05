@@ -31,6 +31,93 @@
 
 #include "cbc_data.h"
 
+static void dump_one_cbc_peer(struct vty *vty, const struct cbc_peer *peer)
+{
+	vty_out(vty, " %-20s | %-15s | %-5d | %s |%s",
+		peer->name ? peer->name : "<unnamed>", peer->remote_host, peer->remote_port,
+		get_value_string(cbc_peer_proto_name, peer->proto), VTY_NEWLINE);
+}
+
+DEFUN(show_peers, show_peers_cmd,
+	"show peers",
+	SHOW_STR "Display Information about RAN peers connected to this CBC\n")
+{
+	struct cbc_peer *peer;
+
+	vty_out(vty, " Name                | IP             | Port  | Proto |%s", VTY_NEWLINE);
+	vty_out(vty, "---------------------|----------------|-------|-------|%s", VTY_NEWLINE);
+	llist_for_each_entry(peer, &g_cbc->peers, list)
+		dump_one_cbc_peer(vty, peer);
+
+	return CMD_SUCCESS;
+}
+
+#define MESSAGES_STR "Display information about currently active SMSCB messages\n"
+
+static void dump_one_cbc_msg(struct vty *vty, const struct cbc_message *cbc_msg)
+{
+	const struct smscb_message *smscb = &cbc_msg->msg;
+
+	OSMO_ASSERT(!smscb->is_etws);
+
+	vty_out(vty, " %04X| %04X|%-20s|%-13s| %-4u|%c|%02x|%s",
+		smscb->message_id, smscb->serial_nr, cbc_msg->cbe_name,
+		get_value_string(cbsp_category_names, cbc_msg->priority), cbc_msg->rep_period,
+		cbc_msg->extended_cbch ? 'E' : 'N', smscb->cbs.dcs,
+		VTY_NEWLINE);
+}
+
+DEFUN(show_messages_cbs, show_messages_cbs_cmd,
+	"show messages cbs",
+	SHOW_STR MESSAGES_STR "Display Cell Broadcast Service (CBS) messages\n")
+{
+	struct cbc_message *cbc_msg;
+
+	vty_out(vty,
+"|MsgId|SerNo|      CBE Name       |  Category   |Period|E|DCS|%s", VTY_NEWLINE);
+	vty_out(vty,
+"|-----|-----|---------------------|-------------|------|-|---|%s", VTY_NEWLINE);
+
+	llist_for_each_entry(cbc_msg, &g_cbc->messages, list) {
+		if (cbc_msg->msg.is_etws)
+			continue;
+		dump_one_cbc_msg(vty, cbc_msg);
+	}
+
+	return CMD_SUCCESS;
+}
+
+static void dump_one_etws_msg(struct vty *vty, const struct cbc_message *cbc_msg)
+{
+	const struct smscb_message *smscb = &cbc_msg->msg;
+
+	OSMO_ASSERT(smscb->is_etws);
+
+	/* FIXME */
+}
+
+DEFUN(show_messages_etws, show_messages_etws_cmd,
+	"show messages etws",
+	SHOW_STR MESSAGES_STR "Display ETWS (CMAS, KPAS, EU-ALERT, PWS, WEA) Emergency messages\n")
+{
+	struct cbc_message *cbc_msg;
+
+	/* FIXME: header */
+
+	llist_for_each_entry(cbc_msg, &g_cbc->messages, list) {
+		if (!cbc_msg->msg.is_etws)
+			continue;
+		dump_one_etws_msg(vty, cbc_msg);
+	}
+
+	return CMD_SUCCESS;
+}
+
+/* TODO: Show a single message; with details about scope + payload */
+/* TODO: Delete a single message; either from one peer or globally from all */
+/* TODO: Re-send all messages to one peer / all peers? */
+/* TODO: Completed / Load status */
+
 enum cbc_vty_node {
 	CBC_NODE = _LAST_OSMOVTY_NODE + 1,
 	PEER_NODE,
@@ -176,6 +263,10 @@ static int config_write_peer(struct vty *vty)
 
 void cbc_vty_init(void)
 {
+	install_lib_element_ve(&show_peers_cmd);
+	install_lib_element_ve(&show_messages_cbs_cmd);
+	install_lib_element_ve(&show_messages_etws_cmd);
+
 	install_lib_element(CONFIG_NODE, &cfg_cbc_cmd);
 	install_node(&cbc_node, config_write_cbc);
 	install_lib_element(CBC_NODE, &cfg_permit_unknown_peers_cmd);
