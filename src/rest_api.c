@@ -320,6 +320,7 @@ static int json2payload(struct smscb_message *out, json_t *in)
 
 }
 
+/* decode a "smscb.schema.json#definitions/smscb_message" */
 static int json2smscb_message(struct smscb_message *out, json_t *in)
 {
 	json_t *jser_nr, *jtmp;
@@ -345,11 +346,117 @@ static int json2smscb_message(struct smscb_message *out, json_t *in)
 	return 0;
 }
 
+static const struct value_string category_str_vals[] = {
+	{ CBSP_CATEG_NORMAL,		"normal" },
+	{ CBSP_CATEG_HIGH_PRIO,		"high_priority" },
+	{ CBSP_CATEG_BACKGROUND,	"background" },
+	{ 0, NULL }
+};
+
+/* decode a "cbc.schema.json#definitions/cbc_message" */
+static int json2cbc_message(struct cbc_message *out, json_t *in)
+{
+	const char *category_str, *cbe_str;
+	json_t *jtmp;
+	int rc, tmp;
+
+	if (!json_is_object(in))
+		return -EINVAL;
+
+	/* CBE name (M) */
+	cbe_str = json_get_string(in, "cbe_name");
+	if (!cbe_str)
+		return -EINVAL;
+	out->cbe_name = talloc_strdup(out, cbe_str);
+
+	/* Category (O) */
+	category_str = json_get_string(in, "category");
+	if (!category_str)
+		out->priority = CBSP_CATEG_NORMAL;
+	else {
+		rc = get_string_value(category_str_vals, category_str);
+		if (rc < 0)
+			return -EINVAL;
+		out->priority = rc;
+	}
+
+	/* Repetition Period (O) */
+	jtmp = json_object_get(in, "repetition_period");
+	if (jtmp) {
+	}
+
+	/* Number of Broadcasts (O) */
+	rc = json_get_integer_range(&tmp, in, "number_of_broadcasts", 0, 65535);
+	if (rc == 0)
+		out->num_bcast = tmp;
+	else if (rc == -ENOENT)
+		out->num_bcast = 0; /* unlimited */
+	else
+		return rc;
+
+	/* Warning Period in seconds (O) */
+	rc = json_get_integer_range(&tmp, in, "warning_period_sec", 0, 65535);
+	if (rc == 0)
+		out->warning_period_sec = tmp;
+	else if (rc == -ENOENT)
+		out->warning_period_sec = 0xffffffff; /* infinite */
+	else
+		return rc;
+
+	/* [Geographic] Scope (M) */
+	jtmp = json_object_get(in, "scope");
+	if (!jtmp)
+		return -EINVAL;
+	if ((jtmp = json_object_get(jtmp, "scope_plmn"))) {
+		out->scope = CBC_MSG_SCOPE_PLMN;
+	} else
+		return -EINVAL;
+
+	/* SMSCB message itself */
+	jtmp = json_object_get(in, "smscb_message");
+	if (!jtmp)
+		return -EINVAL;
+	rc = json2smscb_message(&out->msg, jtmp);
+	if (rc < 0)
+		return rc;
+
+	return 0;
+}
+
 static int api_cb_message_post(const struct _u_request *req, struct _u_response *resp, void *user_data)
+{
+	struct cbc_message *cbc_msg = talloc_zero(g_cbc, struct cbc_message);
+	json_error_t json_err;
+	json_t *json_req = NULL;
+	int rc;
+
+	json_req = ulfius_get_json_body_request(req, &json_err);
+	if (!json_req) {
+		LOGP(DREST, LOGL_ERROR, "REST: No JSON Body\n");
+		goto err;
+	}
+
+	rc = json2cbc_message(cbc_msg, json_req);
+	if (rc < 0)
+		goto err;
+
+	/* FIXME: actually add the message */
+
+	json_decref(json_req);
+	ulfius_set_empty_body_response(resp, 200);
+	return U_CALLBACK_COMPLETE;
+err:
+	json_decref(json_req);
+	talloc_free(cbc_msg);
+	ulfius_set_empty_body_response(resp, 400);
+	return U_CALLBACK_COMPLETE;
+}
+
+static int api_cb_message_del(const struct _u_request *req, struct _u_response *resp, void *user_data)
 {
 	struct smscb_message message;
 	json_error_t json_err;
-	json_t *json_req;
+	json_t *json_req = NULL;
 	int rc;
 
 	json_req = ulfius_get_json_body_request(req, &json_err);
@@ -362,16 +469,23 @@ static int api_cb_message_post(const struct _u_request *req, struct _u_response 
 	if (rc < 0)
 		goto err;
 
+	/* FIXME: actually look-up and delete the message */
+
+
+	json_decref(json_req);
 	ulfius_set_empty_body_response(resp, 200);
 	return U_CALLBACK_COMPLETE;
 err:
+	json_decref(json_req);
 	ulfius_set_empty_body_response(resp, 400);
 	return U_CALLBACK_COMPLETE;
 }
 
+
 static const struct _u_endpoint api_endpoints[] = {
 	/* create/update a message */
 	{ "POST", PREFIX, "/message", 0, &api_cb_message_post, NULL },
+	{ "DELETE", PREFIX, "/message/:FIXME", 0, &api_cb_message_del, NULL },
 };
 
 static struct _u_instance g_instance;

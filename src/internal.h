@@ -1,7 +1,11 @@
 #pragma once
 
+#include <stdint.h>
+
 #include <osmocom/core/logging.h>
 #include <osmocom/core/fsm.h>
+
+#include "cbc_data.h"
 
 enum {
 	DCBSP,
@@ -25,3 +29,7 @@ void rest_api_fin(void);
 
 /* cbc_vty.c */
 void cbc_vty_init(void);
+
+/* message_handling.c */
+int cbc_message_new(struct cbc_message *cbcmsg);
+struct cbc_message *cbc_message_by_id(uint16_t message_id);

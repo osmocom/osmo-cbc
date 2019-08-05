@@ -80,13 +80,14 @@ struct cbc_message_peer {
 
 /* internal representation of a CBC message */
 struct cbc_message {
-	struct llist_head list;		 /* global list of currently active CBCs */
+	struct llist_head list;		/* global list of currently active CBCs */
 
+	const char *cbe_name;		/* name of the CBE originating this SMSCB */
 	enum cbsp_category priority;
 	uint16_t rep_period;		/* repetition period (1..4095) */
 	bool extended_cbch;		/* basic (false) or extended (true) CBCH */
-	uint16_t warning_period_sec;	/* warning period in seconds */
-	uint16_t num_bcast;		/* number of broadcasts requested */
+	uint32_t warning_period_sec;	/* warning period in seconds (0xffffffff = unlimited) */
+	uint16_t num_bcast;		/* number of broadcasts requested (0=unlimited) */
 
 	enum cbc_message_scope scope;
 	/* FIXME: data for other scopes than PLMN-wide */

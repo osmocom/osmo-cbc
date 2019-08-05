@@ -33,10 +33,10 @@
 				{ "$ref": "#/definitions/scope_plmn" }
 			]
 		},
-
 		"cbc_message": {
 			"type": "object",
 			"properties": {
+				"cbe_name": { "type": "string" },
 				"category": { "$ref": "#/definitions/category" },
 				"rep_period": { "$ref": "#/definitions/repetition_period" },
 				"num_of_bcast": { "$ref": "#/definitions/number_of_broadcasts" },
