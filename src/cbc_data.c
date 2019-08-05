@@ -8,6 +8,12 @@
 #include "cbc_data.h"
 #include "cbsp_server.h"
 
+const struct value_string cbc_peer_proto_name[] = {
+	{ CBC_PEER_PROTO_CBSP, "CBSP" },
+	{ CBC_PEER_PROTO_SABP, "SABP" },
+	{ 0, NULL }
+};
+
 /* remove a peer from the message */
 int cbc_message_del_peer(struct cbc_message *cbcmsg, struct cbc_peer *peer)
 {
