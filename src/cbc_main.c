@@ -197,6 +197,9 @@ int main(int argc, char **argv)
 
 	rest_api_init(tall_rest_ctx, 12345);
 
+	g_cbc->it_q.rest2main = osmo_it_q_alloc(g_cbc, "rest2main", 10, rest2main_read_cb, NULL);
+	OSMO_ASSERT(g_cbc->it_q.rest2main);
+
 	signal(SIGUSR1, &signal_handler);
 	signal(SIGUSR2, &signal_handler);
 	osmo_init_ignore_signals();

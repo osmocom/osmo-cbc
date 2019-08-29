@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <osmocom/core/linuxlist.h>
+#include <osmocom/core/it_q.h>
 #include <osmocom/gsm/protocol/gsm_48_049.h>
 
 struct osmo_cbsp_cbc_client;
@@ -110,6 +111,9 @@ struct cbc {
 
 	struct llist_head messages;	/* cbc_message.list */
 	struct llist_head peers;	/* cbc_peer.list */
+	struct {
+		struct osmo_it_q *rest2main;
+	} it_q;
 };
 
 extern struct cbc *g_cbc;

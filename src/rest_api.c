@@ -39,6 +39,7 @@
 #include "internal.h"
 #include "charset.h"
 #include "cbc_data.h"
+#include "rest_it_op.h"
 
 /* get an integer value for field "key" in object "parent" */
 static int json_get_integer(int *out, json_t *parent, const char *key)
@@ -425,10 +426,15 @@ static int json2cbc_message(struct cbc_message *out, json_t *in)
 
 static int api_cb_message_post(const struct _u_request *req, struct _u_response *resp, void *user_data)
 {
-	struct cbc_message *cbc_msg = talloc_zero(g_cbc, struct cbc_message);
+
+	struct rest_it_op *riop = talloc_zero(g_cbc, struct rest_it_op);
 	json_error_t json_err;
 	json_t *json_req = NULL;
 	int rc;
+
+	if (!riop)
+		return -ENOMEM;
+	riop->operation = REST_IT_OP_MSG_CREATE;
 
 	json_req = ulfius_get_json_body_request(req, &json_err);
 	if (!json_req) {
@@ -436,19 +442,21 @@ static int api_cb_message_post(const struct _u_request *req, struct _u_response 
 		goto err;
 	}
 
-	rc = json2cbc_message(cbc_msg, json_req);
+	rc = json2cbc_message(&riop->u.create.cbc_msg, json_req);
 	if (rc < 0)
 		goto err;
 
-	/* actually add the message */
-	cbc_message_new(cbc_msg);
+	/* request message to be added by main thread */
+	rc = rest_it_op_send_and_wait(riop, 10);
+	if (rc < 0)
+		goto err;
 
 	json_decref(json_req);
 	ulfius_set_empty_body_response(resp, 200);
 	return U_CALLBACK_COMPLETE;
 err:
 	json_decref(json_req);
-	talloc_free(cbc_msg);
+	talloc_free(riop);
 	ulfius_set_empty_body_response(resp, 400);
 	return U_CALLBACK_COMPLETE;
 }
@@ -456,9 +464,10 @@ err:
 static int api_cb_message_del(const struct _u_request *req, struct _u_response *resp, void *user_data)
 {
 	const char *message_id_str = u_map_get(req->map_url, "message_id");
-	struct cbc_message *cbc_msg;
+	struct rest_it_op *riop = talloc_zero(g_cbc, struct rest_it_op);
 	uint16_t message_id;
 	int status = 404;
+	int rc;
 
 	if (!message_id_str) {
 		status = 400;
@@ -470,19 +479,24 @@ static int api_cb_message_del(const struct _u_request *req, struct _u_response *
 		goto err;
 	}
 
-	cbc_msg = cbc_message_by_id(message_id);
-	if (cbc_msg) {
-		status = 200;
-		/* FIXME: delete from all peers */
-		/* should we postpone this and rather translate into another state until we get
-		 * all the KILL ACK from the peers [and hence can update statistics] ? */
-		llist_del(&cbc_msg->list);
-		talloc_free(cbc_msg);
+	if (!riop) {
+		status = 999; /* FIXME */
+		goto err;
 	}
 
-	ulfius_set_empty_body_response(resp, status);
+	riop->operation = REST_IT_OP_MSG_DELETE;
+	riop->u.del.msg_id = message_id;
+
+	/* request message to be deleted by main thread */
+	rc = rest_it_op_send_and_wait(riop, 10);
+	if (rc < 0)
+		goto err;
+
+	talloc_free(riop);
+	ulfius_set_empty_body_response(resp, 200);
 	return U_CALLBACK_COMPLETE;
 err:
+	talloc_free(riop);
 	ulfius_set_empty_body_response(resp, status);
 	return U_CALLBACK_COMPLETE;
 }

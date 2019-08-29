@@ -33,3 +33,6 @@ void cbc_vty_init(void);
 /* message_handling.c */
 int cbc_message_new(struct cbc_message *cbcmsg);
 struct cbc_message *cbc_message_by_id(uint16_t message_id);
+
+/* rest_it_op.c */
+void rest2main_read_cb(struct osmo_it_q *q, void *item);
