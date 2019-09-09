@@ -195,15 +195,110 @@ struct osmo_fsm cbsp_server_fsm = {
 	.event_names = cbsp_server_event_names,
 };
 
+static int get_msg_id(const struct osmo_cbsp_decoded *dec)
+{
+	switch (dec->msg_type) {
+	case CBSP_MSGT_WRITE_REPLACE_COMPL:
+		return dec->u.write_replace_compl.msg_id;
+	case CBSP_MSGT_WRITE_REPLACE_FAIL:
+		return dec->u.write_replace_fail.msg_id;
+	case CBSP_MSGT_KILL_COMPL:
+		return dec->u.kill_compl.msg_id;
+	case CBSP_MSGT_KILL_FAIL:
+		return dec->u.kill_fail.msg_id;
+	case CBSP_MSGT_MSG_STATUS_QUERY_COMPL:
+		return dec->u.msg_status_query_compl.msg_id;
+	case CBSP_MSGT_MSG_STATUS_QUERY_FAIL:
+		return dec->u.msg_status_query_fail.msg_id;
+	default:
+		return -1;
+	}
+}
+
 /* message was received from remote CBSP peer (BSC) */
 int cbc_client_rx_cb(struct osmo_cbsp_cbc_client *client, struct osmo_cbsp_decoded *dec)
 {
+	struct cbc_message *smscb;
+	struct cbc_message_peer *mp;
+	int msg_id;
+
+	/* messages without reference to a specific SMSCB message */
 	switch (dec->msg_type) {
 	case CBSP_MSGT_RESTART:
 		osmo_fsm_inst_dispatch(client->fi, CBSP_SRV_E_RX_RESTART, dec);
-		break;
+		return 0;
+	case CBSP_MSGT_KEEP_ALIVE_COMPL:
+		osmo_fsm_inst_dispatch(client->fi, CBSP_SRV_E_RX_KA_COMPL, dec);
+		return 0;
+	case CBSP_MSGT_FAILURE:
+		LOGPCC(client, LOGL_ERROR, "CBSP FAILURE (bcast_msg_type=%u)\n",
+			dec->u.failure.bcast_msg_type);
+		/* TODO: failure list */
+		return 0;
+	case CBSP_MSGT_ERROR_IND:
+		LOGPCC(client, LOGL_ERROR, "CBSP ERROR_IND (cause=%u, msg_id=0x%04x)\n",
+			dec->u.error_ind.cause,
+			dec->u.error_ind.msg_id ? *dec->u.error_ind.msg_id : 0xffff);
+		/* TODO: old/new serial number, channel_ind */
+		return 0;
+	case CBSP_MSGT_KEEP_ALIVE:
+	case CBSP_MSGT_LOAD_QUERY_COMPL:
+	case CBSP_MSGT_LOAD_QUERY_FAIL:
+	case CBSP_MSGT_SET_DRX_COMPL:
+	case CBSP_MSGT_SET_DRX_FAIL:
+	case CBSP_MSGT_RESET_COMPL:
+	case CBSP_MSGT_RESET_FAIL:
+		LOGPCC(client, LOGL_ERROR, "unimplemented message %s\n",
+			get_value_string(cbsp_msg_type_names, dec->msg_type));
+		return 0;
 	default:
-		LOGPCC(client, LOGL_ERROR, "unknown/unhandled %s\n",
+		break;
+	}
+
+	/* messages with reference to a specific SMSCB message handled below*/
+	msg_id = get_msg_id(dec);
+	OSMO_ASSERT(msg_id >= 0);
+
+	/* look-up smscb_message */
+	smscb = cbc_message_by_id(msg_id);
+	if (!smscb) {
+		LOGPCC(client, LOGL_ERROR, "%s for unknown message-id 0x%04x\n",
+			get_value_string(cbsp_msg_type_names, dec->msg_type), msg_id);
+		/* TODO: inform peer? */
+		return 0;
+	}
+
+	/* look-up smscb_message_peer */
+	mp = cbc_message_peer_get(smscb, client->peer);
+	if (!mp) {
+		LOGPCC(client, LOGL_ERROR, "%s for message-id 0x%04x without peer %s\n",
+			get_value_string(cbsp_msg_type_names, dec->msg_type), msg_id, client->peer->name);
+		/* TODO: inform peer? */
+		return 0;
+	}
+
+	/* dispatch event to smscp_p_fms instance */
+	switch (dec->msg_type) {
+	case CBSP_MSGT_WRITE_REPLACE_COMPL:
+		if (dec->u.write_replace_compl.old_serial_nr)
+			return osmo_fsm_inst_dispatch(mp->fi, SMSCB_E_CBSP_REPLACE_ACK, dec);
+		else
+			return osmo_fsm_inst_dispatch(mp->fi, SMSCB_E_CBSP_WRITE_ACK, dec);
+	case CBSP_MSGT_WRITE_REPLACE_FAIL:
+		if (dec->u.write_replace_fail.old_serial_nr)
+			return osmo_fsm_inst_dispatch(mp->fi, SMSCB_E_CBSP_REPLACE_NACK, dec);
+		else
+			return osmo_fsm_inst_dispatch(mp->fi, SMSCB_E_CBSP_WRITE_NACK, dec);
+	case CBSP_MSGT_KILL_COMPL:
+		return osmo_fsm_inst_dispatch(mp->fi, SMSCB_E_CBSP_DELETE_ACK, dec);
+	case CBSP_MSGT_KILL_FAIL:
+		return osmo_fsm_inst_dispatch(mp->fi, SMSCB_E_CBSP_DELETE_NACK, dec);
+	case CBSP_MSGT_MSG_STATUS_QUERY_COMPL:
+		return osmo_fsm_inst_dispatch(mp->fi, SMSCB_E_CBSP_STATUS_ACK, dec);
+	case CBSP_MSGT_MSG_STATUS_QUERY_FAIL:
+		return osmo_fsm_inst_dispatch(mp->fi, SMSCB_E_CBSP_STATUS_NACK, dec);
+	default:
+		LOGPCC(client, LOGL_ERROR, "unknown message %s\n",
 			get_value_string(cbsp_msg_type_names, dec->msg_type));
 		break;
 	}

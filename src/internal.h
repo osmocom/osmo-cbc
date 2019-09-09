@@ -36,3 +36,29 @@ struct cbc_message *cbc_message_by_id(uint16_t message_id);
 
 /* rest_it_op.c */
 void rest2main_read_cb(struct osmo_it_q *q, void *item);
+
+
+/* smscb_*fsm.c */
+enum smscb_fsm_event {
+	SMSCB_E_CHILD_DIED,
+	/* create a message (from REST) */
+	SMSCB_E_CREATE,
+	/* replace a message (from REST) */
+	SMSCB_E_REPLACE,
+	/* get status of a message (from REST) */
+	SMSCB_E_STATUS,
+	/* delete a message (from REST) */
+	SMSCB_E_DELETE,
+	/* CBSP peer confirms write */
+	SMSCB_E_CBSP_WRITE_ACK,
+	SMSCB_E_CBSP_WRITE_NACK,
+	/* CBSP peer confirms replace */
+	SMSCB_E_CBSP_REPLACE_ACK,
+	SMSCB_E_CBSP_REPLACE_NACK,
+	/* CBSP peer confirms delete */
+	SMSCB_E_CBSP_DELETE_ACK,
+	SMSCB_E_CBSP_DELETE_NACK,
+	/* CBSP peer confirms status query */
+	SMSCB_E_CBSP_STATUS_ACK,
+	SMSCB_E_CBSP_STATUS_NACK,
+};

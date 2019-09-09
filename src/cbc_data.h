@@ -4,6 +4,7 @@
 #include <osmocom/core/linuxlist.h>
 #include <osmocom/core/it_q.h>
 #include <osmocom/gsm/protocol/gsm_48_049.h>
+#include <osmocom/gsm/gsm23003.h>
 
 struct osmo_cbsp_cbc_client;
 struct osmo_sabp_cbc_client;
@@ -32,6 +33,38 @@ struct cbc_peer {
 };
 
 extern const struct value_string cbc_peer_proto_name[];
+
+enum cbc_cell_id_type {
+	CBC_CELL_ID_NONE,
+	CBC_CELL_ID_BSS,
+	CBC_CELL_ID_CGI,
+	CBC_CELL_ID_LAC_CI,
+	CBC_CELL_ID_LAI,
+	CBC_CELL_ID_LAC,
+	CBC_CELL_ID_CI,
+};
+
+struct cbc_cell_id {
+	struct llist_head list;
+	enum cbc_cell_id_type id_discr;
+	union {
+		struct osmo_cell_global_id cgi;
+		struct osmo_lac_and_ci_id lac_and_ci;
+		struct osmo_location_area_id lai;
+		uint16_t lac;
+		uint16_t ci;
+	} u;
+	/* only in failure list */
+	struct {
+		int cause;
+	} fail;
+	/* only in num_compl list */
+	struct {
+		uint32_t num_compl;
+		uint32_t num_bcast_info;
+	} num_compl;
+};
+
 
 /*********************************************************************************
  * CBC Message
@@ -75,8 +108,17 @@ enum cbc_message_scope {
 /* link between a SMSCB message and a peer (BSC, RNC, MME) */
 struct cbc_message_peer {
 	struct llist_head list;		/* lined to cbc_message.peers */
-	struct cbc_peer *peer;		/* peer */
-	bool acknowledged;		/* did peer acknowledge this message yet? */
+
+	struct cbc_message *cbcmsg;	/* the SMSCB this relates to */
+	struct cbc_peer *peer;		/* the peer thos relates to */
+	struct osmo_fsm_inst *fi;	/* the FSM instance representing our state */
+
+	/* cells in which this message has been established/installed */
+	struct llist_head cell_list;
+	/* cells in which this message has NOT been established/installed */
+	struct llist_head fail_list;
+	/* number of broadcasts completed in cells of this peer */
+	struct llist_head num_compl_list;
 };
 
 /* internal representation of a CBC message */
@@ -95,6 +137,8 @@ struct cbc_message {
 
 	/* SMSCB message with id, serial, dcs, pages, ... */
 	struct smscb_message msg;
+
+	struct osmo_fsm_inst *fi;	/* FSM instance */
 
 	/* CBC peers (BSCs, RNCs, MMEs) to which this message has already been sent */
 	struct llist_head peers;
@@ -122,6 +166,7 @@ extern struct cbc *g_cbc;
 
 int cbc_message_del_peer(struct cbc_message *cbcmsg, struct cbc_peer *peer);
 int cbc_message_add_peer(struct cbc_message *cbcmsg, struct cbc_peer *peer);
+struct cbc_message_peer *cbc_message_peer_get(struct cbc_message *cbcmsg, struct cbc_peer *peer);
 struct cbc_peer *cbc_peer_by_name(const char *name);
 struct cbc_peer *cbc_peer_by_addr_proto(const char *remote_host, uint16_t remote_port,
 					enum cbc_peer_protocol proto);

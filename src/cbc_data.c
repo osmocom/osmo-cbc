@@ -54,6 +54,18 @@ int cbc_message_del_peer(struct cbc_message *cbcmsg, struct cbc_peer *peer)
 	return i;
 }
 
+struct cbc_message_peer *cbc_message_peer_get(struct cbc_message *cbcmsg, struct cbc_peer *peer)
+{
+	struct cbc_message_peer *mp;
+
+	llist_for_each_entry(mp, &cbcmsg->peers, list) {
+		if (mp->peer == peer)
+			return mp;
+	}
+	return NULL;
+}
+
+#if 0
 /* add a new peer to the message */
 int cbc_message_add_peer(struct cbc_message *cbcmsg, struct cbc_peer *peer)
 {
@@ -65,6 +77,7 @@ int cbc_message_add_peer(struct cbc_message *cbcmsg, struct cbc_peer *peer)
 	llist_add_tail(&mp->list, &cbcmsg->peers);
 	return 0;
 }
+#endif
 
 
 /* look-up of cbc_peer by name */

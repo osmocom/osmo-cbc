@@ -124,7 +124,7 @@ int peer_new_cbc_message(struct cbc_peer *peer, struct cbc_message *cbcmsg)
 	}
 
 	/* record that we've sent the message to the peer */
-	cbc_message_add_peer(cbcmsg, peer);
+	//cbc_message_add_peer(cbcmsg, peer);
 
 	return 0;
 }
