@@ -307,5 +307,5 @@ int cbc_client_rx_cb(struct osmo_cbsp_cbc_client *client, struct osmo_cbsp_decod
 
 static __attribute__((constructor)) void on_dso_load_cbsp_srv_fsm(void)
 {
-	osmo_fsm_register(&cbsp_server_fsm);
+	OSMO_ASSERT(osmo_fsm_register(&cbsp_server_fsm) == 0);
 }

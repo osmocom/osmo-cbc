@@ -521,7 +521,7 @@ struct osmo_fsm smscb_p_fsm = {
 
 static __attribute__((constructor)) void on_dso_load_smscb_p_fsm(void)
 {
-	osmo_fsm_register(&smscb_p_fsm);
+	OSMO_ASSERT(osmo_fsm_register(&smscb_p_fsm) == 0);
 }
 
 struct cbc_message_peer *smscb_peer_fsm_alloc(struct cbc_peer *peer, struct cbc_message *cbcmsg)
