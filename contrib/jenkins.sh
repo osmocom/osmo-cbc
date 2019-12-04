@@ -55,8 +55,8 @@ DISTCHECK_CONFIGURE_FLAGS="--enable-external-tests $CONFIG" \
   $MAKE distcheck \
   || cat-testlogs.sh
 
-if [ "$WITH_MANUALS" = "1" ] && [ "$PUBLISH" = "1" ]; then
-	make -C "$base/doc/manuals" publish
-fi
+#if [ "$WITH_MANUALS" = "1" ] && [ "$PUBLISH" = "1" ]; then
+#	make -C "$base/doc/manuals" publish
+#fi
 
 osmo-clean-workspace.sh
