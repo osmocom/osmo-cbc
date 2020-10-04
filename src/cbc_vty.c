@@ -154,16 +154,16 @@ static int config_write_peer(struct vty *vty)
 
 void cbc_vty_init(void)
 {
-	install_element(CONFIG_NODE, &cfg_cbc_cmd);
+	install_lib_element(CONFIG_NODE, &cfg_cbc_cmd);
 	install_node(&cbc_node, config_write_cbc);
-	install_element(CBC_NODE, &cfg_permit_unknown_peers_cmd);
+	install_lib_element(CBC_NODE, &cfg_permit_unknown_peers_cmd);
 
-	install_element(CBC_NODE, &cfg_cbc_peer_cmd);
-	install_element(CBC_NODE, &cfg_cbc_no_peer_cmd);
+	install_lib_element(CBC_NODE, &cfg_cbc_peer_cmd);
+	install_lib_element(CBC_NODE, &cfg_cbc_no_peer_cmd);
 	install_node(&peer_node, config_write_peer);
-	install_element(PEER_NODE, &cfg_peer_proto_cmd);
-	install_element(PEER_NODE, &cfg_peer_remote_port_cmd);
-	install_element(PEER_NODE, &cfg_peer_no_remote_port_cmd);
-	install_element(PEER_NODE, &cfg_peer_remote_ip_cmd);
+	install_lib_element(PEER_NODE, &cfg_peer_proto_cmd);
+	install_lib_element(PEER_NODE, &cfg_peer_remote_port_cmd);
+	install_lib_element(PEER_NODE, &cfg_peer_no_remote_port_cmd);
+	install_lib_element(PEER_NODE, &cfg_peer_remote_ip_cmd);
 
 }
