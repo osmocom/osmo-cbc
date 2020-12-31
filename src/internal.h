@@ -31,7 +31,8 @@ void rest_api_fin(void);
 void cbc_vty_init(void);
 
 /* message_handling.c */
-int cbc_message_new(struct cbc_message *cbcmsg);
+int cbc_message_new(const struct cbc_message *cbcmsg);
+void cbc_message_delete(struct cbc_message *cbcmsg);
 struct cbc_message *cbc_message_by_id(uint16_t message_id);
 
 /* rest_it_op.c */
@@ -62,3 +63,28 @@ enum smscb_fsm_event {
 	SMSCB_E_CBSP_STATUS_ACK,
 	SMSCB_E_CBSP_STATUS_NACK,
 };
+
+enum smscb_fsm_state {
+	/* initial state after creation  */
+	SMSCB_S_INIT,
+	/* peer (BSC) have been notified of this SMSCB; we're waiting for ACK */
+	SMSCB_S_WAIT_WRITE_ACK,
+	/* peer (BSC) have confirmed it, message is active */
+	SMSCB_S_ACTIVE,
+	/* we have modified the message and sent REPLACE to peer; we're waiting for ACK */
+	SMSCB_S_WAIT_REPLACE_ACK,
+	/* we have modified the message and sent REPLACE to peer; we're waiting for ACK */
+	SMSCB_S_WAIT_STATUS_ACK,
+	/* we have deleted the message and sent KILL to peer; wait for ACK */
+	SMSCB_S_WAIT_DELETE_ACK,
+	SMSCB_S_DELETED,
+};
+
+enum smscb_p_fsm_timer {
+	T_WAIT_WRITE_ACK,
+	T_WAIT_REPLACE_ACK,
+	T_WAIT_STATUS_ACK,
+	T_WAIT_DELETE_ACK,
+};
+
+extern const struct value_string smscb_fsm_event_names[];

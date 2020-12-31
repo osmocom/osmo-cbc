@@ -8,6 +8,7 @@
 
 struct osmo_cbsp_cbc_client;
 struct osmo_sabp_cbc_client;
+struct rest_it_op;
 
 /*********************************************************************************
  * CBC Peer
@@ -138,10 +139,12 @@ struct cbc_message {
 	/* SMSCB message with id, serial, dcs, pages, ... */
 	struct smscb_message msg;
 
-	struct osmo_fsm_inst *fi;	/* FSM instance */
+	struct osmo_fsm_inst *fi;	/* FSM instance (smscb_message_fsm) */
 
 	/* CBC peers (BSCs, RNCs, MMEs) to which this message has already been sent */
 	struct llist_head peers;
+
+	struct rest_it_op *it_op;	/* inter-thread queue operation currently processing */
 };
 
 /*********************************************************************************
@@ -166,9 +169,11 @@ extern struct cbc *g_cbc;
 
 int cbc_message_del_peer(struct cbc_message *cbcmsg, struct cbc_peer *peer);
 int cbc_message_add_peer(struct cbc_message *cbcmsg, struct cbc_peer *peer);
+struct cbc_message_peer *smscb_peer_fsm_alloc(struct cbc_peer *peer, struct cbc_message *cbcmsg);
 struct cbc_message_peer *cbc_message_peer_get(struct cbc_message *cbcmsg, struct cbc_peer *peer);
 struct cbc_peer *cbc_peer_by_name(const char *name);
 struct cbc_peer *cbc_peer_by_addr_proto(const char *remote_host, uint16_t remote_port,
 					enum cbc_peer_protocol proto);
 struct cbc_peer *cbc_peer_create(const char *name, enum cbc_peer_protocol proto);
 void cbc_peer_remove(struct cbc_peer *peer);
+

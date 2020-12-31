@@ -33,6 +33,7 @@
  * HTTP THREAD
  ***********************************************************************/
 
+/* allocate an inter-thread operation */
 struct rest_it_op *rest_it_op_alloc(void *ctx)
 {
 	struct rest_it_op *op = talloc_zero(ctx, struct rest_it_op);
@@ -82,8 +83,10 @@ void rest2main_read_cb(struct osmo_it_q *q, void *item)
 {
 	struct rest_it_op *op = item;
 	struct cbc_message *cbc_msg;
+
 	/* FIXME: look up related message and dispatch to message FSM,
 	 * which will eventually call pthread_cond_signal(&op->cond) */
+
 	switch (op->operation) {
 	case REST_IT_OP_MSG_CREATE:
 		/* FIXME: send to message FSM who can addd it on RAN */
@@ -93,10 +96,13 @@ void rest2main_read_cb(struct osmo_it_q *q, void *item)
 		/* FIXME: send to message FSM who can remove it from RAN */
 		cbc_msg = cbc_message_by_id(op->u.del.msg_id);
 		if (cbc_msg) {
-			llist_del(&cbc_msg->list);
-			talloc_free(cbc_msg);
+			cbc_message_delete(cbc_msg);
+		} else {
+			/* FIXME: immediately wake up? */
 		}
 		break;
+	/* TODO: REPLACE */
+	/* TODO: STATUS */
 	default:
 		break;
 	}

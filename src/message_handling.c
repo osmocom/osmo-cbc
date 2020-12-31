@@ -104,12 +104,13 @@ static bool is_peer_in_scope(const struct cbc_peer *peer, const struct cbc_messa
 	switch (cbcmsg->scope) {
 	case CBC_MSG_SCOPE_PLMN:
 		return true;
+	/* FIXME: differnt scopes */
 	default:
 		OSMO_ASSERT(0);
 	}
 }
 
-/* send given message to given peer */
+/* send given new message to given peer */
 int peer_new_cbc_message(struct cbc_peer *peer, struct cbc_message *cbcmsg)
 {
 	struct osmo_cbsp_decoded *cbsp;
@@ -123,29 +124,43 @@ int peer_new_cbc_message(struct cbc_peer *peer, struct cbc_message *cbcmsg)
 		OSMO_ASSERT(0);
 	}
 
-	/* record that we've sent the message to the peer */
-	//cbc_message_add_peer(cbcmsg, peer);
+	return 0;
+}
+
+/* receive a new CBC message from the user (REST). Allocates new memory,
+ * a FSM, copies data from 'orig', routes to all peers and starts FSMs */
+int cbc_message_new(const struct cbc_message *orig)
+{
+	struct cbc_message *cbcmsg = cbc_message_alloc(g_cbc, orig);
+	struct cbc_peer *peer;
+
+	OSMO_ASSERT(llist_empty(&cbcmsg->peers));
+
+	/* iterate over all peers */
+	llist_for_each_entry(peer, &g_cbc->peers, list) {
+		struct cbc_message_peer *mp;
+
+		if (!is_peer_in_scope(peer, cbcmsg))
+			continue;
+
+		/* allocate new cbc_mesage_peer + related FSM */
+		mp = smscb_peer_fsm_alloc(peer, cbcmsg);
+		if (!mp) {
+			LOGP(DCBSP, LOGL_ERROR, "Cannot allocate cbc_message_peer\n");
+			continue;
+		}
+	}
+
+	/* kick off the state machine[s] */
+	osmo_fsm_inst_dispatch(cbcmsg->fi, SMSCB_E_CREATE, NULL);
 
 	return 0;
 }
 
-/* receive a new CBC message */
-int cbc_message_new(struct cbc_message *cbcmsg)
+void cbc_message_delete(struct cbc_message *cbcmsg)
 {
-	struct cbc_peer *peer;
-
-	/* FIXME: check for duplicate message_id / serial_nr */
-
-	/* add to global list of messages */
-	llist_add_tail(&cbcmsg->list, &g_cbc->messages);
-
-	/* iterate over all peers */
-	llist_for_each_entry(peer, &g_cbc->peers, list) {
-		if (!is_peer_in_scope(peer, cbcmsg))
-			continue;
-		peer_new_cbc_message(peer, cbcmsg);
-	}
-	return 0;
+	osmo_fsm_inst_dispatch(cbcmsg->fi, SMSCB_E_DELETE, NULL);
+	/* TODO: how to handle completion */
 }
 
 struct cbc_message *cbc_message_by_id(uint16_t message_id)
