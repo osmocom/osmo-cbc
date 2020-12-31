@@ -1,6 +1,6 @@
 /* Osmocom CBC (Cell Broacast Centre) */
 
-/* (C) 2019 by Harald Welte <laforge@gnumonks.org>
+/* (C) 2019-2020 by Harald Welte <laforge@gnumonks.org>
  * All Rights Reserved
  *
  * SPDX-License-Identifier: AGPL-3.0+
@@ -84,7 +84,7 @@ static const char *json_get_string(json_t *parent, const char *key)
 	return json_string_value(jtmp);
 }
 
-/* geographc scope (part of message_id) as per 3GPP TS 23.041 Section 9.4.1.2 "GS Code" */
+/* geographic scope (part of message_id) as per 3GPP TS 23.041 Section 9.4.1.2 "GS Code" */
 static const struct value_string geo_scope_vals[] = {
 	{ 0, "cell_wide_immediate" },
 	{ 1, "plmn_wide" },
@@ -131,38 +131,48 @@ static const struct value_string ts23041_warning_type_vals[] = {
 };
 
 /* parse a smscb.schema.json/warning_type (either encoded or decoded) */
-static int parse_warning_type(uint16_t *out, json_t *in)
+static int parse_warning_type(uint16_t *out, json_t *in, const char **errstr)
 {
 	json_t *jtmp;
 	int i, rc;
 
-	if (!in || !json_is_object(in))
+	if (!in || !json_is_object(in)) {
+		*errstr = "'warning_type' must be object";
 		return -EINVAL;
+	}
 	rc = json_get_integer_range(&i, in, "warning_type_encoded", 0, 255);
 	if (rc == 0) {
 		*out = i;
 	} else if (rc == -ENOENT && (jtmp = json_object_get(in, "warning_type_decoded"))) {
 		const char *tstr = json_string_value(jtmp);
-		if (!tstr)
+		if (!tstr) {
+			*errstr = "'warning_type_decoded' is not a string";
 			return -EINVAL;
+		}
 		i = get_string_value(ts23041_warning_type_vals, tstr);
-		if (i < 0)
+		if (i < 0) {
+			*errstr = "'warning_type_decoded' is invalid";
 			return -EINVAL;
+		}
 		*out = i;
-	} else
+	} else {
+		*errstr = "either 'warning_type_encoded' or 'warning_type_decoded' must be present";
 		return -EINVAL;
+	}
 
 	return 0;
 }
 
 /* parse a smscb.schema.json/serial_nr type (either encoded or decoded) */
-static int json2serial_nr(uint16_t *out, json_t *jser_nr)
+static int json2serial_nr(uint16_t *out, json_t *jser_nr, const char **errstr)
 {
 	json_t *jtmp;
 	int tmp, rc;
 
-	if (!jser_nr || !json_is_object(jser_nr))
+	if (!jser_nr || !json_is_object(jser_nr)) {
+		*errstr = "'serial_nr' must be present and an object";
 		return -EINVAL;
+	}
 	rc = json_get_integer_range(&tmp, jser_nr, "serial_nr_encoded", 0, UINT16_MAX);
 	if (rc == 0) {
 		*out = tmp;
@@ -170,27 +180,37 @@ static int json2serial_nr(uint16_t *out, json_t *jser_nr)
 		const char *geo_scope_str;
 		int msg_code, upd_nr, geo_scope;
 		geo_scope_str = json_get_string(jtmp, "geo_scope");
-		if (!geo_scope_str)
+		if (!geo_scope_str) {
+			*errstr = "'geo_scope' is mandatory";
 			return -EINVAL;
+		}
 		geo_scope = get_string_value(geo_scope_vals, geo_scope_str);
-		if (geo_scope < 0)
+		if (geo_scope < 0) {
+			*errstr = "'geo_scope' is invalid";
 			return -EINVAL;
+		}
 		rc = json_get_integer_range(&msg_code, jtmp, "msg_code", 0, 1024);
-		if (rc < 0)
+		if (rc < 0) {
+			*errstr = "'msg_code' is out of range";
 			return rc;
+		}
 		rc = json_get_integer_range(&upd_nr, jtmp, "update_nr", 0, 15);
-		if (rc < 0)
+		if (rc < 0) {
+			*errstr = "'update_nr' is out of range";
 			return rc;
+		}
 		*out = ((geo_scope & 3) << 14) | ((msg_code & 0x3ff) << 4) | (upd_nr & 0xf);
 		return 0;
-	} else
+	} else {
+		*errstr = "Either 'serial_nr_encoded' or 'serial_nr_decoded' are mandatory";
 		return -EINVAL;
+	}
 
 	return 0;
 }
 
 /* parse a smscb.schema.json/payload_decoded type */
-static int parse_payload_decoded(struct smscb_message *out, json_t *jtmp)
+static int parse_payload_decoded(struct smscb_message *out, json_t *jtmp, const char **errstr)
 {
 	const char *cset_str, *lang_str, *data_utf8_str;
 	int rc, dcs_class = 0;
@@ -198,23 +218,30 @@ static int parse_payload_decoded(struct smscb_message *out, json_t *jtmp)
 	/* character set */
 	cset_str = json_get_string(jtmp, "character_set");
 	if (!cset_str) {
+		*errstr = "Currently 'character_set' is mandatory";
 		/* TODO: dynamically decide? */
 		return -EINVAL;
 	}
 
 	/* language */
 	lang_str = json_get_string(jtmp, "language");
-	if (lang_str && strlen(lang_str) > 2)
+	if (lang_str && strlen(lang_str) > 2) {
+		*errstr = "Only two-digit 'language' code is supported";
 		return -EINVAL;
+	}
 
 	/* DCS class: if not present, default (0) above will prevail */
 	rc = json_get_integer_range(&dcs_class, jtmp, "dcs_class", 0, 3);
-	if (rc < 0 && rc != -EINVAL)
+	if (rc < 0 && rc != -ENOENT) {
+		*errstr = "'dcs_class' out of range";
 		return rc;
+	}
 
 	data_utf8_str = json_get_string(jtmp, "data_utf8");
-	if (!data_utf8_str)
+	if (!data_utf8_str) {
+		*errstr = "'data_utf8' is mandatory";
 		return -EINVAL;
+	}
 
 	/* encode according to character set */
 	if (!strcmp(cset_str, "gsm")) {
@@ -251,19 +278,23 @@ static int parse_payload_decoded(struct smscb_message *out, json_t *jtmp)
 		/* convert from UTF-8 input to UCS2 output */
 		rc = charset_utf8_to_ucs2((char *) out->cbs.data, sizeof(out->cbs.data),
 					  data_utf8_str, strlen(data_utf8_str));
-	} else
+	} else {
+		*errstr = "Invalid 'character_set'";
 		return -EINVAL;
+	}
 	return 0;
 }
 
 /* parse a smscb.schema.json/payload type */
-static int json2payload(struct smscb_message *out, json_t *in)
+static int json2payload(struct smscb_message *out, json_t *in, const char **errstr)
 {
 	json_t *jtmp;
 	int rc;
 
-	if (!in || !json_is_object(in))
+	if (!in || !json_is_object(in)) {
+		*errstr = "'payload' must be JSON object";
 		return -EINVAL;
+	}
 
 	if ((jtmp = json_object_get(in, "payload_encoded"))) {
 		json_t *jpage_arr, *jpage;
@@ -272,78 +303,102 @@ static int json2payload(struct smscb_message *out, json_t *in)
 		out->is_etws = false;
 		/* Data Coding Scheme */
 		rc = json_get_integer_range(&dcs, jtmp, "dcs", 0, 255);
-		if (rc < 0)
+		if (rc < 0) {
+			*errstr = "'dcs' out of range";
 			return rc;
+		}
 		out->cbs.dcs = dcs;
 
 		/* Array of Pages as hex-strings */
 		jpage_arr = json_object_get(jtmp, "pages");
-		if (!jpage_arr || !json_is_array(jpage_arr))
+		if (!jpage_arr || !json_is_array(jpage_arr)) {
+			*errstr = "'pages' absent or not an array";
 			return -EINVAL;
+		}
 		num_pages = json_array_size(jpage_arr);
-		if (num_pages < 1 || num_pages > 15)
+		if (num_pages < 1 || num_pages > 15) {
+			*errstr = "'pages' array size out of range";
 			return -EINVAL;
+		}
 		out->cbs.num_pages = num_pages;
 		json_array_foreach(jpage_arr, i, jpage) {
 			const char *hexstr;
-			if (!json_is_string(jpage))
+			if (!json_is_string(jpage)) {
+				*errstr = "'pages' array must contain strings";
 				return -EINVAL;
+			}
 			hexstr = json_string_value(jpage);
-			if (strlen(hexstr) > 88 * 2)
+			if (strlen(hexstr) > 88 * 2) {
+				*errstr = "'pages' array must contain strings up to 88 hex nibbles";
 				return -EINVAL;
-			if (osmo_hexparse(hexstr, out->cbs.data[i], sizeof(out->cbs.data[i])) < 0)
+			}
+			if (osmo_hexparse(hexstr, out->cbs.data[i], sizeof(out->cbs.data[i])) < 0) {
+				*errstr = "'pages' array must contain hex strings";
 				return -EINVAL;
+			}
 		}
 		return 0;
 	} else if ((jtmp = json_object_get(in, "payload_decoded"))) {
 		out->is_etws = false;
-		return parse_payload_decoded(out, jtmp);
+		return parse_payload_decoded(out, jtmp, errstr);
 	} else if ((jtmp = json_object_get(in, "payload_etws"))) {
 		json_t *jwtype;
 		const char *wsecinfo_str;
 		out->is_etws = true;
 		/* Warning Type */
 		jwtype = json_object_get(jtmp, "warning_type");
-		if (!jwtype)
+		if (!jwtype) {
+			*errstr = "'warning_type' must be object";
 			return -EINVAL;
-		if (parse_warning_type(&out->etws.warning_type, jwtype) < 0)
+		}
+		if (parse_warning_type(&out->etws.warning_type, jwtype, errstr) < 0)
 			return -EINVAL;
 		/* Warning Security Info */
 		wsecinfo_str = json_get_string(jtmp, "warning_sec_info");
 		if (wsecinfo_str) {
 			if (osmo_hexparse(wsecinfo_str, out->etws.warning_sec_info,
-					  sizeof(out->etws.warning_sec_info)) < 0)
+					  sizeof(out->etws.warning_sec_info)) < 0) {
+				*errstr = "'warnin_sec_info' must be hex string";
 				return -EINVAL;
+			}
 		}
 		return 0;
-	} else
+	} else {
+		*errstr = "'payload_type_encoded', 'payload_type_decoded' or 'payload_etws' must be present";
 		return -EINVAL;
-
+	}
 }
 
 /* decode a "smscb.schema.json#definitions/smscb_message" */
-static int json2smscb_message(struct smscb_message *out, json_t *in)
+static int json2smscb_message(struct smscb_message *out, json_t *in, const char **errstr)
 {
 	json_t *jser_nr, *jtmp;
 	int msg_id, rc;
 
-	if (!json_is_object(in))
+	if (!json_is_object(in)) {
+		*errstr = "not a JSON object";
 		return -EINVAL;
+	}
 
 	jser_nr = json_object_get(in, "serial_nr");
-	if (!jser_nr)
+	if (!jser_nr) {
+		*errstr = "serial_nr is mandatory";
 		return -EINVAL;
-	if (json2serial_nr(&out->serial_nr, jser_nr) < 0)
+	}
+	if (json2serial_nr(&out->serial_nr, jser_nr, errstr) < 0)
 		return -EINVAL;
 
 	rc = json_get_integer_range(&msg_id, in, "message_id", 0, UINT16_MAX);
-	if (rc < 0)
+	if (rc < 0) {
+		*errstr = "message_id out of range";
 		return -EINVAL;
+	}
 	out->message_id = msg_id;
 
 	jtmp = json_object_get(in, "payload");
-	if (json2payload(out, jtmp) < 0)
+	if (json2payload(out, jtmp, errstr) < 0)
 		return -EINVAL;
+
 	return 0;
 }
 
@@ -355,20 +410,24 @@ static const struct value_string category_str_vals[] = {
 };
 
 /* decode a "cbc.schema.json#definitions/cbc_message" */
-static int json2cbc_message(struct cbc_message *out, json_t *in)
+static int json2cbc_message(struct cbc_message *out, void *ctx, json_t *in, const char **errstr)
 {
 	const char *category_str, *cbe_str;
 	json_t *jtmp;
 	int rc, tmp;
 
-	if (!json_is_object(in))
+	if (!json_is_object(in)) {
+		*errstr = "CBCMSG must be JSON object";
 		return -EINVAL;
+	}
 
 	/* CBE name (M) */
 	cbe_str = json_get_string(in, "cbe_name");
-	if (!cbe_str)
+	if (!cbe_str) {
+		*errstr = "CBCMSG 'cbe_name' is mandatory";
 		return -EINVAL;
-	out->cbe_name = talloc_strdup(out, cbe_str);
+	}
+	out->cbe_name = talloc_strdup(ctx, cbe_str);
 
 	/* Category (O) */
 	category_str = json_get_string(in, "category");
@@ -376,8 +435,10 @@ static int json2cbc_message(struct cbc_message *out, json_t *in)
 		out->priority = CBSP_CATEG_NORMAL;
 	else {
 		rc = get_string_value(category_str_vals, category_str);
-		if (rc < 0)
+		if (rc < 0) {
+			*errstr = "CBCMSG 'category' unknown";
 			return -EINVAL;
+		}
 		out->priority = rc;
 	}
 
@@ -392,8 +453,10 @@ static int json2cbc_message(struct cbc_message *out, json_t *in)
 		out->num_bcast = tmp;
 	else if (rc == -ENOENT)
 		out->num_bcast = 0; /* unlimited */
-	else
+	else {
+		*errstr = "CBCMSG 'number_of_broadcasts' out of range";
 		return rc;
+	}
 
 	/* Warning Period in seconds (O) */
 	rc = json_get_integer_range(&tmp, in, "warning_period_sec", 0, 65535);
@@ -401,23 +464,32 @@ static int json2cbc_message(struct cbc_message *out, json_t *in)
 		out->warning_period_sec = tmp;
 	else if (rc == -ENOENT)
 		out->warning_period_sec = 0xffffffff; /* infinite */
-	else
+	else {
+		*errstr = "CBCMSG 'warning_period_sec' out of range";
 		return rc;
+	}
 
 	/* [Geographic] Scope (M) */
 	jtmp = json_object_get(in, "scope");
-	if (!jtmp)
+	if (!jtmp) {
+		*errstr = "CBCMSG 'scope' is mandatory";
 		return -EINVAL;
+	}
+
 	if ((jtmp = json_object_get(jtmp, "scope_plmn"))) {
 		out->scope = CBC_MSG_SCOPE_PLMN;
-	} else
+	} else {
+		*errstr = "CBCMSG only 'scope_plmn' supported";
 		return -EINVAL;
+	}
 
 	/* SMSCB message itself */
 	jtmp = json_object_get(in, "smscb_message");
-	if (!jtmp)
+	if (!jtmp) {
+		*errstr = "CBCMSG 'smscb_message' is mandatory";
 		return -EINVAL;
-	rc = json2smscb_message(&out->msg, jtmp);
+	}
+	rc = json2smscb_message(&out->msg, jtmp, errstr);
 	if (rc < 0)
 		return rc;
 
@@ -426,37 +498,53 @@ static int json2cbc_message(struct cbc_message *out, json_t *in)
 
 static int api_cb_message_post(const struct _u_request *req, struct _u_response *resp, void *user_data)
 {
-
 	struct rest_it_op *riop = talloc_zero(g_cbc, struct rest_it_op);
+	const char *errstr = "Unknown";
 	json_error_t json_err;
 	json_t *json_req = NULL;
+	char *jsonstr;
 	int rc;
 
-	if (!riop)
+	if (!riop) {
+		LOGP(DREST, LOGL_ERROR, "Out of memory\n");
 		return -ENOMEM;
+	}
+
 	riop->operation = REST_IT_OP_MSG_CREATE;
 
 	json_req = ulfius_get_json_body_request(req, &json_err);
 	if (!json_req) {
-		LOGP(DREST, LOGL_ERROR, "REST: No JSON Body\n");
+		errstr = "REST: No JSON Body";
 		goto err;
 	}
 
-	rc = json2cbc_message(&riop->u.create.cbc_msg, json_req);
+	char *jsontxt = json_dumps(json_req, 0);
+	LOGP(DREST, LOGL_DEBUG, "/message POST: %s\n", jsontxt);
+	free(jsontxt);
+
+	rc = json2cbc_message(&riop->u.create.cbc_msg, riop, json_req, &errstr);
 	if (rc < 0)
 		goto err;
 
+	LOGP(DREST, LOGL_DEBUG, "sending as inter-thread op\n");
 	/* request message to be added by main thread */
 	rc = rest_it_op_send_and_wait(riop, 10);
-	if (rc < 0)
+	if (rc < 0) {
+		errstr = "Error in it_queue";
 		goto err;
+	}
 
 	json_decref(json_req);
+	LOGP(DREST, LOGL_DEBUG, "/message POST -> 200\n");
 	ulfius_set_empty_body_response(resp, 200);
 	return U_CALLBACK_COMPLETE;
 err:
+	jsonstr = json_dumps(json_req, 0);
+	LOGP(DREST, LOGL_ERROR, "ERROR: %s (%s)", errstr, jsonstr);
+	free(jsonstr);
 	json_decref(json_req);
 	talloc_free(riop);
+	LOGP(DREST, LOGL_DEBUG, "/message POST -> 400\n");
 	ulfius_set_empty_body_response(resp, 400);
 	return U_CALLBACK_COMPLETE;
 }
@@ -542,7 +630,7 @@ int rest_api_init(void *ctx, uint16_t port)
 	int i;
 
 	g_tall_rest = ctx;
-	o_set_alloc_funcs(my_o_malloc, my_o_realloc, my_o_free);
+	//o_set_alloc_funcs(my_o_malloc, my_o_realloc, my_o_free);
 
 	if (ulfius_init_instance(&g_instance, port, NULL, NULL) != U_OK)
 		return -1;

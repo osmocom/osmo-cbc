@@ -51,6 +51,8 @@ int rest_it_op_send_and_wait(struct rest_it_op *op, unsigned int wait_sec)
 	struct timespec ts;
 	int rc = 0;
 
+	LOGP(DREST, LOGL_DEBUG, "rest_it_op enqueue\n");
+
 	rc = osmo_it_q_enqueue(g_cbc->it_q.rest2main, op, list);
 	if (rc < 0)
 		return rc;
@@ -60,11 +62,15 @@ int rest_it_op_send_and_wait(struct rest_it_op *op, unsigned int wait_sec)
 	clock_gettime(CLOCK_REALTIME, &ts);
 	ts.tv_sec += wait_sec;
 
+	LOGP(DREST, LOGL_DEBUG, "rest_it_op wait....\n");
+
 	while (rc == 0)
 		rc = pthread_cond_timedwait(&op->cond, &op->mutex, &ts);
 
 	if (rc == 0)
 		pthread_mutex_unlock(&op->mutex);
+
+	LOGP(DREST, LOGL_DEBUG, "rest_it_op completed\n");
 
 	/* 'op' is implicitly owned by the caller again now, who needs to take care
 	 * of releasing its memory */

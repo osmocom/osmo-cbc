@@ -59,6 +59,13 @@ static const struct log_info_cat log_info_cat[] = {
 		.enabled = 1,
 		.loglevel = LOGL_NOTICE,
 	},
+	[DREST] = {
+		.name = "DREST",
+		.description = "REST interface",
+		.color = "\033[1;32m",
+		.enabled = 1,
+		.loglevel = LOGL_NOTICE,
+	},
 };
 
 static const struct log_info log_info = {
