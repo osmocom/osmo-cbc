@@ -97,9 +97,10 @@ static int cbsp_cbc_closed_cb(struct osmo_stream_srv *conn)
 {
 	struct osmo_cbsp_cbc_client *client = osmo_stream_srv_get_data(conn);
 	LOGPCC(client, LOGL_INFO, "connection closed\n");
-	llist_del(&client->list);
-	osmo_fsm_inst_term(client->fi, OSMO_FSM_TERM_REQUEST, NULL);
-	talloc_free(client);
+
+	client->conn = NULL;
+	osmo_fsm_inst_dispatch(client->fi, CBSP_SRV_E_CMD_CLOSE, NULL);
+
 	return 0;
 }
 
@@ -173,6 +174,8 @@ void cbsp_cbc_client_tx(struct osmo_cbsp_cbc_client *client, struct osmo_cbsp_de
 
 void cbsp_cbc_client_close(struct osmo_cbsp_cbc_client *client)
 {
+	if (client->fi)
+		osmo_fsm_inst_dispatch(client->fi, CBSP_SRV_E_CMD_CLOSE, NULL);
 	osmo_stream_srv_destroy(client->conn);
 	/* FIXME: do we need to unlink/free the client? */
 }

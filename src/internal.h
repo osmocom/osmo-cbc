@@ -20,6 +20,7 @@ enum cbsp_server_event {
 	CBSP_SRV_E_RX_KA_COMPL,
 	CBSP_SRV_E_RX_RESTART,
 	CBSP_SRV_E_CMD_RESET,
+	CBSP_SRV_E_CMD_CLOSE,
 };
 
 

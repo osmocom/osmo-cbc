@@ -53,6 +53,7 @@ static const struct value_string cbsp_server_event_names[] = {
 	{ CBSP_SRV_E_RX_KA_COMPL, "Rx Keep-Alive Complete" },
 	{ CBSP_SRV_E_RX_RESTART, "Rx Restart" },
 	{ CBSP_SRV_E_CMD_RESET, "RESET.cmd" },
+	{ CBSP_SRV_E_CMD_CLOSE, "CLOSE.cmd" },
 	{ 0, NULL }
 };
 
@@ -154,6 +155,30 @@ static int cbsp_server_fsm_timer_cb(struct osmo_fsm_inst *fi)
 	}
 }
 
+static void cbsp_server_fsm_allstate(struct osmo_fsm_inst *fi, uint32_t event, void *data)
+{
+	switch (event) {
+	case CBSP_SRV_E_CMD_CLOSE:
+		osmo_fsm_inst_term(fi, OSMO_FSM_TERM_REQUEST, NULL);
+		break;
+	}
+}
+
+static void cbsp_server_fsm_cleanup(struct osmo_fsm_inst *fi, enum osmo_fsm_term_cause cause)
+{
+	struct osmo_cbsp_cbc_client *client = (struct osmo_cbsp_cbc_client *) fi->priv;
+
+	if (client->conn)
+		osmo_stream_srv_destroy(client->conn);
+	llist_del(&client->list);
+	client->fi = NULL;
+
+	/* reparent the fsm_inst to the cbc as we're about to free() it's talloc
+	 * parent 'client' */
+	talloc_steal(g_cbc, fi);
+	talloc_free(client);
+}
+
 static const struct osmo_fsm_state cbsp_server_fsm_states[] = {
 	[CBSP_SRV_S_INIT] = {
 		.name = "INIT",
@@ -190,9 +215,12 @@ struct osmo_fsm cbsp_server_fsm = {
 	.name = "CBSP-SERVER",
 	.states = cbsp_server_fsm_states,
 	.num_states = ARRAY_SIZE(cbsp_server_fsm_states),
+	.allstate_event_mask = S(CBSP_SRV_E_CMD_CLOSE),
+	.allstate_action = cbsp_server_fsm_allstate,
 	.timer_cb = cbsp_server_fsm_timer_cb,
 	.log_subsys = DCBSP,
 	.event_names = cbsp_server_event_names,
+	.cleanup = cbsp_server_fsm_cleanup,
 };
 
 static int get_msg_id(const struct osmo_cbsp_decoded *dec)
