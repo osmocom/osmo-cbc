@@ -25,18 +25,20 @@
 
 #include "charset.h"
 
+/* return number of output bytes written */
 int charset_utf8_to_gsm7(char *out, size_t out_len, const char *in, size_t in_len)
 {
 	/* FIXME: implement this */
 	osmo_strlcpy(out, in, out_len);
-	return 0;
+	return in_len;
 }
 
+/* return number of output bytes written */
 int charset_gsm7_to_utf8(char *out, size_t out_len, const char *in, size_t in_len)
 {
 	/* FIXME: implement this */
 	osmo_strlcpy(out, in, out_len);
-	return 0;
+	return in_len;
 }
 
 

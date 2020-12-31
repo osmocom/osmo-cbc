@@ -32,6 +32,7 @@ void rest_api_fin(void);
 void cbc_vty_init(void);
 
 /* message_handling.c */
+struct cbc_message *cbc_message_alloc(void *ctx, const struct cbc_message *cbcmsg);
 int cbc_message_new(const struct cbc_message *cbcmsg);
 void cbc_message_delete(struct cbc_message *cbcmsg);
 struct cbc_message *cbc_message_by_id(uint16_t message_id);

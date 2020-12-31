@@ -110,6 +110,8 @@ enum cbc_message_scope {
 struct cbc_message_peer {
 	struct llist_head list;		/* lined to cbc_message.peers */
 
+	/* 'cbcmsg' is not really needed, as the fsm instance parent points to
+	 * the fsm instance of cbc_message, so we could also dereference those */
 	struct cbc_message *cbcmsg;	/* the SMSCB this relates to */
 	struct cbc_peer *peer;		/* the peer thos relates to */
 	struct osmo_fsm_inst *fi;	/* the FSM instance representing our state */

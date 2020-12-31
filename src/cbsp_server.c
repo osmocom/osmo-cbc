@@ -149,6 +149,12 @@ static int cbsp_cbc_accept_cb(struct osmo_stream_srv_link *link, int fd)
 			/* FIXME: further cleanup needed? or does close_cb handle everything? */
 			return -1;
 		}
+	} else {
+		if (client->peer->client.cbsp) {
+			LOGPCC(client, LOGL_ERROR, "We already have a connection for peer %s\n");
+			/* FIXME */
+		}
+		client->peer->client.cbsp = client;
 	}
 
 	LOGPCC(client, LOGL_INFO, "New CBSP client connection\n");
@@ -163,8 +169,8 @@ void cbsp_cbc_client_tx(struct osmo_cbsp_cbc_client *client, struct osmo_cbsp_de
 	LOGPCC(client, LOGL_INFO, "Transmitting %s\n",
 		get_value_string(cbsp_msg_type_names, cbsp->msg_type));
 	if (!msg) {
-		LOGPCC(client, LOGL_ERROR, "Failed to encode CBSP %s\n",
-			get_value_string(cbsp_msg_type_names, cbsp->msg_type));
+		LOGPCC(client, LOGL_ERROR, "Failed to encode CBSP %s: %s\n",
+			get_value_string(cbsp_msg_type_names, cbsp->msg_type), osmo_cbsp_errstr);
 		talloc_free(cbsp);
 		return;
 	}

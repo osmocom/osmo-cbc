@@ -537,6 +537,10 @@ struct cbc_message_peer *smscb_peer_fsm_alloc(struct cbc_peer *peer, struct cbc_
 		return NULL;
 	}
 	mp->peer = peer;
+	mp->cbcmsg = cbcmsg;
+	INIT_LLIST_HEAD(&mp->cell_list);
+	INIT_LLIST_HEAD(&mp->fail_list);
+	INIT_LLIST_HEAD(&mp->num_compl_list);
 
 	/* link message_peer with its FSM instance */
 	fi->priv = mp;

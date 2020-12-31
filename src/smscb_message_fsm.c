@@ -344,17 +344,23 @@ struct cbc_message *cbc_message_alloc(void *ctx, const struct cbc_message *orig_
 
 	snprintf(idbuf, sizeof(idbuf), "%s-%u", orig_msg->cbe_name, orig_msg->msg.message_id);
 	fi = osmo_fsm_inst_alloc(&smscb_fsm, ctx, NULL, LOGL_INFO, idbuf);
-	if (!fi)
+	if (!fi) {
+		LOGP(DCBSP, LOGL_ERROR, "Cannot allocate cbc_message fsm\n");
 		return NULL;
+	}
 
-	/* copy data from original message */
-	smscb = talloc_zero(fi, struct cbc_message);
+	smscb = talloc(fi, struct cbc_message);
 	if (!smscb) {
+		LOGP(DCBSP, LOGL_ERROR, "Cannot allocate cbc_message\n");
 		osmo_fsm_inst_term(fi, OSMO_FSM_TERM_ERROR, NULL);
 		return NULL;
 	}
+	/* copy data from original message */
 	memcpy(smscb, orig_msg, sizeof(*smscb));
+	/* initialize other members */
 	INIT_LLIST_HEAD(&smscb->peers);
+	smscb->fi = fi;
+	smscb->it_op = NULL;
 
 	fi->priv = smscb;
 
@@ -362,4 +368,9 @@ struct cbc_message *cbc_message_alloc(void *ctx, const struct cbc_message *orig_
 	llist_add_tail(&smscb->list, &g_cbc->messages);
 
 	return smscb;
+}
+
+__attribute__((constructor)) smscb_fsm_constructor(void)
+{
+	OSMO_ASSERT(osmo_fsm_register(&smscb_fsm) == 0);
 }

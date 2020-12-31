@@ -209,6 +209,15 @@ static int json2serial_nr(uint16_t *out, json_t *jser_nr, const char **errstr)
 	return 0;
 }
 
+/* compute the number of pages needed for number of octets */
+static unsigned int pages_from_octets(int n_octets)
+{
+	unsigned int n_pages = n_octets / SMSCB_RAW_PAGE_LEN;
+	if (n_octets % SMSCB_RAW_PAGE_LEN)
+		n_pages++;
+	return n_pages;
+}
+
 /* parse a smscb.schema.json/payload_decoded type */
 static int parse_payload_decoded(struct smscb_message *out, json_t *jtmp, const char **errstr)
 {
@@ -266,11 +275,15 @@ static int parse_payload_decoded(struct smscb_message *out, json_t *jtmp, const 
 		/* convert from UTF-8 input to GSM 7bit output */
 		rc = charset_utf8_to_gsm7((char *)out->cbs.data, sizeof(out->cbs.data),
 					  data_utf8_str, strlen(data_utf8_str));
+		if (rc > 0)
+			out->cbs.num_pages = pages_from_octets(rc);
 	} else if (!strcmp(cset_str, "8bit")) {
 		/* Determine DCS based on UDH + message class */
 		out->cbs.dcs = 0xF4 | (dcs_class & 3);
 		/* copy 8bit data over (hex -> binary conversion) */
 		rc = osmo_hexparse(data_utf8_str, (uint8_t *)out->cbs.data, sizeof(out->cbs.data));
+		if (rc > 0)
+			out->cbs.num_pages = pages_from_octets(rc);
 	} else if (!strcmp(cset_str, "ucs2")) {
 		if (lang_str) {
 			/* TODO: we must encode it in the first two octets */
@@ -278,6 +291,8 @@ static int parse_payload_decoded(struct smscb_message *out, json_t *jtmp, const 
 		/* convert from UTF-8 input to UCS2 output */
 		rc = charset_utf8_to_ucs2((char *) out->cbs.data, sizeof(out->cbs.data),
 					  data_utf8_str, strlen(data_utf8_str));
+		if (rc > 0)
+			out->cbs.num_pages = pages_from_octets(rc);
 	} else {
 		*errstr = "Invalid 'character_set'";
 		return -EINVAL;
@@ -445,16 +460,17 @@ static int json2cbc_message(struct cbc_message *out, void *ctx, json_t *in, cons
 	/* Repetition Period (O) */
 	jtmp = json_object_get(in, "repetition_period");
 	if (jtmp) {
+		/* FIXME */
 	}
 
 	/* Number of Broadcasts (O) */
-	rc = json_get_integer_range(&tmp, in, "number_of_broadcasts", 0, 65535);
+	rc = json_get_integer_range(&tmp, in, "num_of_bcast", 0, 65535);
 	if (rc == 0)
 		out->num_bcast = tmp;
 	else if (rc == -ENOENT)
 		out->num_bcast = 0; /* unlimited */
 	else {
-		*errstr = "CBCMSG 'number_of_broadcasts' out of range";
+		*errstr = "CBCMSG 'num_of_bcast' out of range";
 		return rc;
 	}
 

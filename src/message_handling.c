@@ -68,7 +68,7 @@ struct osmo_cbsp_decoded *cbcmsg_to_cbsp(void *ctx, const struct cbc_message *cb
 	wrepl->new_serial_nr = smscb->serial_nr;
 	/* FIXME: old? */
 	/* Cell list */
-	rc = cbcmsg_to_cbsp_cell_list(smscb, &wrepl->cell_list, cbcmsg);
+	rc = cbcmsg_to_cbsp_cell_list(cbcmsg, &wrepl->cell_list, cbcmsg);
 	if (rc < 0) {
 		talloc_free(cbsp);
 		return NULL;
@@ -84,6 +84,7 @@ struct osmo_cbsp_decoded *cbcmsg_to_cbsp(void *ctx, const struct cbc_message *cb
 		wrepl->u.cbs.rep_period = cbcmsg->rep_period;
 		wrepl->u.cbs.num_bcast_req = cbcmsg->num_bcast;
 		wrepl->u.cbs.dcs = smscb->cbs.dcs;
+		INIT_LLIST_HEAD(&wrepl->u.cbs.msg_content);
 		for (i = 0; i < smscb->cbs.num_pages; i++) {
 			struct osmo_cbsp_content *ce = talloc_zero(cbsp, struct osmo_cbsp_content);
 			// FIXME: ce->user_len =
@@ -133,6 +134,9 @@ int cbc_message_new(const struct cbc_message *orig)
 {
 	struct cbc_message *cbcmsg = cbc_message_alloc(g_cbc, orig);
 	struct cbc_peer *peer;
+
+	if (!cbcmsg)
+		return -ENOMEM;
 
 	OSMO_ASSERT(llist_empty(&cbcmsg->peers));
 
