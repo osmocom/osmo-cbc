@@ -269,13 +269,15 @@ int cbc_client_rx_cb(struct osmo_cbsp_cbc_client *client, struct osmo_cbsp_decod
 			dec->u.error_ind.msg_id ? *dec->u.error_ind.msg_id : 0xffff);
 		/* TODO: old/new serial number, channel_ind */
 		return 0;
+	case CBSP_MSGT_RESET_COMPL:
+		return osmo_fsm_inst_dispatch(client->fi, CBSP_SRV_E_RX_RST_COMPL, dec);
+	case CBSP_MSGT_RESET_FAIL:
+		return osmo_fsm_inst_dispatch(client->fi, CBSP_SRV_E_RX_RST_FAIL, dec);
 	case CBSP_MSGT_KEEP_ALIVE:
 	case CBSP_MSGT_LOAD_QUERY_COMPL:
 	case CBSP_MSGT_LOAD_QUERY_FAIL:
 	case CBSP_MSGT_SET_DRX_COMPL:
 	case CBSP_MSGT_SET_DRX_FAIL:
-	case CBSP_MSGT_RESET_COMPL:
-	case CBSP_MSGT_RESET_FAIL:
 		LOGPCC(client, LOGL_ERROR, "unimplemented message %s\n",
 			get_value_string(cbsp_msg_type_names, dec->msg_type));
 		return 0;
