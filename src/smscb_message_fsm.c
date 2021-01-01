@@ -221,11 +221,13 @@ static void smscb_fsm_deleted_onenter(struct osmo_fsm_inst *fi, uint32_t old_sta
 
 static struct osmo_fsm_state smscb_fsm_states[] = {
 	[SMSCB_S_INIT] = {
+		.name = "INIT",
 		.in_event_mask = S(SMSCB_E_CREATE),
 		.out_state_mask = S(SMSCB_S_WAIT_WRITE_ACK),
 		.action = smscb_fsm_init,
 	},
 	[SMSCB_S_WAIT_WRITE_ACK] = {
+		.name = "WAIT_WRITE_ACK",
 		.in_event_mask = S(SMSCB_E_CBSP_WRITE_ACK) |
 				 S(SMSCB_E_CBSP_WRITE_NACK),
 		.out_state_mask = S(SMSCB_S_ACTIVE),
@@ -233,6 +235,7 @@ static struct osmo_fsm_state smscb_fsm_states[] = {
 		.onleave = smscb_fsm_wait_write_ack_onleave,
 	},
 	[SMSCB_S_ACTIVE] = {
+		.name = "ACTIVE",
 		.in_event_mask = S(SMSCB_E_REPLACE) |
 				 S(SMSCB_E_STATUS) |
 				 S(SMSCB_E_DELETE),
@@ -243,6 +246,7 @@ static struct osmo_fsm_state smscb_fsm_states[] = {
 		.action = smscb_fsm_active,
 	},
 	[SMSCB_S_WAIT_REPLACE_ACK] = {
+		.name = "WAIT_REPLACE_ACK",
 		.in_event_mask = S(SMSCB_E_CBSP_REPLACE_ACK) |
 				 S(SMSCB_E_CBSP_REPLACE_NACK),
 		.out_state_mask = S(SMSCB_S_ACTIVE),
@@ -250,6 +254,7 @@ static struct osmo_fsm_state smscb_fsm_states[] = {
 		.onleave = smscb_fsm_wait_replace_ack_onleave,
 	},
 	[SMSCB_S_WAIT_STATUS_ACK] = {
+		.name = "WAIT_STATUS_ACK",
 		.in_event_mask = S(SMSCB_E_CBSP_STATUS_ACK) |
 				 S(SMSCB_E_CBSP_STATUS_NACK),
 		.out_state_mask = S(SMSCB_S_ACTIVE),
@@ -257,6 +262,7 @@ static struct osmo_fsm_state smscb_fsm_states[] = {
 		.onleave = smscb_fsm_wait_status_ack_onleave,
 	},
 	[SMSCB_S_WAIT_DELETE_ACK] = {
+		.name = "WAIT_DELETE_ACK",
 		.in_event_mask = S(SMSCB_E_CBSP_DELETE_ACK) |
 				 S(SMSCB_E_CBSP_DELETE_NACK),
 		.out_state_mask = S(SMSCB_S_ACTIVE),
@@ -264,6 +270,7 @@ static struct osmo_fsm_state smscb_fsm_states[] = {
 		.onleave = smscb_fsm_wait_delete_ack_onleave,
 	},
 	[SMSCB_S_DELETED] = {
+		.name = "DELETED",
 		.in_event_mask = 0,
 		.out_state_mask = 0,
 		.onenter = smscb_fsm_deleted_onenter,
