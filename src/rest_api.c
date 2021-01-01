@@ -275,8 +275,10 @@ static int parse_payload_decoded(struct smscb_message *out, json_t *jtmp, const 
 		/* convert from UTF-8 input to GSM 7bit output */
 		rc = charset_utf8_to_gsm7((char *)out->cbs.data, sizeof(out->cbs.data),
 					  data_utf8_str, strlen(data_utf8_str));
-		if (rc > 0)
+		if (rc > 0) {
+			out->cbs.data_user_len = rc;
 			out->cbs.num_pages = pages_from_octets(rc);
+		}
 	} else if (!strcmp(cset_str, "8bit")) {
 		/* Determine DCS based on UDH + message class */
 		out->cbs.dcs = 0xF4 | (dcs_class & 3);

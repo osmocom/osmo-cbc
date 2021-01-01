@@ -87,7 +87,10 @@ struct osmo_cbsp_decoded *cbcmsg_to_cbsp(void *ctx, const struct cbc_message *cb
 		INIT_LLIST_HEAD(&wrepl->u.cbs.msg_content);
 		for (i = 0; i < smscb->cbs.num_pages; i++) {
 			struct osmo_cbsp_content *ce = talloc_zero(cbsp, struct osmo_cbsp_content);
-			// FIXME: ce->user_len =
+			if (i == smscb->cbs.num_pages - 1)
+				ce->user_len = smscb->cbs.data_user_len - (i * SMSCB_RAW_PAGE_LEN);
+			else
+				ce->user_len = SMSCB_RAW_PAGE_LEN;
 			memcpy(ce->data, smscb->cbs.data[i], SMSCB_RAW_PAGE_LEN);
 			llist_add_tail(&ce->list, &wrepl->u.cbs.msg_content);
 		}

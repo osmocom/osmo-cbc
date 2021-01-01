@@ -92,6 +92,8 @@ struct smscb_message {
 			/* FIXME: do we need information on the total length to
 			 * determine which is the last block used in [at least the last]
 			 * page? */
+			/* total number of octets user data over _all_ the pages */
+			uint16_t data_user_len;
 		} cbs;
 		struct {
 			/* WarningType 16bit parameter as per 23.041 9.3.24 */
