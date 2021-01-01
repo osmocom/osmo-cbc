@@ -66,7 +66,7 @@ static void smscb_fsm_wait_write_ack(struct osmo_fsm_inst *fi, uint32_t event, v
 		mp = data;
 		/* check if any per-peer children have not yet received the ACK or
 		 * timed out */
-		llist_for_each_entry(peer_fi, &fi->proc.children, list) {
+		llist_for_each_entry(peer_fi, &fi->proc.children, proc.child) {
 			if (peer_fi->state == SMSCB_S_WAIT_WRITE_ACK)
 				break;
 		}
