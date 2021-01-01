@@ -60,7 +60,7 @@ static void dump_one_cbc_msg(struct vty *vty, const struct cbc_message *cbc_msg)
 
 	OSMO_ASSERT(!smscb->is_etws);
 
-	vty_out(vty, " %04X| %04X|%-20s|%-13s| %-4u|%c|%02x|%s",
+	vty_out(vty, "| %04X| %04X|%-20s|%-13s|  %-4u|%c|%02x|%s",
 		smscb->message_id, smscb->serial_nr, cbc_msg->cbe_name,
 		get_value_string(cbsp_category_names, cbc_msg->priority), cbc_msg->rep_period,
 		cbc_msg->extended_cbch ? 'E' : 'N', smscb->cbs.dcs,
@@ -74,9 +74,9 @@ DEFUN(show_messages_cbs, show_messages_cbs_cmd,
 	struct cbc_message *cbc_msg;
 
 	vty_out(vty,
-"|MsgId|SerNo|      CBE Name       |  Category   |Period|E|DCS|%s", VTY_NEWLINE);
+"|MsgId|SerNo|      CBE Name      |  Category   |Period|E|DCS|%s", VTY_NEWLINE);
 	vty_out(vty,
-"|-----|-----|---------------------|-------------|------|-|---|%s", VTY_NEWLINE);
+"|-----|-----|--------------------|-------------|------|-|---|%s", VTY_NEWLINE);
 
 	llist_for_each_entry(cbc_msg, &g_cbc->messages, list) {
 		if (cbc_msg->msg.is_etws)
