@@ -21,6 +21,7 @@
  */
 
 #include <iconv.h>
+#include <osmocom/gsm/gsm_utils.h>
 #include <osmocom/core/utils.h>
 
 #include "charset.h"
@@ -28,17 +29,17 @@
 /* return number of output bytes written */
 int charset_utf8_to_gsm7(char *out, size_t out_len, const char *in, size_t in_len)
 {
-	/* FIXME: implement this */
-	osmo_strlcpy(out, in, out_len);
-	return in_len;
+	int octets;
+	/* FIXME: implement this for 'escape' characters outside 7bit alphabet */
+	gsm_7bit_encode_n_ussd(out, out_len, in, &octets);
+	return octets;
 }
 
 /* return number of output bytes written */
 int charset_gsm7_to_utf8(char *out, size_t out_len, const char *in, size_t in_len)
 {
-	/* FIXME: implement this */
-	osmo_strlcpy(out, in, out_len);
-	return in_len;
+	/* FIXME: implement this for 'escape' characters outside 7bit alphabet */
+	return gsm_7bit_decode_n_ussd(out, out_len, in, in_len);
 }
 
 
