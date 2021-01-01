@@ -132,7 +132,7 @@ struct cbc_message {
 
 	const char *cbe_name;		/* name of the CBE originating this SMSCB */
 	enum cbsp_category priority;
-	uint16_t rep_period;		/* repetition period (1..4095) */
+	uint16_t rep_period;		/* repetition period (1..4095) in units of 1.883s */
 	bool extended_cbch;		/* basic (false) or extended (true) CBCH */
 	uint32_t warning_period_sec;	/* warning period in seconds (0xffffffff = unlimited) */
 	uint16_t num_bcast;		/* number of broadcasts requested (0=unlimited) */

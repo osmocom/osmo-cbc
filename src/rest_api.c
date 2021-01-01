@@ -460,9 +460,15 @@ static int json2cbc_message(struct cbc_message *out, void *ctx, json_t *in, cons
 	}
 
 	/* Repetition Period (O) */
-	jtmp = json_object_get(in, "repetition_period");
-	if (jtmp) {
-		/* FIXME */
+	rc = json_get_integer_range(&tmp, in, "repetition_period", 0, 4095);
+	if (rc == 0)
+		out->rep_period = tmp;
+	else if (rc == -ENOENT){
+		*errstr = "CBCMSG 'repetiton_period' is mandatory";
+		return rc;
+	} else {
+		*errstr = "CBCMSG 'repetiton_period' out of range";
+		return rc;
 	}
 
 	/* Number of Broadcasts (O) */

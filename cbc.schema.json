@@ -38,7 +38,7 @@
 			"properties": {
 				"cbe_name": { "type": "string" },
 				"category": { "$ref": "#/definitions/category" },
-				"rep_period": { "$ref": "#/definitions/repetition_period" },
+				"repetition_period": { "$ref": "#/definitions/repetition_period" },
 				"num_of_bcast": { "$ref": "#/definitions/number_of_broadcasts" },
 				"scope": { "$ref": "#/definitions/scope" },
 				"warning_period_sec": { "$ref": "#/definitions/warning_period_sec" },
