@@ -121,6 +121,9 @@ int peer_new_cbc_message(struct cbc_peer *peer, struct cbc_message *cbcmsg)
 
 	switch (peer->proto) {
 	case CBC_PEER_PROTO_CBSP:
+		/* skip peers without any current CBSP connection */
+		if (!peer->client.cbsp)
+			return 0;
 		cbsp = cbcmsg_to_cbsp(peer, cbcmsg);
 		cbsp_cbc_client_tx(peer->client.cbsp, cbsp);
 		break;
