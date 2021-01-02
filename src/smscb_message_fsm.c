@@ -369,6 +369,7 @@ struct cbc_message *cbc_message_alloc(void *ctx, const struct cbc_message *orig_
 	INIT_LLIST_HEAD(&smscb->peers);
 	smscb->fi = fi;
 	smscb->it_op = NULL;
+	smscb->time.created = time(NULL);
 
 	fi->priv = smscb;
 

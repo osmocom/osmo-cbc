@@ -1,6 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include <stdbool.h>
+#include <time.h>
 #include <osmocom/core/linuxlist.h>
 #include <osmocom/core/it_q.h>
 #include <osmocom/gsm/protocol/gsm_48_049.h>
@@ -150,10 +151,9 @@ struct cbc_message {
 
 	struct rest_it_op *it_op;	/* inter-thread queue operation currently processing */
 
-	/* TODO:
-	 * - timer for timeout after warning_period_sec
-	 * - timestamp when the message was created / last updated
-	 **/
+	struct {
+		time_t created;		/* when was this message created? */
+	} time;
 };
 
 /*********************************************************************************
