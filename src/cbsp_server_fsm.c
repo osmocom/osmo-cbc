@@ -161,6 +161,11 @@ static void cbsp_server_fsm_allstate(struct osmo_fsm_inst *fi, uint32_t event, v
 	case CBSP_SRV_E_CMD_CLOSE:
 		osmo_fsm_inst_term(fi, OSMO_FSM_TERM_REQUEST, NULL);
 		break;
+	case CBSP_SRV_E_RX_RESTART:
+		/* FIXME: */
+		break;
+	default:
+		OSMO_ASSERT(0);
 	}
 }
 
@@ -215,7 +220,8 @@ struct osmo_fsm cbsp_server_fsm = {
 	.name = "CBSP-SERVER",
 	.states = cbsp_server_fsm_states,
 	.num_states = ARRAY_SIZE(cbsp_server_fsm_states),
-	.allstate_event_mask = S(CBSP_SRV_E_CMD_CLOSE),
+	.allstate_event_mask = S(CBSP_SRV_E_CMD_CLOSE) |
+			       S(CBSP_SRV_E_RX_RESTART),
 	.allstate_action = cbsp_server_fsm_allstate,
 	.timer_cb = cbsp_server_fsm_timer_cb,
 	.log_subsys = DCBSP,
