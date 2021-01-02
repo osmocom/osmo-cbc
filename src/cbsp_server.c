@@ -100,7 +100,7 @@ static int cbsp_cbc_read_cb(struct osmo_stream_srv *conn)
 static int cbsp_cbc_closed_cb(struct osmo_stream_srv *conn)
 {
 	struct osmo_cbsp_cbc_client *client = osmo_stream_srv_get_data(conn);
-	LOGPCC(client, LOGL_INFO, "connection closed\n");
+	LOGPCC(client, LOGL_NOTICE, "connection closed\n");
 
 	client->conn = NULL;
 	osmo_fsm_inst_dispatch(client->fi, CBSP_SRV_E_CMD_CLOSE, NULL);
@@ -142,7 +142,7 @@ static int cbsp_cbc_accept_cb(struct osmo_stream_srv_link *link, int fd)
 	client->peer = cbc_peer_by_addr_proto(remote_ip, remote_port, CBC_PEER_PROTO_CBSP);
 	if (!client->peer) {
 		if (g_cbc->config.permit_unknown_peers) {
-			LOGPCC(client, LOGL_INFO, "Accepting unknown CBSP peer %s:%d\n",
+			LOGPCC(client, LOGL_NOTICE, "Accepting unknown CBSP peer %s:%d\n",
 				remote_ip, remote_port);
 			client->peer = cbc_peer_create(NULL, CBC_PEER_PROTO_CBSP);
 			OSMO_ASSERT(client->peer);
@@ -155,13 +155,14 @@ static int cbsp_cbc_accept_cb(struct osmo_stream_srv_link *link, int fd)
 		}
 	} else {
 		if (client->peer->client.cbsp) {
-			LOGPCC(client, LOGL_ERROR, "We already have a connection for peer %s\n");
+			LOGPCC(client, LOGL_ERROR, "We already have a connection for peer %s\n",
+				client->peer->name);
 			/* FIXME */
 		}
 		client->peer->client.cbsp = client;
 	}
 
-	LOGPCC(client, LOGL_INFO, "New CBSP client connection from %s:%u\n", remote_ip, remote_port);
+	LOGPCC(client, LOGL_NOTICE, "New CBSP client connection from %s:%u\n", remote_ip, remote_port);
 	osmo_fsm_inst_dispatch(client->fi, CBSP_SRV_E_CMD_RESET, NULL);
 
 	return 0;
