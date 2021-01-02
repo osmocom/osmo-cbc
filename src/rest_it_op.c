@@ -44,6 +44,8 @@ struct rest_it_op *rest_it_op_alloc(void *ctx)
 		return NULL;
 	pthread_mutex_init(&op->mutex, NULL);
 	pthread_cond_init(&op->cond, NULL);
+	/* set a 'safe' default for all kinds of error situations */
+	rest_it_op_set_http_result(op, 500, "Internal Server Error");
 
 	return op;
 }
@@ -103,14 +105,14 @@ void rest2main_read_cb(struct osmo_it_q *q, void *item)
 		if (cbc_msg) {
 			cbc_message_delete(cbc_msg, op);
 		} else {
-			rest_it_op_set_http_result(op, 400, "Unknown message ID");
+			rest_it_op_set_http_result(op, 404, "Unknown message ID");
 			rest_it_op_complete(op);
 		}
 		break;
 	/* TODO: REPLACE */
 	/* TODO: STATUS */
 	default:
-		rest_it_op_set_http_result(op, 400, "Not implemented yet");
+		rest_it_op_set_http_result(op, 501, "Not Implemented");
 		rest_it_op_complete(op);
 		break;
 	}

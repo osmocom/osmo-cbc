@@ -70,7 +70,7 @@ static void smscb_fsm_wait_write_ack(struct osmo_fsm_inst *fi, uint32_t event, v
 			if (peer_fi->state == SMSCB_S_WAIT_WRITE_ACK)
 				break;
 		}
-		rest_it_op_set_http_result(cbcmsg->it_op, 200, "OK"); // FIXME: error cases
+		rest_it_op_set_http_result(cbcmsg->it_op, 201, "Created"); // FIXME: error cases
 		osmo_fsm_inst_state_chg(fi, SMSCB_S_ACTIVE, 0, 0);
 		break;
 	default:
