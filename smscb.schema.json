@@ -86,7 +86,7 @@
 		"warning_type_encoded": {
 			"type": "integer",
 			"minimum": 0,
-			"maximum": 255
+			"maximum": 127
 		},
 		"warning_type_decoded": {
 			"enum": [ "earthquake", "tsunami", "earthquake_and_tsunami", "test",
@@ -105,6 +105,8 @@
 			"type": "object",
 			"properties": {
 				"warning_type": { "$ref": "#/definitions/warning_type" },
+				"emergency_user_alert": "boolean",
+				"popup_on_display": "boolean",
 				"warning_sec_info": { "$ref": "#/definitions/warning_sec_info" }
 			},
 			"required": [ "warning_type" ]

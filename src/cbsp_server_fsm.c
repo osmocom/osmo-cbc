@@ -106,6 +106,7 @@ static void cbsp_server_s_keepalive_pending(struct osmo_fsm_inst *fi, uint32_t e
 {
 	switch (event) {
 	case CBSP_SRV_E_RX_KA_COMPL:
+		osmo_fsm_inst_state_chg(fi, CBSP_SRV_S_IDLE, 0, 0);
 		break;
 	default:
 		OSMO_ASSERT(0);
@@ -157,12 +158,30 @@ static int cbsp_server_fsm_timer_cb(struct osmo_fsm_inst *fi)
 
 static void cbsp_server_fsm_allstate(struct osmo_fsm_inst *fi, uint32_t event, void *data)
 {
+	struct osmo_cbsp_cbc_client *client = (struct osmo_cbsp_cbc_client *) fi->priv;
+	struct osmo_cbsp_decoded *dec;
+
 	switch (event) {
 	case CBSP_SRV_E_CMD_CLOSE:
 		osmo_fsm_inst_term(fi, OSMO_FSM_TERM_REQUEST, NULL);
 		break;
 	case CBSP_SRV_E_RX_RESTART:
-		/* FIXME: */
+		dec = data;
+		/* if BSC has _not_ lost messages, skip */
+		if (dec->u.restart.recovery_ind == 0)
+			break;
+		switch (dec->u.restart.bcast_msg_type) {
+		case 0: /* CBS */
+			/* TODO: delete any CBS state we have for this peer */
+			/* TODO: re-send CBS messages we have matching the scope of the peer */
+			LOGPCC(client, LOGL_NOTICE, "RESTART (CBS) but re-sending not implemented yet\n");
+			break;
+		case 1: /* ETWS */
+			/* TODO: delete any ETWS state we have for this peer */
+			/* TODO: re-send ETWS messages we have matching the scope of the peer */
+			LOGPCC(client, LOGL_NOTICE, "RESTART (ETWS) but re-sending not implemented yet\n");
+			break;
+		}
 		break;
 	default:
 		OSMO_ASSERT(0);

@@ -90,15 +90,16 @@ struct smscb_message {
 			unsigned int num_pages;
 			/* actual page data, concatenated */
 			uint8_t data[SMSCB_MAX_NUM_PAGES][SMSCB_RAW_PAGE_LEN];
-			/* FIXME: do we need information on the total length to
-			 * determine which is the last block used in [at least the last]
-			 * page? */
 			/* total number of octets user data over _all_ the pages */
 			uint16_t data_user_len;
 		} cbs;
 		struct {
-			/* WarningType 16bit parameter as per 23.041 9.3.24 */
+			/* WarningTypeValue 7bit parameter as per 23.041 9.3.24 */
 			uint16_t warning_type;
+			/* Emergency User Alert */
+			bool user_alert;
+			/* Popup on Display */
+			bool popup_on_display;
 			uint8_t warning_sec_info[50];
 		} etws;
 	};

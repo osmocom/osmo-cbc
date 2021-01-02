@@ -47,7 +47,7 @@ static void smscb_fsm_init(struct osmo_fsm_inst *fi, uint32_t event, void *data)
 		cbcmsg->it_op = data;
 		osmo_fsm_inst_state_chg(fi, SMSCB_S_WAIT_WRITE_ACK, 15, T_WAIT_WRITE_ACK);
 		/* forward this event to all child FSMs (i.e. all smscb_message_peer) */
-		osmo_fsm_inst_broadcast_children(fi, SMSCB_E_CREATE, data);
+		osmo_fsm_inst_broadcast_children(fi, SMSCB_E_CREATE, NULL);
 		break;
 	default:
 		OSMO_ASSERT(0);
@@ -127,7 +127,7 @@ static void smscb_fsm_wait_replace_ack(struct osmo_fsm_inst *fi, uint32_t event,
 	case SMSCB_E_CBSP_REPLACE_ACK:
 	case SMSCB_E_CBSP_REPLACE_NACK:
 		mp = data;
-		llist_for_each_entry(peer_fi, &fi->proc.children, list) {
+		llist_for_each_entry(peer_fi, &fi->proc.children, proc.child) {
 			if (peer_fi->state == SMSCB_S_WAIT_REPLACE_ACK)
 				break;
 		}
@@ -157,7 +157,7 @@ static void smscb_fsm_wait_status_ack(struct osmo_fsm_inst *fi, uint32_t event, 
 	case SMSCB_E_CBSP_STATUS_ACK:
 	case SMSCB_E_CBSP_STATUS_NACK:
 		mp = data;
-		llist_for_each_entry(peer_fi, &fi->proc.children, list) {
+		llist_for_each_entry(peer_fi, &fi->proc.children, proc.child) {
 			if (peer_fi->state == SMSCB_S_WAIT_STATUS_ACK)
 				break;
 		}
@@ -187,7 +187,7 @@ static void smscb_fsm_wait_delete_ack(struct osmo_fsm_inst *fi, uint32_t event, 
 	case SMSCB_E_CBSP_DELETE_ACK:
 	case SMSCB_E_CBSP_DELETE_NACK:
 		mp = data;
-		llist_for_each_entry(peer_fi, &fi->proc.children, list) {
+		llist_for_each_entry(peer_fi, &fi->proc.children, proc.child) {
 			if (peer_fi->state == SMSCB_S_WAIT_DELETE_ACK)
 				break;
 		}
@@ -266,7 +266,7 @@ static struct osmo_fsm_state smscb_fsm_states[] = {
 		.name = "WAIT_DELETE_ACK",
 		.in_event_mask = S(SMSCB_E_CBSP_DELETE_ACK) |
 				 S(SMSCB_E_CBSP_DELETE_NACK),
-		.out_state_mask = S(SMSCB_S_ACTIVE),
+		.out_state_mask = S(SMSCB_S_DELETED),
 		.action = smscb_fsm_wait_delete_ack,
 		.onleave = smscb_fsm_wait_delete_ack_onleave,
 	},
@@ -365,6 +365,7 @@ struct cbc_message *cbc_message_alloc(void *ctx, const struct cbc_message *orig_
 	}
 	/* copy data from original message */
 	memcpy(smscb, orig_msg, sizeof(*smscb));
+	smscb->cbe_name  = talloc_strdup(smscb, orig_msg->cbe_name);
 	/* initialize other members */
 	INIT_LLIST_HEAD(&smscb->peers);
 	smscb->fi = fi;

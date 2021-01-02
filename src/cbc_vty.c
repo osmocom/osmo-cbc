@@ -24,18 +24,32 @@
 #include <stdlib.h>
 
 #include <osmocom/core/utils.h>
+#include <osmocom/core/fsm.h>
 
 #include <osmocom/vty/command.h>
 #include <osmocom/vty/buffer.h>
 #include <osmocom/vty/vty.h>
 
 #include "cbc_data.h"
+#include "internal.h"
+#include "cbsp_server.h"
 
 static void dump_one_cbc_peer(struct vty *vty, const struct cbc_peer *peer)
 {
-	vty_out(vty, " %-20s | %-15s | %-5d | %s |%s",
+	const char *state = "<disconnected>";
+
+	switch (peer->proto) {
+	case CBC_PEER_PROTO_CBSP:
+		if (peer->client.cbsp)
+			state = osmo_fsm_inst_state_name(peer->client.cbsp->fi);
+		break;
+	case CBC_PEER_PROTO_SABP:
+		break;
+	}
+
+	vty_out(vty, "|%-20s| %-15s| %-5d| %-6s| %-20s|%s",
 		peer->name ? peer->name : "<unnamed>", peer->remote_host, peer->remote_port,
-		get_value_string(cbc_peer_proto_name, peer->proto), VTY_NEWLINE);
+		get_value_string(cbc_peer_proto_name, peer->proto), state, VTY_NEWLINE);
 }
 
 DEFUN(show_peers, show_peers_cmd,
@@ -44,8 +58,10 @@ DEFUN(show_peers, show_peers_cmd,
 {
 	struct cbc_peer *peer;
 
-	vty_out(vty, " Name                | IP             | Port  | Proto |%s", VTY_NEWLINE);
-	vty_out(vty, "---------------------|----------------|-------|-------|%s", VTY_NEWLINE);
+	vty_out(vty,
+"|Name                | IP             | Port | Proto | State               |%s", VTY_NEWLINE);
+	vty_out(vty,
+"|--------------------|----------------|------|-------|---------------------|%s", VTY_NEWLINE);
 	llist_for_each_entry(peer, &g_cbc->peers, list)
 		dump_one_cbc_peer(vty, peer);
 
@@ -53,6 +69,7 @@ DEFUN(show_peers, show_peers_cmd,
 }
 
 #define MESSAGES_STR "Display information about currently active SMSCB messages\n"
+#define MESSAGES_CBS_STR "Display Cell Broadcast Service (CBS) messages\n"
 
 static void dump_one_cbc_msg(struct vty *vty, const struct cbc_message *cbc_msg)
 {
@@ -69,7 +86,7 @@ static void dump_one_cbc_msg(struct vty *vty, const struct cbc_message *cbc_msg)
 
 DEFUN(show_messages_cbs, show_messages_cbs_cmd,
 	"show messages cbs",
-	SHOW_STR MESSAGES_STR "Display Cell Broadcast Service (CBS) messages\n")
+	SHOW_STR MESSAGES_STR MESSAGES_CBS_STR)
 {
 	struct cbc_message *cbc_msg;
 
@@ -87,13 +104,127 @@ DEFUN(show_messages_cbs, show_messages_cbs_cmd,
 	return CMD_SUCCESS;
 }
 
+static const char *cbc_cell_id2str(const struct cbc_cell_id *cid)
+{
+	static char buf[256];
+
+	switch (cid->id_discr) {
+	case CBC_CELL_ID_NONE:
+		snprintf(buf, sizeof(buf), "NONE");
+		break;
+	case CBC_CELL_ID_BSS:
+		snprintf(buf, sizeof(buf), "BSS");
+		break;
+	case CBC_CELL_ID_CGI:
+		snprintf(buf, sizeof(buf), "CGI %s", osmo_cgi_name(&cid->u.cgi));
+		break;
+	case CBC_CELL_ID_LAC_CI:
+		snprintf(buf, sizeof(buf), "LAC %u CI %u", cid->u.lac_and_ci.lac, cid->u.lac_and_ci.ci);
+		break;
+	case CBC_CELL_ID_LAI:
+		snprintf(buf, sizeof(buf), "LAI %s", osmo_lai_name(&cid->u.lai));
+		break;
+	case CBC_CELL_ID_LAC:
+		snprintf(buf, sizeof(buf), "LAC %u", cid->u.lac);
+		break;
+	case CBC_CELL_ID_CI:
+		snprintf(buf, sizeof(buf), "CI %u", cid->u.ci);
+		break;
+	default:
+		snprintf(buf, sizeof(buf), "<invalid>");
+		break;
+	}
+	return buf;
+}
+
+static void dump_one_msg_peer(struct vty *vty, const struct cbc_message_peer *msg_peer, const char *pfx)
+{
+	struct cbc_cell_id *cid;
+
+	vty_out(vty, "%sPeer: '%s', State: %s%s", pfx, msg_peer->peer->name,
+		osmo_fsm_inst_state_name(msg_peer->fi), VTY_NEWLINE);
+
+
+	vty_out(vty, "%s Cells Installed:%s", pfx, VTY_NEWLINE);
+	llist_for_each_entry(cid, &msg_peer->cell_list, list) {
+		vty_out(vty, "%s  %s%s", pfx, cbc_cell_id2str(cid), VTY_NEWLINE);
+	}
+
+	vty_out(vty, "%s Cells Failed:%s", pfx, VTY_NEWLINE);
+	llist_for_each_entry(cid, &msg_peer->fail_list, list) {
+		vty_out(vty, "%s  %s (cause=%d)%s", pfx, cbc_cell_id2str(cid), cid->fail.cause, VTY_NEWLINE);
+	}
+
+	vty_out(vty, "%s Number of Broadcasts Completed:%s", pfx, VTY_NEWLINE);
+	llist_for_each_entry(cid, &msg_peer->num_compl_list, list) {
+		vty_out(vty, "%s  %s (%u/%u)%s", pfx, cbc_cell_id2str(cid),
+			cid->num_compl.num_compl, cid->num_compl.num_bcast_info, VTY_NEWLINE);
+	}
+}
+
+
+DEFUN(show_message_cbs, show_message_cbs_cmd,
+	"show message id <0-65535>",
+	SHOW_STR MESSAGES_STR "Message ID\n" "Message ID\n")
+{
+	const struct cbc_message *cbc_msg;
+	const struct smscb_message *smscb;
+	struct cbc_message_peer *msg_peer;
+	char *timestr;
+
+	cbc_msg = cbc_message_by_id(atoi(argv[0]));
+	if (!cbc_msg) {
+		vty_out(vty, "Unknown Messsage ID %s%s", argv[0], VTY_NEWLINE);
+		return CMD_WARNING;
+	}
+	smscb = &cbc_msg->msg;
+
+	vty_out(vty, "Message ID %04X, Serial Number %04X, State: %s%s", smscb->message_id, smscb->serial_nr,
+		osmo_fsm_inst_state_name(cbc_msg->fi), VTY_NEWLINE);
+	timestr = ctime(&cbc_msg->time.created);
+	timestr[strlen(timestr)-1] = '\0';	/* stupid \n termination of ctime() */
+	vty_out(vty, " Created by CBE '%s' at %s%s", cbc_msg->cbe_name, timestr, VTY_NEWLINE);
+	vty_out(vty, " Repetition Period: %u (%5.2fs), Number of broadcasts: %u%s",
+		cbc_msg->rep_period, (float)cbc_msg->rep_period * 1.883,
+		cbc_msg->num_bcast, VTY_NEWLINE);
+
+	if (!smscb->is_etws) {
+		int i;
+		vty_out(vty, " Warning Period: %us%s", cbc_msg->warning_period_sec, VTY_NEWLINE);
+		vty_out(vty, " DCS: 0x%02x, Number of pages: %u, User Data Bytes: %u%s", smscb->cbs.dcs,
+			smscb->cbs.num_pages, smscb->cbs.data_user_len, VTY_NEWLINE);
+		for (i = 0; i < smscb->cbs.num_pages; i++) {
+			vty_out(vty, " Page %u: %s%s", i,
+				osmo_hexdump_nospc(smscb->cbs.data[i], sizeof(smscb->cbs.data[i])),
+				VTY_NEWLINE);
+		}
+		/* FIXME: more */
+	} else {
+		vty_out(vty, " ETWS Warning Type Value: 0x%02x, User Alert: %s, Popup: %s%s",
+			smscb->etws.warning_type, smscb->etws.user_alert ? "On" : "Off",
+			smscb->etws.popup_on_display ? "On" : "Off", VTY_NEWLINE);
+		vty_out(vty, " Security: %s%s",
+			osmo_hexdump_nospc(smscb->etws.warning_sec_info, sizeof(smscb->etws.warning_sec_info)),
+			VTY_NEWLINE);
+	}
+
+	llist_for_each_entry(msg_peer, &cbc_msg->peers, list)
+		dump_one_msg_peer(vty, msg_peer, " ");
+
+	return CMD_SUCCESS;
+}
+
 static void dump_one_etws_msg(struct vty *vty, const struct cbc_message *cbc_msg)
 {
 	const struct smscb_message *smscb = &cbc_msg->msg;
 
 	OSMO_ASSERT(smscb->is_etws);
 
-	/* FIXME */
+	vty_out(vty, "| %04X| %04X|%-20s|%-13s|  %-4u|%c|      %04d|%s",
+		smscb->message_id, smscb->serial_nr, cbc_msg->cbe_name,
+		get_value_string(cbsp_category_names, cbc_msg->priority), cbc_msg->rep_period,
+		cbc_msg->extended_cbch ? 'E' : 'N', smscb->etws.warning_type,
+		VTY_NEWLINE);
 }
 
 DEFUN(show_messages_etws, show_messages_etws_cmd,
@@ -102,7 +233,12 @@ DEFUN(show_messages_etws, show_messages_etws_cmd,
 {
 	struct cbc_message *cbc_msg;
 
-	/* FIXME: header */
+	vty_out(vty,
+"|MsgId|SerNo|      CBE Name      |  Category   |Period|E|Warning Type|%s", VTY_NEWLINE);
+	vty_out(vty,
+"|-----|-----|--------------------|-------------|------|-|------------|%s", VTY_NEWLINE);
+
+
 
 	llist_for_each_entry(cbc_msg, &g_cbc->messages, list) {
 		if (!cbc_msg->msg.is_etws)
@@ -264,6 +400,7 @@ static int config_write_peer(struct vty *vty)
 void cbc_vty_init(void)
 {
 	install_lib_element_ve(&show_peers_cmd);
+	install_lib_element_ve(&show_message_cbs_cmd);
 	install_lib_element_ve(&show_messages_cbs_cmd);
 	install_lib_element_ve(&show_messages_etws_cmd);
 

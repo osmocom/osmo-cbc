@@ -131,10 +131,10 @@ static const struct value_string ts23041_warning_type_vals[] = {
 };
 
 /* parse a smscb.schema.json/warning_type (either encoded or decoded) */
-static int parse_warning_type(uint16_t *out, json_t *in, const char **errstr)
+static int parse_warning_type(json_t *in, const char **errstr)
 {
 	json_t *jtmp;
-	int i, rc;
+	int i, rc, val;
 
 	if (!in || !json_is_object(in)) {
 		*errstr = "'warning_type' must be object";
@@ -142,7 +142,7 @@ static int parse_warning_type(uint16_t *out, json_t *in, const char **errstr)
 	}
 	rc = json_get_integer_range(&i, in, "warning_type_encoded", 0, 255);
 	if (rc == 0) {
-		*out = i;
+		val = i;
 	} else if (rc == -ENOENT && (jtmp = json_object_get(in, "warning_type_decoded"))) {
 		const char *tstr = json_string_value(jtmp);
 		if (!tstr) {
@@ -154,13 +154,13 @@ static int parse_warning_type(uint16_t *out, json_t *in, const char **errstr)
 			*errstr = "'warning_type_decoded' is invalid";
 			return -EINVAL;
 		}
-		*out = i;
+		val = i;
 	} else {
 		*errstr = "either 'warning_type_encoded' or 'warning_type_decoded' must be present";
 		return -EINVAL;
 	}
 
-	return 0;
+	return val;
 }
 
 /* parse a smscb.schema.json/serial_nr type (either encoded or decoded) */
@@ -260,6 +260,7 @@ static int parse_payload_decoded(struct smscb_message *out, json_t *jtmp, const 
 				out->cbs.dcs = rc;
 			else {
 				/* TODO: we must encode it in the first 3 characters */
+				out->cbs.dcs = 0x0f;
 			}
 		} else {
 			if (json_object_get(jtmp, "dcs_class")) {
@@ -359,17 +360,36 @@ static int json2payload(struct smscb_message *out, json_t *in, const char **errs
 		out->is_etws = false;
 		return parse_payload_decoded(out, jtmp, errstr);
 	} else if ((jtmp = json_object_get(in, "payload_etws"))) {
-		json_t *jwtype;
+		json_t *jwtype, *jtmp2;
 		const char *wsecinfo_str;
+
 		out->is_etws = true;
-		/* Warning Type */
+
+		/* Warning Type (value) */
 		jwtype = json_object_get(jtmp, "warning_type");
 		if (!jwtype) {
 			*errstr = "'warning_type' must be object";
 			return -EINVAL;
 		}
-		if (parse_warning_type(&out->etws.warning_type, jwtype, errstr) < 0)
+		rc = parse_warning_type(jwtype, errstr);
+		if (rc < 0)
 			return -EINVAL;
+		out->etws.warning_type = rc;
+
+		/* Emergency User Alert */
+		jtmp2 = json_object_get(jtmp, "emergency_user_alert");
+		if (jtmp && json_is_true(jtmp2))
+			out->etws.user_alert = true;
+		else
+			out->etws.user_alert = false;
+
+		/* Popup */
+		jtmp2 = json_object_get(jtmp, "popup_on_display");
+		if (jtmp && json_is_true(jtmp2))
+			out->etws.popup_on_display = true;
+		else
+			out->etws.popup_on_display = false;
+
 		/* Warning Security Info */
 		wsecinfo_str = json_get_string(jtmp, "warning_sec_info");
 		if (wsecinfo_str) {
@@ -531,7 +551,8 @@ static int api_cb_message_post(const struct _u_request *req, struct _u_response 
 
 	if (!riop) {
 		LOGP(DREST, LOGL_ERROR, "Out of memory\n");
-		return -ENOMEM;
+		ulfius_set_string_body_response(resp, 500, "Out of memory");
+		return U_CALLBACK_COMPLETE;
 	}
 
 	riop->operation = REST_IT_OP_MSG_CREATE;
@@ -595,7 +616,7 @@ static int api_cb_message_del(const struct _u_request *req, struct _u_response *
 	}
 
 	if (!riop) {
-		status = 999; /* FIXME */
+		status = 500;
 		goto err;
 	}
 

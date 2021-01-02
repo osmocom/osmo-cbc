@@ -96,9 +96,18 @@ struct osmo_cbsp_decoded *cbcmsg_to_cbsp(void *ctx, const struct cbc_message *cb
 			llist_add_tail(&ce->list, &wrepl->u.cbs.msg_content);
 		}
 	} else {
-		/* FIXME */
-		talloc_free(cbsp);
-		return NULL;
+		wrepl->u.emergency.indicator = 1;
+		wrepl->u.emergency.warning_type = (smscb->etws.warning_type & 0x7f) << 9;
+		if (smscb->etws.user_alert)
+			wrepl->u.emergency.warning_type |= 0x0100;
+		if (smscb->etws.popup_on_display)
+			wrepl->u.emergency.warning_type |= 0x0080;
+		memcpy(wrepl->u.emergency.warning_sec_info, smscb->etws.warning_sec_info,
+			sizeof(wrepl->u.emergency.warning_sec_info));
+		if (cbcmsg->warning_period_sec == 0xffffffff)
+			wrepl->u.emergency.warning_period = 0;
+		else
+			wrepl->u.emergency.warning_period = cbcmsg->warning_period_sec;
 	}
 	return cbsp;
 }

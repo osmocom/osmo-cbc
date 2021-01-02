@@ -458,6 +458,13 @@ static int smscb_p_fsm_timer_cb(struct osmo_fsm_inst *fi)
 	return 0;
 }
 
+static void smscb_p_fsm_cleanup(struct osmo_fsm_inst *fi, enum osmo_fsm_term_cause cause)
+{
+	struct cbc_message_peer *mp = (struct cbc_message_peer *) fi->priv;
+	llist_del(&mp->list);
+	/* memory of mp is child of fi and hence automatically free'd */
+}
+
 static const struct osmo_fsm_state smscb_p_fsm_states[] = {
 	[SMSCB_S_INIT] = {
 		.name = "INIT",
@@ -503,6 +510,9 @@ static const struct osmo_fsm_state smscb_p_fsm_states[] = {
 		.out_state_mask = S(SMSCB_S_DELETED),
 		.action = smscb_p_fsm_wait_delete_ack,
 	},
+	[SMSCB_S_DELETED] = {
+		.name = "DELETED",
+	},
 };
 
 struct osmo_fsm smscb_p_fsm = {
@@ -512,6 +522,7 @@ struct osmo_fsm smscb_p_fsm = {
 	.timer_cb = smscb_p_fsm_timer_cb,
 	.log_subsys = DCBSP,
 	.event_names = smscb_fsm_event_names,
+	.cleanup = smscb_p_fsm_cleanup,
 };
 
 static __attribute__((constructor)) void on_dso_load_smscb_p_fsm(void)

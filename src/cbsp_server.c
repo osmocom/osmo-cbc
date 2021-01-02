@@ -44,6 +44,8 @@ struct osmo_cbsp_bsc {
 
 const char *cbsp_cbc_client_name(const struct osmo_cbsp_cbc_client *client)
 {
+	OSMO_ASSERT(client);
+
 	if (client->peer && client->peer->name) {
 		return client->peer->name;
 	} else {
@@ -102,6 +104,8 @@ static int cbsp_cbc_closed_cb(struct osmo_stream_srv *conn)
 	struct osmo_cbsp_cbc_client *client = osmo_stream_srv_get_data(conn);
 	LOGPCC(client, LOGL_NOTICE, "connection closed\n");
 
+	if (client->peer)
+		client->peer->client.cbsp = NULL;
 	client->conn = NULL;
 	osmo_fsm_inst_dispatch(client->fi, CBSP_SRV_E_CMD_CLOSE, NULL);
 
@@ -170,9 +174,18 @@ static int cbsp_cbc_accept_cb(struct osmo_stream_srv_link *link, int fd)
 
 void cbsp_cbc_client_tx(struct osmo_cbsp_cbc_client *client, struct osmo_cbsp_decoded *cbsp)
 {
-	struct msgb *msg = osmo_cbsp_encode(client, cbsp);
+	struct msgb *msg;
+
+	if (!client) {
+		LOGP(DCBSP, LOGL_NOTICE, "Cannot transmit %s: no connection\n",
+			get_value_string(cbsp_msg_type_names, cbsp->msg_type));
+		return ;
+	}
+
 	LOGPCC(client, LOGL_INFO, "Transmitting %s\n",
 		get_value_string(cbsp_msg_type_names, cbsp->msg_type));
+
+	msg = osmo_cbsp_encode(client, cbsp);
 	if (!msg) {
 		LOGPCC(client, LOGL_ERROR, "Failed to encode CBSP %s: %s\n",
 			get_value_string(cbsp_msg_type_names, cbsp->msg_type), osmo_cbsp_errstr);
