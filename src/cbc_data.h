@@ -149,6 +149,11 @@ struct cbc_message {
 	struct llist_head peers;
 
 	struct rest_it_op *it_op;	/* inter-thread queue operation currently processing */
+
+	/* TODO:
+	 * - timer for timeout after warning_period_sec
+	 * - timestamp when the message was created / last updated
+	 **/
 };
 
 /*********************************************************************************
