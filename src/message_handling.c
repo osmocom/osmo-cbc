@@ -29,6 +29,7 @@
 
 #include "cbc_data.h"
 #include "cbsp_server.h"
+#include "rest_it_op.h"
 #include "internal.h"
 
 /* convert cbc_message to osmo_cbsp_cell_list */
@@ -135,14 +136,19 @@ int peer_new_cbc_message(struct cbc_peer *peer, struct cbc_message *cbcmsg)
 }
 
 /* receive a new CBC message from the user (REST). Allocates new memory,
- * a FSM, copies data from 'orig', routes to all peers and starts FSMs */
-int cbc_message_new(const struct cbc_message *orig)
+ * a FSM, copies data from 'orig', routes to all peers and starts FSMs.
+ * Once the operation is complete (success, error, timeout) we must
+ * notify osmo_it_q of the completion */
+int cbc_message_new(const struct cbc_message *orig, struct rest_it_op *op)
 {
 	struct cbc_message *cbcmsg = cbc_message_alloc(g_cbc, orig);
 	struct cbc_peer *peer;
 
-	if (!cbcmsg)
+	if (!cbcmsg) {
+		rest_it_op_set_http_result(op, 400, "Could not allocate");
+		rest_it_op_complete(op);
 		return -ENOMEM;
+	}
 
 	OSMO_ASSERT(llist_empty(&cbcmsg->peers));
 
@@ -162,15 +168,23 @@ int cbc_message_new(const struct cbc_message *orig)
 	}
 
 	/* kick off the state machine[s] */
-	osmo_fsm_inst_dispatch(cbcmsg->fi, SMSCB_E_CREATE, NULL);
+	if (osmo_fsm_inst_dispatch(cbcmsg->fi, SMSCB_E_CREATE, op) < 0) {
+		rest_it_op_set_http_result(op, 400, "Illegal FSM event");
+		rest_it_op_complete(op);
+	}
+
+	/* we continue in the FSM after the WRITE_ACK event was received */
 
 	return 0;
 }
 
-void cbc_message_delete(struct cbc_message *cbcmsg)
+void cbc_message_delete(struct cbc_message *cbcmsg, struct rest_it_op *op)
 {
-	osmo_fsm_inst_dispatch(cbcmsg->fi, SMSCB_E_DELETE, NULL);
-	/* TODO: how to handle completion */
+	if (osmo_fsm_inst_dispatch(cbcmsg->fi, SMSCB_E_DELETE, op) < 0) {
+		rest_it_op_set_http_result(op, 400, "Illegal FSM event");
+		rest_it_op_complete(op);
+	}
+	/* we continue in the FSM after the DELETE_ACK event was received */
 }
 
 struct cbc_message *cbc_message_by_id(uint16_t message_id)

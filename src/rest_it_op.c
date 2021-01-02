@@ -49,9 +49,8 @@ struct rest_it_op *rest_it_op_alloc(void *ctx)
 }
 
 /* enqueue an inter-thread operation in REST->main direction and wait for its completion */
-int rest_it_op_send_and_wait(struct rest_it_op *op, unsigned int wait_sec)
+int rest_it_op_send_and_wait(struct rest_it_op *op)
 {
-	struct timespec ts;
 	int rc = 0;
 
 	LOGP(DREST, LOGL_DEBUG, "rest_it_op enqueue from %u\n", gettid());
@@ -60,20 +59,17 @@ int rest_it_op_send_and_wait(struct rest_it_op *op, unsigned int wait_sec)
 	if (rc < 0)
 		return rc;
 
-	/* grab mutex before pthread_cond_timedwait() */
+	/* grab mutex before pthread_cond_wait() */
 	pthread_mutex_lock(&op->mutex);
-	clock_gettime(CLOCK_REALTIME, &ts);
-	ts.tv_sec += wait_sec;
 
 	LOGP(DREST, LOGL_DEBUG, "rest_it_op wait....\n");
 
-	while (rc == 0)
-		rc = pthread_cond_timedwait(&op->cond, &op->mutex, &ts);
+	rc = pthread_cond_wait(&op->cond, &op->mutex);
 
-	if (rc == 0)
-		pthread_mutex_unlock(&op->mutex);
+	LOGP(DREST, LOGL_DEBUG, "rest_it_op completed with %d (HTTP %u)\n",
+		rc, op->http_result.response_code);
 
-	LOGP(DREST, LOGL_DEBUG, "rest_it_op completed\n");
+	pthread_mutex_unlock(&op->mutex);
 
 	/* 'op' is implicitly owned by the caller again now, who needs to take care
 	 * of releasing its memory */
@@ -93,29 +89,46 @@ void rest2main_read_cb(struct osmo_it_q *q, void *item)
 	struct rest_it_op *op = item;
 	struct cbc_message *cbc_msg;
 
-	LOGP(DREST, LOGL_DEBUG, "%s() from %u\n", __func__, gettid());
+	LOGP(DREST, LOGL_DEBUG, "%s(op=%p) from %u\n", __func__, op, gettid());
 
 	/* FIXME: look up related message and dispatch to message FSM,
 	 * which will eventually call pthread_cond_signal(&op->cond) */
 
 	switch (op->operation) {
 	case REST_IT_OP_MSG_CREATE:
-		/* FIXME: send to message FSM who can addd it on RAN */
-		cbc_message_new(&op->u.create.cbc_msg);
+		cbc_message_new(&op->u.create.cbc_msg, op);
 		break;
 	case REST_IT_OP_MSG_DELETE:
-		/* FIXME: send to message FSM who can remove it from RAN */
 		cbc_msg = cbc_message_by_id(op->u.del.msg_id);
 		if (cbc_msg) {
-			cbc_message_delete(cbc_msg);
+			cbc_message_delete(cbc_msg, op);
 		} else {
-			/* FIXME: immediately wake up? */
+			rest_it_op_set_http_result(op, 400, "Unknown message ID");
+			rest_it_op_complete(op);
 		}
 		break;
 	/* TODO: REPLACE */
 	/* TODO: STATUS */
 	default:
+		rest_it_op_set_http_result(op, 400, "Not implemented yet");
+		rest_it_op_complete(op);
 		break;
 	}
-	pthread_cond_signal(&op->cond); // HACK
+}
+
+void rest_it_op_set_http_result(struct rest_it_op *op, uint32_t code, const char *body)
+{
+	if (!op)
+		return;
+	op->http_result.response_code = code;
+	op->http_result.message = body;
+}
+
+/* signal completion of rest_it_op to whoever is waiting for it */
+void rest_it_op_complete(struct rest_it_op *op)
+{
+	LOGP(DREST, LOGL_DEBUG, "%s(op=%p) complete\n", __func__, op);
+	if (!op)
+		return;
+	pthread_cond_signal(&op->cond);
 }

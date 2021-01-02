@@ -552,15 +552,18 @@ static int api_cb_message_post(const struct _u_request *req, struct _u_response 
 
 	LOGP(DREST, LOGL_DEBUG, "sending as inter-thread op\n");
 	/* request message to be added by main thread */
-	rc = rest_it_op_send_and_wait(riop, 10);
+	rc = rest_it_op_send_and_wait(riop);
 	if (rc < 0) {
+		LOGP(DREST, LOGL_ERROR, "Error %d in inter-thread op\n", rc);
 		errstr = "Error in it_queue";
 		goto err;
 	}
 
 	json_decref(json_req);
-	LOGP(DREST, LOGL_DEBUG, "/message POST -> 200\n");
-	ulfius_set_empty_body_response(resp, 200);
+	LOGP(DREST, LOGL_DEBUG, "/message POST -> %u (%s)\n",
+		riop->http_result.response_code, riop->http_result.message);
+	ulfius_set_string_body_response(resp, riop->http_result.response_code, riop->http_result.message);
+	talloc_free(riop);
 	return U_CALLBACK_COMPLETE;
 err:
 	jsonstr = json_dumps(json_req, 0);
@@ -569,7 +572,7 @@ err:
 	json_decref(json_req);
 	talloc_free(riop);
 	LOGP(DREST, LOGL_DEBUG, "/message POST -> 400\n");
-	ulfius_set_empty_body_response(resp, 400);
+	ulfius_set_string_body_response(resp, 400, errstr);
 	return U_CALLBACK_COMPLETE;
 }
 
@@ -600,12 +603,14 @@ static int api_cb_message_del(const struct _u_request *req, struct _u_response *
 	riop->u.del.msg_id = message_id;
 
 	/* request message to be deleted by main thread */
-	rc = rest_it_op_send_and_wait(riop, 10);
+	rc = rest_it_op_send_and_wait(riop);
 	if (rc < 0)
 		goto err;
 
+	LOGP(DREST, LOGL_DEBUG, "/message DELETE(%u) -> %u (%s)\n", message_id,
+		riop->http_result.response_code, riop->http_result.message);
+	ulfius_set_string_body_response(resp, riop->http_result.response_code, riop->http_result.message);
 	talloc_free(riop);
-	ulfius_set_empty_body_response(resp, 200);
 	return U_CALLBACK_COMPLETE;
 err:
 	talloc_free(riop);

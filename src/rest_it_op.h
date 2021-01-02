@@ -40,6 +40,13 @@ struct rest_it_op {
 		struct rest_it_op_create create;
 		struct rest_it_op_delete del;
 	} u;
+
+	struct {
+		uint32_t response_code;
+		const char *message;
+	} http_result;
 };
 
-int rest_it_op_send_and_wait(struct rest_it_op *op, unsigned int wait_sec);
+int rest_it_op_send_and_wait(struct rest_it_op *op);
+void rest_it_op_set_http_result(struct rest_it_op *op, uint32_t code, const char *body);
+void rest_it_op_complete(struct rest_it_op *op);

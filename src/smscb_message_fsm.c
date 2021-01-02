@@ -70,6 +70,7 @@ static void smscb_fsm_wait_write_ack(struct osmo_fsm_inst *fi, uint32_t event, v
 			if (peer_fi->state == SMSCB_S_WAIT_WRITE_ACK)
 				break;
 		}
+		rest_it_op_set_http_result(cbcmsg->it_op, 200, "OK"); // FIXME: error cases
 		osmo_fsm_inst_state_chg(fi, SMSCB_S_ACTIVE, 0, 0);
 		break;
 	default:
@@ -81,10 +82,8 @@ static void smscb_fsm_wait_write_ack_onleave(struct osmo_fsm_inst *fi, uint32_t 
 {
 	struct cbc_message *cbcmsg = fi->priv;
 	/* release the mutex from the REST interface + respond to user */
-	if (cbcmsg->it_op) {
-		pthread_cond_signal(&cbcmsg->it_op->cond);
-		cbcmsg->it_op = NULL;
-	}
+	rest_it_op_complete(cbcmsg->it_op);
+	cbcmsg->it_op = NULL;
 }
 
 static void smscb_fsm_active(struct osmo_fsm_inst *fi, uint32_t event, void *data)
@@ -120,6 +119,7 @@ static void smscb_fsm_active(struct osmo_fsm_inst *fi, uint32_t event, void *dat
 
 static void smscb_fsm_wait_replace_ack(struct osmo_fsm_inst *fi, uint32_t event, void *data)
 {
+	struct cbc_message *cbcmsg = fi->priv;
 	struct cbc_message_peer *mp = NULL;
 	struct osmo_fsm_inst *peer_fi;
 
@@ -131,6 +131,7 @@ static void smscb_fsm_wait_replace_ack(struct osmo_fsm_inst *fi, uint32_t event,
 			if (peer_fi->state == SMSCB_S_WAIT_REPLACE_ACK)
 				break;
 		}
+		rest_it_op_set_http_result(cbcmsg->it_op, 200, "OK"); // FIXME: error cases
 		osmo_fsm_inst_state_chg(fi, SMSCB_S_ACTIVE, 0, 0);
 		break;
 	default:
@@ -142,14 +143,13 @@ static void smscb_fsm_wait_replace_ack_onleave(struct osmo_fsm_inst *fi, uint32_
 {
 	struct cbc_message *cbcmsg = fi->priv;
 	/* release the mutex from the REST interface + respond to user */
-	if (cbcmsg->it_op) {
-		pthread_cond_signal(&cbcmsg->it_op->cond);
-		cbcmsg->it_op = NULL;
-	}
+	rest_it_op_complete(cbcmsg->it_op);
+	cbcmsg->it_op = NULL;
 }
 
 static void smscb_fsm_wait_status_ack(struct osmo_fsm_inst *fi, uint32_t event, void *data)
 {
+	struct cbc_message *cbcmsg = fi->priv;
 	struct cbc_message_peer *mp = NULL;
 	struct osmo_fsm_inst *peer_fi;
 
@@ -161,6 +161,7 @@ static void smscb_fsm_wait_status_ack(struct osmo_fsm_inst *fi, uint32_t event, 
 			if (peer_fi->state == SMSCB_S_WAIT_STATUS_ACK)
 				break;
 		}
+		rest_it_op_set_http_result(cbcmsg->it_op, 200, "OK"); // FIXME: error cases
 		osmo_fsm_inst_state_chg(fi, SMSCB_S_ACTIVE, 0, 0);
 		break;
 	default:
@@ -172,14 +173,13 @@ static void smscb_fsm_wait_status_ack_onleave(struct osmo_fsm_inst *fi, uint32_t
 {
 	struct cbc_message *cbcmsg = fi->priv;
 	/* release the mutex from the REST interface + respond to user */
-	if (cbcmsg->it_op) {
-		pthread_cond_signal(&cbcmsg->it_op->cond);
-		cbcmsg->it_op = NULL;
-	}
+	rest_it_op_complete(cbcmsg->it_op);
+	cbcmsg->it_op = NULL;
 }
 
 static void smscb_fsm_wait_delete_ack(struct osmo_fsm_inst *fi, uint32_t event, void *data)
 {
+	struct cbc_message *cbcmsg = fi->priv;
 	struct cbc_message_peer *mp = NULL;
 	struct osmo_fsm_inst *peer_fi;
 
@@ -191,6 +191,7 @@ static void smscb_fsm_wait_delete_ack(struct osmo_fsm_inst *fi, uint32_t event, 
 			if (peer_fi->state == SMSCB_S_WAIT_DELETE_ACK)
 				break;
 		}
+		rest_it_op_set_http_result(cbcmsg->it_op, 200, "OK"); // FIXME: error cases
 		osmo_fsm_inst_state_chg(fi, SMSCB_S_DELETED, 0, 0);
 		break;
 	default:
@@ -203,7 +204,7 @@ static void smscb_fsm_wait_delete_ack_onleave(struct osmo_fsm_inst *fi, uint32_t
 	struct cbc_message *cbcmsg = fi->priv;
 	/* release the mutex from the REST interface + respond to user */
 	if (cbcmsg->it_op) {
-		pthread_cond_signal(&cbcmsg->it_op->cond);
+		rest_it_op_complete(cbcmsg->it_op);
 		cbcmsg->it_op = NULL;
 	}
 }
@@ -213,7 +214,7 @@ static void smscb_fsm_deleted_onenter(struct osmo_fsm_inst *fi, uint32_t old_sta
 	/* release the mutex from the REST interface, then destroy */
 	struct cbc_message *cbcmsg = fi->priv;
 	if (cbcmsg->it_op) {
-		pthread_cond_signal(&cbcmsg->it_op->cond);
+		rest_it_op_complete(cbcmsg->it_op);
 		cbcmsg->it_op = NULL;
 	}
 	osmo_fsm_inst_term(fi, OSMO_FSM_TERM_REGULAR, NULL);
