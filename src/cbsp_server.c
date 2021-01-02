@@ -44,8 +44,12 @@ struct osmo_cbsp_bsc {
 
 const char *cbsp_cbc_client_name(const struct osmo_cbsp_cbc_client *client)
 {
-	struct osmo_fd *ofd = osmo_stream_srv_get_ofd(client->conn);
-	return osmo_sock_get_name2(ofd->fd);
+	if (client->peer && client->peer->name) {
+		return client->peer->name;
+	} else {
+		struct osmo_fd *ofd = osmo_stream_srv_get_ofd(client->conn);
+		return osmo_sock_get_name2(ofd->fd);
+	}
 }
 
 /* data from BSC has arrived at CBC */
@@ -157,7 +161,7 @@ static int cbsp_cbc_accept_cb(struct osmo_stream_srv_link *link, int fd)
 		client->peer->client.cbsp = client;
 	}
 
-	LOGPCC(client, LOGL_INFO, "New CBSP client connection\n");
+	LOGPCC(client, LOGL_INFO, "New CBSP client connection from %s:%u\n", remote_ip, remote_port);
 	osmo_fsm_inst_dispatch(client->fi, CBSP_SRV_E_CMD_RESET, NULL);
 
 	return 0;
