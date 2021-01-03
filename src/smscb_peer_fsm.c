@@ -345,16 +345,6 @@ static void smscb_p_fsm_active(struct osmo_fsm_inst *fi, uint32_t event, void *d
 		cbsp_cbc_client_tx(mp->peer->client.cbsp, cbsp);
 		osmo_fsm_inst_state_chg(fi, SMSCB_S_WAIT_STATUS_ACK, 10, T_WAIT_STATUS_ACK);
 		break;
-	case SMSCB_E_DELETE: /* send KILL to BSC */
-		cbsp = osmo_cbsp_decoded_alloc(mp->peer, CBSP_MSGT_KILL);
-		OSMO_ASSERT(cbsp);
-		cbsp->u.kill.msg_id = mp->cbcmsg->msg.message_id;
-		cbsp->u.kill.old_serial_nr = mp->cbcmsg->msg.serial_nr;
-		/* TODO: we assume that the delete will always affect all original cells */
-		cbsp_append_cell_list(&cbsp->u.kill.cell_list, cbsp, mp);
-		cbsp_cbc_client_tx(mp->peer->client.cbsp, cbsp);
-		osmo_fsm_inst_state_chg(fi, SMSCB_S_WAIT_DELETE_ACK, 10, T_WAIT_DELETE_ACK);
-		break;
 	default:
 		OSMO_ASSERT(0);
 	}
@@ -460,6 +450,36 @@ static int smscb_p_fsm_timer_cb(struct osmo_fsm_inst *fi)
 	return 0;
 }
 
+static void smscb_p_fsm_allstate(struct osmo_fsm_inst *fi, uint32_t event, void *data)
+{
+	struct cbc_message_peer *mp = (struct cbc_message_peer *) fi->priv;
+	struct osmo_cbsp_decoded *cbsp;
+
+	switch (event) {
+	case SMSCB_E_DELETE: /* send KILL to BSC */
+		switch (fi->state) {
+		case SMSCB_S_DELETED:
+		case SMSCB_S_INIT:
+			LOGPFSML(fi, LOGL_ERROR, "Event %s not permitted\n",
+				 osmo_fsm_event_name(fi->fsm, event));
+			return;
+		default:
+			break;
+		}
+		cbsp = osmo_cbsp_decoded_alloc(mp->peer, CBSP_MSGT_KILL);
+		OSMO_ASSERT(cbsp);
+		cbsp->u.kill.msg_id = mp->cbcmsg->msg.message_id;
+		cbsp->u.kill.old_serial_nr = mp->cbcmsg->msg.serial_nr;
+		/* TODO: we assume that the delete will always affect all original cells */
+		cbsp_append_cell_list(&cbsp->u.kill.cell_list, cbsp, mp);
+		cbsp_cbc_client_tx(mp->peer->client.cbsp, cbsp);
+		osmo_fsm_inst_state_chg(fi, SMSCB_S_WAIT_DELETE_ACK, 10, T_WAIT_DELETE_ACK);
+		break;
+	default:
+		OSMO_ASSERT(0);
+	}
+}
+
 static void smscb_p_fsm_cleanup(struct osmo_fsm_inst *fi, enum osmo_fsm_term_cause cause)
 {
 	struct cbc_message_peer *mp = (struct cbc_message_peer *) fi->priv;
@@ -478,14 +498,14 @@ static const struct osmo_fsm_state smscb_p_fsm_states[] = {
 		.name = "WAIT_WRITE_ACK",
 		.in_event_mask = S(SMSCB_E_CBSP_WRITE_ACK) |
 				 S(SMSCB_E_CBSP_WRITE_NACK),
-		.out_state_mask = S(SMSCB_S_ACTIVE),
+		.out_state_mask = S(SMSCB_S_ACTIVE) |
+				  S(SMSCB_S_WAIT_DELETE_ACK),
 		.action = smscb_p_fsm_wait_write_ack,
 	},
 	[SMSCB_S_ACTIVE] = {
 		.name = "ACTIVE",
 		.in_event_mask = S(SMSCB_E_REPLACE) |
-				 S(SMSCB_E_STATUS) |
-				 S(SMSCB_E_DELETE),
+				 S(SMSCB_E_STATUS),
 		.out_state_mask = S(SMSCB_S_WAIT_REPLACE_ACK) |
 				  S(SMSCB_S_WAIT_STATUS_ACK) |
 				  S(SMSCB_S_WAIT_DELETE_ACK),
@@ -495,14 +515,16 @@ static const struct osmo_fsm_state smscb_p_fsm_states[] = {
 		.name = "WAIT_STATUS_ACK",
 		.in_event_mask = S(SMSCB_E_CBSP_STATUS_ACK) |
 				 S(SMSCB_E_CBSP_STATUS_NACK),
-		.out_state_mask = S(SMSCB_S_ACTIVE),
+		.out_state_mask = S(SMSCB_S_ACTIVE) |
+				 S(SMSCB_S_WAIT_DELETE_ACK),
 		.action = smscb_p_fsm_wait_status_ack,
 	},
 	[SMSCB_S_WAIT_REPLACE_ACK] = {
 		.name = "WAIT_REPLACE_ACK",
 		.in_event_mask = S(SMSCB_E_CBSP_REPLACE_ACK) |
 				 S(SMSCB_E_CBSP_REPLACE_NACK),
-		.out_state_mask = S(SMSCB_S_ACTIVE),
+		.out_state_mask = S(SMSCB_S_ACTIVE) |
+				  S(SMSCB_S_WAIT_DELETE_ACK),
 		.action = smscb_p_fsm_wait_replace_ack,
 	},
 	[SMSCB_S_WAIT_DELETE_ACK] = {
@@ -521,6 +543,8 @@ struct osmo_fsm smscb_p_fsm = {
 	.name = "SMSCB-PEER",
 	.states = smscb_p_fsm_states,
 	.num_states = ARRAY_SIZE(smscb_p_fsm_states),
+	.allstate_event_mask = S(SMSCB_E_DELETE),
+	.allstate_action = smscb_p_fsm_allstate,
 	.timer_cb = smscb_p_fsm_timer_cb,
 	.log_subsys = DCBSP,
 	.event_names = smscb_fsm_event_names,
