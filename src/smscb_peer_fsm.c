@@ -55,12 +55,14 @@ const struct value_string smscb_fsm_event_names[] = {
 	{ 0, NULL }
 };
 
+#if 0
 static const struct value_string smscb_p_fsm_timer_names[] = {
 	OSMO_VALUE_STRING(T_WAIT_WRITE_ACK),
 	OSMO_VALUE_STRING(T_WAIT_REPLACE_ACK),
 	OSMO_VALUE_STRING(T_WAIT_DELETE_ACK),
 	{ 0, NULL }
 };
+#endif
 
 /***********************************************************************
  * Helper functions
@@ -137,6 +139,8 @@ static void cci_from_cbsp(struct cbc_cell_id *cci, enum CELL_IDENT id_discr,
 		cci->u.lac = u->lac;
 		break;
 	case CELL_IDENT_BSS:
+		break;
+	default:
 		break;
 	}
 }
@@ -437,8 +441,6 @@ static void smscb_p_fsm_wait_delete_ack(struct osmo_fsm_inst *fi, uint32_t event
 
 static int smscb_p_fsm_timer_cb(struct osmo_fsm_inst *fi)
 {
-	struct cbc_message_peer *mp = (struct cbc_message_peer *) fi->priv;
-
 	switch (fi->T) {
 	case T_WAIT_WRITE_ACK:
 		osmo_fsm_inst_state_chg(fi, SMSCB_S_ACTIVE, 0, 0);

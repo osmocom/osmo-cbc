@@ -27,7 +27,7 @@
 #include "charset.h"
 
 /* return number of output bytes written */
-int charset_utf8_to_gsm7(char *out, size_t out_len, const char *in, size_t in_len)
+int charset_utf8_to_gsm7(uint8_t *out, size_t out_len, const char *in, size_t in_len)
 {
 	int octets;
 	/* FIXME: implement this for 'escape' characters outside 7bit alphabet */
@@ -36,7 +36,7 @@ int charset_utf8_to_gsm7(char *out, size_t out_len, const char *in, size_t in_le
 }
 
 /* return number of output bytes written */
-int charset_gsm7_to_utf8(char *out, size_t out_len, const char *in, size_t in_len)
+int charset_gsm7_to_utf8(char *out, size_t out_len, const uint8_t *in, size_t in_len)
 {
 	/* FIXME: implement this for 'escape' characters outside 7bit alphabet */
 	return gsm_7bit_decode_n_ussd(out, out_len, in, in_len);
@@ -48,7 +48,7 @@ static struct {
 	iconv_t ucs2_to_utf8;
 } g_iconv_state;
 
-int charset_utf8_to_ucs2(char *out, size_t out_len, const char *in, size_t in_len)
+int charset_utf8_to_ucs2(uint8_t *out, size_t out_len, const char *in, size_t in_len)
 {
 	iconv_t ic = g_iconv_state.utf8_to_ucs2;
 	int rc;
@@ -58,10 +58,10 @@ int charset_utf8_to_ucs2(char *out, size_t out_len, const char *in, size_t in_le
 	if (rc < 0)
 		return rc;
 
-	return iconv(ic, (char **) &in, &in_len, &out, &out_len);
+	return iconv(ic, (char **) &in, &in_len, (char **) &out, &out_len);
 }
 
-int charset_ucs2_to_utf8(char *out, size_t out_len, const char *in, size_t in_len)
+int charset_ucs2_to_utf8(char *out, size_t out_len, const uint8_t *in, size_t in_len)
 {
 	iconv_t ic = g_iconv_state.ucs2_to_utf8;
 	int rc;

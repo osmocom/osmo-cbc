@@ -274,7 +274,7 @@ static int parse_payload_decoded(struct smscb_message *out, json_t *jtmp, const 
 			}
 		}
 		/* convert from UTF-8 input to GSM 7bit output */
-		rc = charset_utf8_to_gsm7((char *)out->cbs.data, sizeof(out->cbs.data),
+		rc = charset_utf8_to_gsm7((uint8_t *) out->cbs.data, sizeof(out->cbs.data),
 					  data_utf8_str, strlen(data_utf8_str));
 		if (rc > 0) {
 			out->cbs.data_user_len = rc;
@@ -292,7 +292,7 @@ static int parse_payload_decoded(struct smscb_message *out, json_t *jtmp, const 
 			/* TODO: we must encode it in the first two octets */
 		}
 		/* convert from UTF-8 input to UCS2 output */
-		rc = charset_utf8_to_ucs2((char *) out->cbs.data, sizeof(out->cbs.data),
+		rc = charset_utf8_to_ucs2((uint8_t *) out->cbs.data, sizeof(out->cbs.data),
 					  data_utf8_str, strlen(data_utf8_str));
 		if (rc > 0)
 			out->cbs.num_pages = pages_from_octets(rc);
@@ -647,6 +647,7 @@ static const struct _u_endpoint api_endpoints[] = {
 };
 
 static struct _u_instance g_instance;
+#ifdef ULFIUS_MALLOC_NOT_BROKEN
 static void *g_tall_rest;
 static pthread_mutex_t g_tall_rest_lock = PTHREAD_MUTEX_INITIALIZER;
 
@@ -674,13 +675,16 @@ static void my_o_free(void *obj)
 	talloc_free(obj);
 	pthread_mutex_unlock(&g_tall_rest_lock);
 }
+#endif
 
 int rest_api_init(void *ctx, uint16_t port)
 {
 	int i;
 
+#ifdef ULFIUS_MALLOC_NOT_BROKEN
 	g_tall_rest = ctx;
-	//o_set_alloc_funcs(my_o_malloc, my_o_realloc, my_o_free);
+	o_set_alloc_funcs(my_o_malloc, my_o_realloc, my_o_free);
+#endif
 
 	if (ulfius_init_instance(&g_instance, port, NULL, NULL) != U_OK)
 		return -1;

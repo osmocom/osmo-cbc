@@ -57,13 +57,11 @@ static void smscb_fsm_init(struct osmo_fsm_inst *fi, uint32_t event, void *data)
 static void smscb_fsm_wait_write_ack(struct osmo_fsm_inst *fi, uint32_t event, void *data)
 {
 	struct cbc_message *cbcmsg = fi->priv;
-	struct cbc_message_peer *mp = NULL;
 	struct osmo_fsm_inst *peer_fi;
 
 	switch (event) {
 	case SMSCB_E_CBSP_WRITE_ACK:
 	case SMSCB_E_CBSP_WRITE_NACK:
-		mp = data;
 		/* check if any per-peer children have not yet received the ACK or
 		 * timed out */
 		llist_for_each_entry(peer_fi, &fi->proc.children, proc.child) {
@@ -120,13 +118,11 @@ static void smscb_fsm_active(struct osmo_fsm_inst *fi, uint32_t event, void *dat
 static void smscb_fsm_wait_replace_ack(struct osmo_fsm_inst *fi, uint32_t event, void *data)
 {
 	struct cbc_message *cbcmsg = fi->priv;
-	struct cbc_message_peer *mp = NULL;
 	struct osmo_fsm_inst *peer_fi;
 
 	switch (event) {
 	case SMSCB_E_CBSP_REPLACE_ACK:
 	case SMSCB_E_CBSP_REPLACE_NACK:
-		mp = data;
 		llist_for_each_entry(peer_fi, &fi->proc.children, proc.child) {
 			if (peer_fi->state == SMSCB_S_WAIT_REPLACE_ACK)
 				break;
@@ -150,13 +146,11 @@ static void smscb_fsm_wait_replace_ack_onleave(struct osmo_fsm_inst *fi, uint32_
 static void smscb_fsm_wait_status_ack(struct osmo_fsm_inst *fi, uint32_t event, void *data)
 {
 	struct cbc_message *cbcmsg = fi->priv;
-	struct cbc_message_peer *mp = NULL;
 	struct osmo_fsm_inst *peer_fi;
 
 	switch (event) {
 	case SMSCB_E_CBSP_STATUS_ACK:
 	case SMSCB_E_CBSP_STATUS_NACK:
-		mp = data;
 		llist_for_each_entry(peer_fi, &fi->proc.children, proc.child) {
 			if (peer_fi->state == SMSCB_S_WAIT_STATUS_ACK)
 				break;
@@ -180,13 +174,11 @@ static void smscb_fsm_wait_status_ack_onleave(struct osmo_fsm_inst *fi, uint32_t
 static void smscb_fsm_wait_delete_ack(struct osmo_fsm_inst *fi, uint32_t event, void *data)
 {
 	struct cbc_message *cbcmsg = fi->priv;
-	struct cbc_message_peer *mp = NULL;
 	struct osmo_fsm_inst *peer_fi;
 
 	switch (event) {
 	case SMSCB_E_CBSP_DELETE_ACK:
 	case SMSCB_E_CBSP_DELETE_NACK:
-		mp = data;
 		llist_for_each_entry(peer_fi, &fi->proc.children, proc.child) {
 			if (peer_fi->state == SMSCB_S_WAIT_DELETE_ACK)
 				break;
@@ -380,7 +372,7 @@ struct cbc_message *cbc_message_alloc(void *ctx, const struct cbc_message *orig_
 	return smscb;
 }
 
-__attribute__((constructor)) smscb_fsm_constructor(void)
+__attribute__((constructor)) void smscb_fsm_constructor(void)
 {
 	OSMO_ASSERT(osmo_fsm_register(&smscb_fsm) == 0);
 }
