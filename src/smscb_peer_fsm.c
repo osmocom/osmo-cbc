@@ -434,15 +434,19 @@ static int smscb_p_fsm_timer_cb(struct osmo_fsm_inst *fi)
 	switch (fi->T) {
 	case T_WAIT_WRITE_ACK:
 		osmo_fsm_inst_state_chg(fi, SMSCB_S_ACTIVE, 0, 0);
+		osmo_fsm_inst_dispatch(fi->proc.parent, SMSCB_E_CBSP_WRITE_NACK, NULL);
 		break;
 	case T_WAIT_REPLACE_ACK:
 		osmo_fsm_inst_state_chg(fi, SMSCB_S_ACTIVE, 0, 0);
+		osmo_fsm_inst_dispatch(fi->proc.parent, SMSCB_E_CBSP_REPLACE_NACK, NULL);
 		break;
 	case T_WAIT_STATUS_ACK:
 		osmo_fsm_inst_state_chg(fi, SMSCB_S_ACTIVE, 0, 0);
+		osmo_fsm_inst_dispatch(fi->proc.parent, SMSCB_E_CBSP_STATUS_NACK, NULL);
 		break;
 	case T_WAIT_DELETE_ACK:
 		osmo_fsm_inst_state_chg(fi, SMSCB_S_DELETED, 0, 0);
+		osmo_fsm_inst_dispatch(fi->proc.parent, SMSCB_E_CBSP_DELETE_NACK, NULL);
 		break;
 	default:
 		OSMO_ASSERT(0);

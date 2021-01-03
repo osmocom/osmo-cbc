@@ -66,7 +66,7 @@ static void smscb_fsm_wait_write_ack(struct osmo_fsm_inst *fi, uint32_t event, v
 		 * timed out */
 		llist_for_each_entry(peer_fi, &fi->proc.children, proc.child) {
 			if (peer_fi->state == SMSCB_S_WAIT_WRITE_ACK)
-				break;
+				return;
 		}
 		rest_it_op_set_http_result(cbcmsg->it_op, 201, "Created"); // FIXME: error cases
 		osmo_fsm_inst_state_chg(fi, SMSCB_S_ACTIVE, 0, 0);
@@ -125,7 +125,7 @@ static void smscb_fsm_wait_replace_ack(struct osmo_fsm_inst *fi, uint32_t event,
 	case SMSCB_E_CBSP_REPLACE_NACK:
 		llist_for_each_entry(peer_fi, &fi->proc.children, proc.child) {
 			if (peer_fi->state == SMSCB_S_WAIT_REPLACE_ACK)
-				break;
+				return;
 		}
 		rest_it_op_set_http_result(cbcmsg->it_op, 200, "OK"); // FIXME: error cases
 		osmo_fsm_inst_state_chg(fi, SMSCB_S_ACTIVE, 0, 0);
@@ -153,7 +153,7 @@ static void smscb_fsm_wait_status_ack(struct osmo_fsm_inst *fi, uint32_t event, 
 	case SMSCB_E_CBSP_STATUS_NACK:
 		llist_for_each_entry(peer_fi, &fi->proc.children, proc.child) {
 			if (peer_fi->state == SMSCB_S_WAIT_STATUS_ACK)
-				break;
+				return;
 		}
 		rest_it_op_set_http_result(cbcmsg->it_op, 200, "OK"); // FIXME: error cases
 		osmo_fsm_inst_state_chg(fi, SMSCB_S_ACTIVE, 0, 0);
@@ -180,8 +180,8 @@ static void smscb_fsm_wait_delete_ack(struct osmo_fsm_inst *fi, uint32_t event, 
 	case SMSCB_E_CBSP_DELETE_ACK:
 	case SMSCB_E_CBSP_DELETE_NACK:
 		llist_for_each_entry(peer_fi, &fi->proc.children, proc.child) {
-			if (peer_fi->state == SMSCB_S_WAIT_DELETE_ACK)
-				break;
+			if (peer_fi->state != SMSCB_S_DELETED)
+				return;
 		}
 		rest_it_op_set_http_result(cbcmsg->it_op, 200, "OK"); // FIXME: error cases
 		osmo_fsm_inst_state_chg(fi, SMSCB_S_DELETED, 0, 0);
