@@ -179,6 +179,7 @@ int main(int argc, char **argv)
 	g_cbc = talloc_zero(tall_cbc_ctx, struct cbc);
 	INIT_LLIST_HEAD(&g_cbc->peers);
 	INIT_LLIST_HEAD(&g_cbc->messages);
+	INIT_LLIST_HEAD(&g_cbc->expired_messages);
 
 	cbc_vty_init();
 

@@ -209,7 +209,10 @@ static void smscb_fsm_deleted_onenter(struct osmo_fsm_inst *fi, uint32_t old_sta
 		rest_it_op_complete(cbcmsg->it_op);
 		cbcmsg->it_op = NULL;
 	}
-	osmo_fsm_inst_term(fi, OSMO_FSM_TERM_REGULAR, NULL);
+	/* move from active to expired messages */
+	llist_del(&cbcmsg->list);
+	llist_add_tail(&cbcmsg->list, &g_cbc->expired_messages);
+	cbcmsg->time.expired = time(NULL);
 }
 
 static struct osmo_fsm_state smscb_fsm_states[] = {

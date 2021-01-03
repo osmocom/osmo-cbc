@@ -101,6 +101,12 @@ DEFUN(show_messages_cbs, show_messages_cbs_cmd,
 		dump_one_cbc_msg(vty, cbc_msg);
 	}
 
+	llist_for_each_entry(cbc_msg, &g_cbc->expired_messages, list) {
+		if (cbc_msg->msg.is_etws)
+			continue;
+		dump_one_cbc_msg(vty, cbc_msg);
+	}
+
 	return CMD_SUCCESS;
 }
 
@@ -238,9 +244,13 @@ DEFUN(show_messages_etws, show_messages_etws_cmd,
 	vty_out(vty,
 "|-----|-----|--------------------|-------------|------|-|------------|%s", VTY_NEWLINE);
 
-
-
 	llist_for_each_entry(cbc_msg, &g_cbc->messages, list) {
+		if (!cbc_msg->msg.is_etws)
+			continue;
+		dump_one_etws_msg(vty, cbc_msg);
+	}
+
+	llist_for_each_entry(cbc_msg, &g_cbc->expired_messages, list) {
 		if (!cbc_msg->msg.is_etws)
 			continue;
 		dump_one_etws_msg(vty, cbc_msg);

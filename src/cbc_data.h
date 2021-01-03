@@ -154,6 +154,7 @@ struct cbc_message {
 
 	struct {
 		time_t created;		/* when was this message created? */
+		time_t expired;		/* when has this message expired? */
 	} time;
 };
 
@@ -167,6 +168,7 @@ struct cbc {
 	} config;
 
 	struct llist_head messages;	/* cbc_message.list */
+	struct llist_head expired_messages;	/* cbc_message.list */
 	struct llist_head peers;	/* cbc_peer.list */
 	struct {
 		struct osmo_it_q *rest2main;
