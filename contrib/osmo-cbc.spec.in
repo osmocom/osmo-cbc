@@ -1,0 +1,92 @@
+#
+# spec file for package osmo-cbc
+#
+# Copyright (c) 2021, Harald Welte <laforge@gnumonks.org>
+#
+# All modifications and additions to the file contributed by third parties
+# remain the property of their copyright owners, unless otherwise agreed
+# upon. The license for this file, and modifications and additions to the
+# file, is the same license as for the pristine package itself (unless the
+# license for the pristine package is not an Open Source License, in which
+# case the license is the MIT License). An "Open Source License" is a
+# license that conforms to the Open Source Definition (Version 1.9)
+# published by the Open Source Initiative.
+
+## Disable LTO for now since it breaks compilation of the tests
+## https://osmocom.org/issues/4113
+%define _lto_cflags %{nil}
+
+Name:           osmo-cbc
+Version:        @VERSION@
+Release:        0
+Summary:        OsmoCBC: Osmocom's Cell Broadcast Centre for 3GPP mobile networks
+License:        AGPL-3.0-or-later AND GPL-2.0-or-later
+Group:          Hardware/Mobile
+URL:            https://osmocom.org/projects/osmo-cbc
+Source:         %{name}-%{version}.tar.xz
+BuildRequires:  automake >= 1.9
+BuildRequires:  libtool >= 2
+BuildRequires:  pkgconfig >= 0.20
+%if 0%{?suse_version}
+BuildRequires:  systemd-rpm-macros
+%endif
+BuildRequires:  pkgconfig(libcrypto) >= 0.9.5
+BuildRequires:  pkgconfig(libosmo-mgcp-client) >= 1.5.0
+BuildRequires:  pkgconfig(libosmo-netif) >= 0.6.0
+BuildRequires:  pkgconfig(libosmo-sccp) >= 0.10.0
+BuildRequires:  pkgconfig(libosmo-sigtran) >= 0.10.0
+BuildRequires:  pkgconfig(libosmoabis) >= 0.6.0
+BuildRequires:  pkgconfig(libosmocore) >= 1.2.0
+BuildRequires:  pkgconfig(libosmoctrl) >= 1.2.0
+BuildRequires:  pkgconfig(libosmogb)
+BuildRequires:  pkgconfig(libosmogsm) >= 1.2.0
+BuildRequires:  pkgconfig(libosmovty) >= 1.2.0
+BuildRequires:  pkgconfig(talloc)
+%{?systemd_requires}
+
+%description
+OsmoCBC: Osmocom's Cell Broadcast Centre for 3GPP mobile networks.
+
+%prep
+%setup -q
+
+%build
+echo "%{version}" >.tarball-version
+autoreconf -fi
+%configure \
+  --docdir=%{_docdir}/%{name} \
+  --with-systemdsystemunitdir=%{_unitdir}
+make %{?_smp_mflags}
+
+%install
+%make_install
+
+%if 0%{?suse_version}
+%preun
+%service_del_preun %{name}.service
+
+%postun
+%service_del_postun %{name}.service
+
+%pre
+%service_add_pre %{name}.service
+
+%post
+%service_add_post %{name}.service
+%endif
+
+%check
+make %{?_smp_mflags} check || (find . -name testsuite.log -exec cat {} +)
+
+%files
+%license COPYING
+%doc AUTHORS README
+%{_bindir}/osmo-cbc
+%dir %{_docdir}/%{name}/examples
+%dir %{_docdir}/%{name}/examples/osmo-cbc
+%{_docdir}/%{name}/examples/osmo-cbc/osmo-cbc*.cfg
+%dir %{_sysconfdir}/osmocom
+%config(noreplace) %{_sysconfdir}/osmocom/osmo-cbc.cfg
+%{_unitdir}/%{name}.service
+
+%changelog

@@ -58,3 +58,5 @@ doc/manuals/osmobsc-usermanual.xml
 doc/manuals/common
 doc/manuals/build
 doc/manuals/vty/cbc_vty_reference.xml
+
+contrib/osmo-cbc.spec
