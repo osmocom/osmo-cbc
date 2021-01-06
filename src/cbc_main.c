@@ -20,14 +20,12 @@
  *
  */
 
-#define _GNU_SOURCE
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <getopt.h>
 #include <signal.h>
-#include <sys/types.h>
 
 #include <osmocom/core/stats.h>
 #include <osmocom/core/select.h>
@@ -206,7 +204,7 @@ int main(int argc, char **argv)
 
 	rest_api_init(tall_rest_ctx, 12345);
 
-	LOGP(DREST, LOGL_INFO, "Main thread tid: %d\n", gettid());
+	LOGP(DREST, LOGL_INFO, "Main thread tid: %lu\n", pthread_self());
 	g_cbc->it_q.rest2main = osmo_it_q_alloc(g_cbc, "rest2main", 10, rest2main_read_cb, NULL);
 	OSMO_ASSERT(g_cbc->it_q.rest2main);
 	osmo_fd_register(&g_cbc->it_q.rest2main->event_ofd);

@@ -20,10 +20,6 @@
  *
  */
 
-#define _GNU_SOURCE
-#include <unistd.h>
-#include <sys/types.h>
-
 #include <errno.h>
 #include <pthread.h>
 
@@ -55,7 +51,7 @@ int rest_it_op_send_and_wait(struct rest_it_op *op)
 {
 	int rc = 0;
 
-	LOGP(DREST, LOGL_DEBUG, "rest_it_op enqueue from %u\n", gettid());
+	LOGP(DREST, LOGL_DEBUG, "rest_it_op enqueue from %lu\n", pthread_self());
 
 	rc = osmo_it_q_enqueue(g_cbc->it_q.rest2main, op, list);
 	if (rc < 0)
@@ -91,7 +87,7 @@ void rest2main_read_cb(struct osmo_it_q *q, void *item)
 	struct rest_it_op *op = item;
 	struct cbc_message *cbc_msg;
 
-	LOGP(DREST, LOGL_DEBUG, "%s(op=%p) from %u\n", __func__, op, gettid());
+	LOGP(DREST, LOGL_DEBUG, "%s(op=%p) from %lu\n", __func__, op, pthread_self());
 
 	/* FIXME: look up related message and dispatch to message FSM,
 	 * which will eventually call pthread_cond_signal(&op->cond) */
