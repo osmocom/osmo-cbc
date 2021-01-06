@@ -1,0 +1,77 @@
+[[overview]]
+== OsmoCBC Overview
+
+=== The 3GPP Cell Broadcast Centre
+
+Within the 3GPP cellular network, the Cell Broadcast Centre is the central
+instance for managing all Cell Broadcast and Emergency Warning functions.
+
+It acts as a gateway between external applications / users, such as government
+authorities for civil protection, and the various components within the 3GPP
+network to actually deliver those broadcast and/or emergency messages.
+
+[[about]]
+=== About OsmoCBC
+
+OsmoCBC is the Osmocom implementation of a Cellular Broadcast Centre (CBC). It
+implements:
+
+- the BSC-CBC interface using the CBSP protocol
+- a HTTP/JSON/RESTful interface for external applications
+- a telnet-based command line interface for configuration and introspection called VTY
+
+OsmoCBC provides mainly the following functionality:
+
+- establishing communication with the various Radio Access Network elements such as BSCs within the network
+- receiving requests to start or remove CBS and ETWS messages from external applications
+- distributing the CBS and/or ETWS messages
+has connection with the various RANs of the 3GPP cellular network
+
+Future versions of OsmoCBC are expected to contain the RNC-CBC interface
+with the SABP protocol, as well as the MME-CBC interface using the SBcAP
+protocol.  Should you be interested in contributing to this effort,
+please contact the author of this document.
+
+=== CBSP implementation
+
+CBSP is a Layer 5 protocol operating on top of TCP/IP, established
+between the CBC and the various BSCs of a cellular network.
+
+According to 3GPP, the CBSP is typically established from the CBC to the
+BSC.   This means that the CBSP operates as TCP client and the BSCs
+operate as TCP servers.  The disadvantage of this is that it requires
+the CBC to have out-of-band, prior knowledge about all the BSCs in the
+network, as well as their IP addresses.
+
+OsmoCBC also supports a slightly modified mode of operation, where the
+CBC operates as TCP server, and the BSCs as TCP clients.  This means
+that all BSCs need to know the IP address of the CBC.  In this situation,
+the CBC doesn't need to know each and every BSC in the network.  It
+simply only accepts incoming CBSP connections.
+
+
+=== REST interface
+
+The REST interface is specified in the JSON schema files
+`cbc.schema.json` and `smscb.schema.json`, which are part of the OsmoCBC
+distribution.
+
+The REST interface currently binds to TCP port 12345 (on INADRR_ANY) and
+can be reached at http://localhost:1234/api/ecbe/v1"
+
+NOTE:: It is your responsibility to properly secure access to the REST
+interface endpoint to ensure only legitimate users can access it.  This
+may be achieved via packet filtering and a reverse HTTP proxy.
+
+==== POST /api/ecbe/v1/message
+
+This command is used to create a new SMSCB or ETWS message inside the CBC.
+The `cbc_messsage` type as specified in the JSON schema.
+
+==== DELETE /api/ecbe/v1/message/:message_id
+
+This command is used to delete an existing SMSCB or ETWS message from the CBC.
+
+The `:message_id` parameter is the decimal integer representation of the
+cbc_message.smscb.message_id that was specified when creating the
+message via the POST command stated above.

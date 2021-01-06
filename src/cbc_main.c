@@ -74,7 +74,7 @@ static const struct log_info log_info = {
 };
 
 static const char cbc_copyright[] =
-        "Copyright (C) 2019 by Harald Welte <laforge@gnumonks.org>\r\n"
+        "Copyright (C) 2019-2021 by Harald Welte <laforge@gnumonks.org>\r\n"
         "License AGPLv3+: GNU Affero GPL Version 3 or later <http://gnu.org/licenses/agpl-3.0.html>\r\n"
         "This is free software: you are free ot change and redistribute it.\r\n"
         "There is NO WARRANTY, to the extent permitted by law.\r\n\r\n"
@@ -98,18 +98,54 @@ static struct {
 
 static void print_help(void)
 {
-	/* FIXME */
+	printf("Supported options:\n");
+	printf("  -h --help                  This text.\n");
+	printf("  -D --daemonize             Fork the process into a background daemon.\n");
+	printf("  -c --config-file filename  The config file to use.\n");
+	printf("  -V --version               Print the version of OsmoMSC.\n");
+
+	printf("\nVTY reference generation:\n");
+	printf("     --vty-ref-mode MODE     VTY reference generation mode (e.g. 'expert').\n");
+	printf("     --vty-ref-xml           Generate the VTY reference XML output and exit.\n");
+}
+
+static void handle_long_options(const char *prog_name, const int long_option)
+{
+	static int vty_ref_mode = VTY_REF_GEN_MODE_DEFAULT;
+
+	switch (long_option) {
+	case 1:
+		vty_ref_mode = get_string_value(vty_ref_gen_mode_names, optarg);
+		if (vty_ref_mode < 0) {
+			fprintf(stderr, "%s: Unknown VTY reference generation "
+				"mode '%s'\n", prog_name, optarg);
+			exit(2);
+		}
+		break;
+	case 2:
+		fprintf(stderr, "Generating the VTY reference in mode '%s' (%s)\n",
+			get_value_string(vty_ref_gen_mode_names, vty_ref_mode),
+			get_value_string(vty_ref_gen_mode_desc, vty_ref_mode));
+		vty_dump_xml_ref_mode(stdout, (enum vty_ref_gen_mode) vty_ref_mode);
+		exit(0);
+	default:
+		fprintf(stderr, "%s: error parsing cmdline options\n", prog_name);
+		exit(2);
+	}
 }
 
 static void handle_options(int argc, char **argv)
 {
 	while (1) {
 		int option_index = 0, c;
+		static int long_option = 0;
 		static const struct option long_options[] = {
 			{ "help", 0, 0, 'h' },
 			{ "daemonize", 0, 0, 'D' },
 			{ "config-file", 1, 0, 'c' },
 			{ "version", 0, 0, 'V' },
+			{ "vty-ref-mode", 1, &long_option, 1},
+			{ "vty-ref-xml", 0, &long_option, 2},
 			{ NULL, 0, 0, 0 }
 		};
 
@@ -121,6 +157,9 @@ static void handle_options(int argc, char **argv)
 		case 'h':
 			print_help();
 			exit(0);
+			break;
+		case 0:
+			handle_long_options(argv[0], long_option);
 			break;
 		case 'D':
 			cmdline_config.daemonize = true;

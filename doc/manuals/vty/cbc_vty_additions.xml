@@ -1,0 +1,18 @@
+<vtydoc xmlns='urn:osmocom:xml:libosmocore:vty:doc:1.0'>
+  <node id='config-cbc'>
+    <description>This node allows to configure the CBC. Will enter the CBC specific VTY configuration node.</description>
+    <command id='peer NAME'>
+      <description>
+        Configure a CBC RAN peer (BSC, ...). Will enter a sub-node where parameters about that peer can be configured.  The NAME has local significance only (for VTY and logging).
+      </description>
+    </command>
+    <command id='unknown-peers (accept|reject)'>
+      <description>
+        Whether or not the CBC should accept incoming CBSP/TCP connections from unknown peers, i.e. such peers that don't have an explicit 'peer' configuration.
+      </description>
+    </command>
+  </node>
+  <node id='config-cbc-peer'>
+    <description>This node allows to configure one CBC RAN peer (BSC, ...)</description>
+  </node>
+</vtydoc>

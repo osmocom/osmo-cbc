@@ -1,0 +1,29 @@
+:gfdl-enabled:
+:program-name: OsmoCBC
+
+OsmoCBC User Manual
+====================
+Harald Welte <hwelte@sysmocom.de>
+
+
+include::./common/chapters/preface.adoc[]
+
+include::{srcdir}/chapters/overview.adoc[]
+
+include::{srcdir}/chapters/running.adoc[]
+
+include::./common/chapters/counters-overview.adoc[]
+
+include::{srcdir}/chapters/counters.adoc[]
+
+include::./common/chapters/vty.adoc[]
+
+include::./common/chapters/logging.adoc[]
+
+include::./common/chapters/port_numbers.adoc[]
+
+include::./common/chapters/bibliography.adoc[]
+
+include::./common/chapters/glossary.adoc[]
+
+include::./common/chapters/gfdl.adoc[]
