@@ -23,6 +23,7 @@
 #include <errno.h>
 #include <pthread.h>
 
+#include <osmocom/core/linuxlist.h>
 #include <osmocom/core/it_q.h>
 
 #include "rest_it_op.h"
@@ -82,9 +83,9 @@ int rest_it_op_send_and_wait(struct rest_it_op *op)
  ***********************************************************************/
 
 
-void rest2main_read_cb(struct osmo_it_q *q, void *item)
+void rest2main_read_cb(struct osmo_it_q *q, struct llist_head *item)
 {
-	struct rest_it_op *op = item;
+	struct rest_it_op *op = container_of(item, struct rest_it_op, list);
 	struct cbc_message *cbc_msg;
 
 	LOGP(DREST, LOGL_DEBUG, "%s(op=%p) from %lu\n", __func__, op, pthread_self());

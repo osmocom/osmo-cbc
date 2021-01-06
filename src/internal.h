@@ -39,7 +39,7 @@ struct cbc_message *cbc_message_by_id(uint16_t message_id);
 int peer_new_cbc_message(struct cbc_peer *peer, struct cbc_message *cbcmsg);
 
 /* rest_it_op.c */
-void rest2main_read_cb(struct osmo_it_q *q, void *item);
+void rest2main_read_cb(struct osmo_it_q *q, struct llist_head *item);
 
 
 /* smscb_*fsm.c */
