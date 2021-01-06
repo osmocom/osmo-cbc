@@ -1,0 +1,5 @@
+osmo-cbc (0.1) UNRELEASED; urgency=medium
+
+  * Initial release.
+
+ -- Harald Welte <lafore@gnumonks.org>  Wed, 06 Jan 2021 12:13:12 +0100
