@@ -682,6 +682,7 @@ int rest_api_init(void *ctx, uint16_t port)
 	int i;
 
 #ifdef ULFIUS_MALLOC_NOT_BROKEN
+	/* See https://github.com/babelouest/ulfius/issues/63 */
 	g_tall_rest = ctx;
 	o_set_alloc_funcs(my_o_malloc, my_o_realloc, my_o_free);
 #endif
