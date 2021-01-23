@@ -26,13 +26,40 @@
 
 #include "charset.h"
 
+/* pad the entire "remainder" of a buffer with repeated instances of the given pad character */
+static void pad_with_septets(uint8_t *buf, size_t buf_len, int num_septets, char pad_char)
+{
+	unsigned int bit_offset;
+
+	for (bit_offset = num_septets * 7; bit_offset + 7 <= buf_len * 8; bit_offset += 7) {
+		unsigned int byte_offset = bit_offset / 8;
+		unsigned int bits = bit_offset % 8;
+
+		/* put one more septet */
+		buf[byte_offset] |= ((pad_char << bits) & 0xff);
+		if (bits > 1)
+			buf[byte_offset+1] = (pad_char) >> (8-bits);
+	}
+}
+
+
 /* return number of output bytes written */
 int charset_utf8_to_gsm7(uint8_t *out, size_t out_len, const char *in, size_t in_len)
 {
-	int octets;
+	int octets, num_septets, num_bits, num_bytes_used;
+
 	/* FIXME: implement this for 'escape' characters outside 7bit alphabet */
-	gsm_7bit_encode_n_ussd(out, out_len, in, &octets);
-	return octets;
+	num_septets = gsm_7bit_encode_n(out, out_len, in, &octets);
+	num_bits = num_septets * 7;
+
+	/* we need to pad the entire remainder of the message with <CR> */
+	pad_with_septets(out, out_len, num_septets, '\r');
+
+	/* return actual number of output octets used, excluding any padding */
+	num_bytes_used = num_bits/8;
+	if (num_bits % 8)
+		num_bytes_used++;
+	return num_bytes_used;
 }
 
 /* return number of output bytes written */
