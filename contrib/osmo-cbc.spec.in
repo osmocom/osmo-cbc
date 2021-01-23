@@ -42,6 +42,7 @@ BuildRequires:  pkgconfig(libosmogb)
 BuildRequires:  pkgconfig(libosmogsm) >= 1.2.0
 BuildRequires:  pkgconfig(libosmovty) >= 1.2.0
 BuildRequires:  pkgconfig(talloc)
+BuildRequires:  pkgconfig(libulfius)
 %{?systemd_requires}
 
 %description
