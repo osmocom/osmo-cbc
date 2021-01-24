@@ -49,29 +49,16 @@ that all BSCs need to know the IP address of the CBC.  In this situation,
 the CBC doesn't need to know each and every BSC in the network.  It
 simply only accepts incoming CBSP connections.
 
+For more information, see <<config-cbsp>> on how CBSP is configured.
 
-=== REST interface
+=== ECBE REST interface
 
-The REST interface is specified in the JSON schema files
-`cbc.schema.json` and `smscb.schema.json`, which are part of the OsmoCBC
-distribution.
+3GPP does not specify the external interface by which competent
+authorities can submit SMSCB and/or ETWS messages to a CBC.
 
-The REST interface currently binds to TCP port 12345 (on INADRR_ANY) and
-can be reached at http://localhost:1234/api/ecbe/v1"
+Hence, a non-standard, Osmocom specific  HTTP/REST/JSON based interface
+is offered for external entities to create and delete SMSCB and ETWS
+messages within the CBC.  This interface is called ECBE.
 
-NOTE:: It is your responsibility to properly secure access to the REST
-interface endpoint to ensure only legitimate users can access it.  This
-may be achieved via packet filtering and a reverse HTTP proxy.
-
-==== POST /api/ecbe/v1/message
-
-This command is used to create a new SMSCB or ETWS message inside the CBC.
-The `cbc_messsage` type as specified in the JSON schema.
-
-==== DELETE /api/ecbe/v1/message/:message_id
-
-This command is used to delete an existing SMSCB or ETWS message from the CBC.
-
-The `:message_id` parameter is the decimal integer representation of the
-cbc_message.smscb.message_id that was specified when creating the
-message via the POST command stated above.
+For more information, see <<ecbe>> on the ECBE API definition and <<config-ecbe>>
+on how it is configured.

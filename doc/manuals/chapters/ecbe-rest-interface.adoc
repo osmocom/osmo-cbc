@@ -1,0 +1,49 @@
+[[ecbe]]
+== ECBE REST interface
+
+The ECBE (External Cell Broadcast Entity) REST interface is specified in
+the JSON schema files `cbc.schema.json` and `smscb.schema.json`, which
+are part of the OsmoCBC distribution.
+
+The REST interface binds to the IP and TCP port as configured and
+can be reached at `http://IP:PORT/api/ecbe/v1`
+
+NOTE:: It is your responsibility to properly secure access to the REST
+interface endpoint to ensure only legitimate users can access it.  This
+may be achieved via packet filtering and a reverse HTTP proxy.
+
+=== API endpoints
+
+==== `POST /api/ecbe/v1/message`
+
+This command is used to create a new SMSCB or ETWS message inside the CBC.
+The `cbc_messsage` type as specified in the JSON schema (<<ecbe-json>>).
+
+==== `DELETE /api/ecbe/v1/message/:message_id`
+
+This command is used to delete an existing SMSCB or ETWS message from the CBC.
+
+The `:message_id` parameter is the decimal integer representation of the
+cbc_message.smscb.message_id that was specified when creating the
+message via the POST command stated above.
+
+[[ecbe-json]]
+=== JSON Schema
+
+==== `cbc.schema.json`
+
+This is the main JSOM schema for osmo-cbc.  In many places, it
+references `smscb.schema.json` described further below.
+
+----
+include::{srcdir}/../../cbc.schema.json[]
+----
+
+==== `smscb.schema.json`
+
+This JSON schema describes a lot of the basic data types relevant for
+SMSCB. It is used heavily by `cbc.schema.json` described above.
+
+----
+include::{srcdir}/../../smscb.schema.json[]
+----
