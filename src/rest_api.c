@@ -1,6 +1,6 @@
 /* Osmocom CBC (Cell Broacast Centre) */
 
-/* (C) 2019-2020 by Harald Welte <laforge@gnumonks.org>
+/* (C) 2019-2021 by Harald Welte <laforge@gnumonks.org>
  * All Rights Reserved
  *
  * SPDX-License-Identifier: AGPL-3.0+
@@ -31,6 +31,7 @@
 
 #include <osmocom/core/utils.h>
 #include <osmocom/core/linuxlist.h>
+#include <osmocom/core/sockaddr_str.h>
 
 #include <osmocom/gsm/protocol/gsm_48_049.h>
 
@@ -677,8 +678,9 @@ static void my_o_free(void *obj)
 }
 #endif
 
-int rest_api_init(void *ctx, uint16_t port)
+int rest_api_init(void *ctx, const char *bind_addr, uint16_t port)
 {
+	struct osmo_sockaddr_str sastr;
 	int i;
 
 #ifdef ULFIUS_MALLOC_NOT_BROKEN
@@ -687,18 +689,37 @@ int rest_api_init(void *ctx, uint16_t port)
 	o_set_alloc_funcs(my_o_malloc, my_o_realloc, my_o_free);
 #endif
 
-	if (ulfius_init_instance(&g_instance, port, NULL, NULL) != U_OK)
-		return -1;
+	OSMO_STRLCPY_ARRAY(sastr.ip, bind_addr);
+	sastr.port = port;
+
+	if (strchr(bind_addr, ':')) {
+#if (ULFIUS_VERSION_MAJOR > 2) || (ULFIUS_VERSION_MAJOR == 2) && (ULFIUS_VERSION_MINOR >= 6)
+		struct sockaddr_in6 sin6;
+		sastr.af = AF_INET6;
+		osmo_sockaddr_str_to_sockaddr_in6(&sastr, &sin6);
+		if (ulfius_init_instance_ipv6(&g_instance, port, &sin6, U_USE_IPV6, NULL) != U_OK)
+			return -1;
+#else
+		LOGP(DREST, LOGL_FATAL, "IPv6 requires ulfius version >= 2.6\n");
+		return -2;
+#endif
+	} else {
+		struct sockaddr_in sin;
+		sastr.af = AF_INET;
+		osmo_sockaddr_str_to_sockaddr_in(&sastr, &sin);
+		if (ulfius_init_instance(&g_instance, port, &sin, NULL) != U_OK)
+			return -1;
+	}
 	g_instance.mhd_response_copy_data = 1;
 
 	for (i = 0; i < ARRAY_SIZE(api_endpoints); i++)
 		ulfius_add_endpoint(&g_instance, &api_endpoints[i]);
 
 	if (ulfius_start_framework(&g_instance) != U_OK) {
-		LOGP(DREST, LOGL_FATAL, "Cannot start REST API on port %u\n", port);
+		LOGP(DREST, LOGL_FATAL, "Cannot start ECBE REST API at %s:%u\n", bind_addr, port);
 		return -1;
 	}
-	LOGP(DREST, LOGL_NOTICE, "Started REST API on port %u\n", port);
+	LOGP(DREST, LOGL_NOTICE, "Started ECBE REST API at %s:%u\n", bind_addr, port);
 	return 0;
 }
 

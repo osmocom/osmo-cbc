@@ -169,6 +169,10 @@ struct cbc {
 			char *local_host;
 			int local_port;
 		} cbsp;
+		struct {
+			char *local_host;
+			int local_port;
+		} ecbe;
 	} config;
 
 	struct llist_head messages;	/* cbc_message.list */

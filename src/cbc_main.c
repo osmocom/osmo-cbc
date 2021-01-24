@@ -1,6 +1,6 @@
 /* Osmocom CBC (Cell Broacast Centre) */
 
-/* (C) 2019 by Harald Welte <laforge@gnumonks.org>
+/* (C) 2019-2021 by Harald Welte <laforge@gnumonks.org>
  * All Rights Reserved
  *
  * SPDX-License-Identifier: AGPL-3.0+
@@ -221,6 +221,8 @@ int main(int argc, char **argv)
 	INIT_LLIST_HEAD(&g_cbc->expired_messages);
 	g_cbc->config.cbsp.local_host = talloc_strdup(g_cbc, "127.0.0.1");
 	g_cbc->config.cbsp.local_port = CBSP_TCP_PORT;
+	g_cbc->config.ecbe.local_host = talloc_strdup(g_cbc, "127.0.0.1");
+	g_cbc->config.ecbe.local_port = 12345;
 
 	cbc_vty_init();
 
@@ -245,7 +247,7 @@ int main(int argc, char **argv)
 	cbsp_cbc_create(tall_cbc_ctx, g_cbc->config.cbsp.local_host, g_cbc->config.cbsp.local_port,
 			&cbc_client_rx_cb);
 
-	rest_api_init(tall_rest_ctx, 12345);
+	rest_api_init(tall_rest_ctx, g_cbc->config.ecbe.local_host, g_cbc->config.ecbe.local_port);
 
 	LOGP(DREST, LOGL_INFO, "Main thread tid: %lu\n", pthread_self());
 	g_cbc->it_q.rest2main = osmo_it_q_alloc(g_cbc, "rest2main", 10, rest2main_read_cb, NULL);

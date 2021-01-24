@@ -1,6 +1,6 @@
 /* Osmocom CBC (Cell Broacast Centre) */
 
-/* (C) 2019 by Harald Welte <laforge@gnumonks.org>
+/* (C) 2019-2021 by Harald Welte <laforge@gnumonks.org>
  * All Rights Reserved
  *
  * SPDX-License-Identifier: AGPL-3.0+
@@ -268,6 +268,7 @@ enum cbc_vty_node {
 	CBC_NODE = _LAST_OSMOVTY_NODE + 1,
 	PEER_NODE,
 	CBSP_NODE,
+	ECBE_NODE,
 };
 
 static struct cmd_node cbc_node = {
@@ -319,6 +320,14 @@ DEFUN(cfg_cbsp, cfg_cbsp_cmd,
 	return CMD_SUCCESS;
 }
 
+DEFUN(cfg_ecbe, cfg_ecbe_cmd,
+	"ecbe",
+	"External CBS Entity (REST Interface)\n")
+{
+	vty->node = ECBE_NODE;
+	return CMD_SUCCESS;
+}
+
 
 /* CBSP */
 
@@ -352,6 +361,43 @@ DEFUN(cfg_cbsp_local_port, cfg_cbsp_local_port_cmd,
 	"Local TCP port for CBSP\n")
 {
 	g_cbc->config.cbsp.local_port = atoi(argv[0]);
+	return CMD_SUCCESS;
+}
+
+
+/* ECBE */
+
+static struct cmd_node ecbe_node = {
+	ECBE_NODE,
+	"%s(config-ecbe)# ",
+	1,
+};
+
+static int config_write_ecbe(struct vty *vty)
+{
+	vty_out(vty, " ecbe%s", VTY_NEWLINE);
+	vty_out(vty, "  local-ip %s%s", g_cbc->config.ecbe.local_host, VTY_NEWLINE);
+	vty_out(vty, "  local-port %u%s", g_cbc->config.ecbe.local_port, VTY_NEWLINE);
+
+	return CMD_SUCCESS;
+}
+
+DEFUN(cfg_ecbe_local_ip, cfg_ecbe_local_ip_cmd,
+	"local-ip (A.B.C.D|X:X::X:X)",
+	"Local IP address for CBSP\n"
+	"Local IPv4 address for ECBE REST Interface\n"
+	"Local IPv6 address for ECBE REST Interface\n")
+{
+	osmo_talloc_replace_string(g_cbc, &g_cbc->config.ecbe.local_host, argv[0]);
+	return CMD_SUCCESS;
+}
+
+DEFUN(cfg_ecbe_local_port, cfg_ecbe_local_port_cmd,
+	"local-port <0-65535>",
+	"Local TCP port for ECBE RESET Interface\n"
+	"Local TCP port for ECBE RESET Interface\n")
+{
+	g_cbc->config.ecbe.local_port = atoi(argv[0]);
 	return CMD_SUCCESS;
 }
 
@@ -468,6 +514,11 @@ void cbc_vty_init(void)
 	install_node(&cbsp_node, config_write_cbsp);
 	install_lib_element(CBSP_NODE, &cfg_cbsp_local_ip_cmd);
 	install_lib_element(CBSP_NODE, &cfg_cbsp_local_port_cmd);
+
+	install_lib_element(CBC_NODE, &cfg_ecbe_cmd);
+	install_node(&ecbe_node, config_write_ecbe);
+	install_lib_element(ECBE_NODE, &cfg_ecbe_local_ip_cmd);
+	install_lib_element(ECBE_NODE, &cfg_ecbe_local_port_cmd);
 
 	install_lib_element(CBC_NODE, &cfg_cbc_peer_cmd);
 	install_lib_element(CBC_NODE, &cfg_cbc_no_peer_cmd);

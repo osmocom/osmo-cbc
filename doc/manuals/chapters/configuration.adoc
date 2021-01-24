@@ -1,12 +1,14 @@
 [[configuration]]
-== CBSP / Peer Configuration
+== Configuration
+
+=== CBSP / Peer Configuration
 
 CBSP is the BSC-CBC interface within the 3GPP architecture.  It serves
 to communicate CSB and ETWS messages from the CBC to the BSC, who then
 subsequently distributes it among the (matching) cells within the BSC
 coverage area.
 
-=== Configuring the CBSP connections
+==== Configuring the CBSP connections
 
 According to 3GPP TS 48.049, a BSC typically operates as a TCP server,
 and the CBC connects as TCP client.  This would require the CBC to have
@@ -46,7 +48,7 @@ cbc
 
 For more details on the available configuration commands, please check the OsmoCBC VTY Reference.
 
-=== Configuring the IP/Port for CBSP to bind to
+==== Configuring the IP/Port for CBSP to bind to
 
 It can be configure to which IP and TCP port the CBSP protocol binds to.
 
@@ -59,4 +61,21 @@ cbc
  cbsp
   local-ip 127.0.0.1
   local-port 48049
+----
+
+=== ECBE (REST Interface) Configuration
+
+==== Configuring the IP/Port for ECBE to bind to
+
+It can be configure to which IP and TCP port the ECBE REST Interface binds to.
+
+The default is to bind to is the non-standard port number 12349 at the
+loopback IP address 127.0.0.1.
+
+.Example: Configure ECBE REST interface to bind to 127.0.0.1:8080
+----
+cbc
+ ecbe
+  local-ip 127.0.0.1
+  local-port 8080
 ----
