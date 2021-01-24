@@ -1,0 +1,79 @@
+[[apitool]]
+== `cbc-apitool.py`
+
+`cbc-apitool.py` is a very simple/basic python3 script that can be used
+to demonstrate the use of the ECBE REST interface (<<ecbe>>) from the
+command line.
+
+It uses the python3 standard librariy `requests` in order to issue ECBE
+API request over HTTP towards osmo-cbc.
+
+`cbc-apitool.py` has a couple of sub-commands, each of which offer
+
+=== Common options
+
+*-h, --help*::
+        Print a short help message about the supported common options.
+*-H, --host HOST*::
+        Remote host name/IP to which to connect (typically your ECBE
+        bind address of osmo-cbc). Default: 127.0.0.1.
+*-p, --port PORT*::
+        Remote TCP port number to which to connect (typically your ECBE
+        bind address of osmo-cbc). Default: 12345
+*-v, --verbose*::
+        Print some more verbose information like the HTTP requests
+        and responses during execution.
+
+
+=== `create-cbs`: Creating a new CBS message
+
+You can create a new CBS message using `cbc-apitool create-cbs`.
+
+==== `create-cbs` Options
+
+*-h, --help*::
+        Print a short help message about the supported create-cbs options.
+*--msg-id MSG_ID*::
+        Specify the message ID of the to-be-created CBS
+        message. Range: 0..65535
+*--msg-code MSG_CODE*::
+        Specify the message code (part of the serial number). Range:
+        0..1023. Default: 768
+*--update-nr UPDATE_NR*::
+        Specify the update number (part of the serial number). Range:
+        0..15.  Default: 0
+*--repetition-period REPETITION_PERIOD*::
+        How frequently this message shall be repeated (in number of CBCH
+        slots).  Default: 5
+*--num-of-bcast NUM_OF_BCAST*::
+        Number of times this message shall be broadcast (Default: 999).
+*--payload-data-utf8 PAYLOAD_DATA_UTF8*::
+        Payload data (typically text message) in UTF8 encoding.  Will be
+        transcoded to 7bit GSM alphabet internally.
+
+
+==== `create-etws` Options
+
+*-h, --help*::
+        Print a short help message about the supported create-cbs options.
+*--msg-id MSG_ID*::
+        Specify the message ID of the to-be-created CBS
+        message. Range: 0..65535
+*--msg-code MSG_CODE*::
+        Specify the message code (part of the serial number). Range:
+        0..1023. Default: 768
+*--update-nr UPDATE_NR*::
+        Specify the update number (part of the serial number). Range:
+        0..15.  Default: 0
+*--repetition-period REPETITION_PERIOD*::
+        How frequently this message shall be repeated (in number of CBCH
+        slots).  Default: 5
+*--num-of-bcast NUM_OF_BCAST*::
+        Number of times this message shall be broadcast (Default: 999).
+
+
+==== `delete` Options
+
+*--msg-id MSG_ID*::
+        Specify the message ID of the to-be-created CBS
+        message. Range: 0..65535

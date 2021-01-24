@@ -18,6 +18,8 @@ include::{srcdir}/chapters/introspection.adoc[]
 
 include::{srcdir}/chapters/ecbe-rest-interface.adoc[]
 
+include::{srcdir}/chapters/cbc-apitool.adoc[]
+
 include::./common/chapters/counters-overview.adoc[]
 
 include::{srcdir}/chapters/counters.adoc[]
