@@ -142,8 +142,9 @@ def main(argv):
 
     argv = sys.argv
     if len(sys.argv) == 1:
-        argv = ['-h']
-    args = parser.parse_args(argv)
+        args = parser.parse_args(['-h'])
+    else:
+        args = parser.parse_args()
 
     server_host = args.host
     server_port = args.port
