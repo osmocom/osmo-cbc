@@ -1,0 +1,91 @@
+== Introspection using the VTY
+
+OsmoCBC offers a VTY interface on TCP port 4264. Like all Osmocom VTY interfaces,
+it is normally bound only to the loopback address 127.0.0.1.  You can change this
+via the configuration.
+
+The actual IP/Port is printed to the log at startup time:
+
+----
+20210124110559489 DLGLOBAL NOTICE Available via telnet 127.0.0.1 4264 (telnet_interface.c:104)
+----
+
+=== Peer State
+
+Using the `show peers` command, you can check on the state of all configured and/or connected
+peers:
+
+.Example: Showing a list of all peers
+----
+OsmoCBC> show peers
+|Name                | IP             | Port | Proto | State               |
+|--------------------|----------------|------|-------|---------------------|
+|ttcn3               | 127.0.0.1      | 9999 | CBSP  | <disconnected>      |
+|local-bsc           | 127.0.0.1      | 46133| CBSP  | IDLE                |
+----
+
+=== CBS Messages
+
+Using `show messages cbs`, a list of all current CBS messages can be obtained.
+
+.Example: Showing a list of all CBS messages
+----
+OsmoCBC> show messages cbs
+|MsgId|SerNo|      CBE Name      |  Category   |Period|E|DCS|
+|-----|-----|--------------------|-------------|------|-|---|
+| 04D2| 7000|cbc_apitool         |Normal       |  5   |N| 0f|
+----
+
+Using `show message 1234`, details about a specific CBS message can be obtained:
+
+.Example: Showing details about a single CBS message
+----
+OsmoCBC> show message id 1234
+Message ID 04D2, Serial Number 7000, State: ACTIVE
+ Created by CBE 'cbc_apitool' at Sun Jan 24 11:10:31 2021
+ Repetition Period: 5 ( 9.41s), Number of broadcasts: 999
+ Warning Period: 4294967295s
+ DCS: 0x0f, Number of pages: 1, User Data Bytes: 7
+ Page 0: cd309aad2fa7e98d46a3d168341a8d46a3d168341a8d46a3d168341a8d46a3d168341a8d46a3d168341a8d46a3d168341a8d46a3d168341a8d46a3d168341a8d46a3d168341a8d46a3d168341a8d46a3d168
+ Peer: 'ttcn3', State: ACTIVE
+  Cells Installed:
+  Cells Failed:
+  Number of Broadcasts Completed:
+ Peer: 'local-bsc', State: ACTIVE
+  Cells Installed:
+   CGI 901-70-1-1234
+  Cells Failed:
+  Number of Broadcasts Completed:
+----
+
+
+=== ETWS Messages
+
+Using `show messages etws` a list of all current ETWS messages can be obtained.
+
+.Example: Showing a list of all ETWS messages
+----
+OsmoCBC> show messages etws 
+|MsgId|SerNo|      CBE Name      |  Category   |Period|E|Warning Type|
+|-----|-----|--------------------|-------------|------|-|------------|
+| 03E8| 7000|cbc_apitool         |Normal       |  5   |N|        0000|
+----
+
+.Example: Showing details of one single ETWS message
+----
+OsmoCBC> show message id 1000
+Message ID 03E8, Serial Number 7000, State: ACTIVE
+ Created by CBE 'cbc_apitool' at Sun Jan 24 11:14:42 2021
+ Repetition Period: 5 ( 9.41s), Number of broadcasts: 999
+ ETWS Warning Type Value: 0x00, User Alert: On, Popup: On
+ Security: 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+ Peer: 'ttcn3', State: ACTIVE
+  Cells Installed:
+  Cells Failed:
+  Number of Broadcasts Completed:
+ Peer: 'local-bsc', State: ACTIVE
+  Cells Installed:
+   CGI 901-70-1-1234
+  Cells Failed:
+  Number of Broadcasts Completed:
+----

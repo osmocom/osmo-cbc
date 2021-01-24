@@ -12,6 +12,10 @@ include::{srcdir}/chapters/overview.adoc[]
 
 include::{srcdir}/chapters/running.adoc[]
 
+include::{srcdir}/chapters/configuration.adoc[]
+
+include::{srcdir}/chapters/introspection.adoc[]
+
 include::./common/chapters/counters-overview.adoc[]
 
 include::{srcdir}/chapters/counters.adoc[]

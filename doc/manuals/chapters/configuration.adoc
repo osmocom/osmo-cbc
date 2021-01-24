@@ -1,0 +1,47 @@
+[[configuration]]
+== CBSP / Peer Configuration
+
+CBSP is the BSC-CBC interface within the 3GPP architecture.  It serves
+to communicate CSB and ETWS messages from the CBC to the BSC, who then
+subsequently distributes it among the (matching) cells within the BSC
+coverage area.
+
+=== Configuring the CBSP connections
+
+According to 3GPP TS 48.049, a BSC typically operates as a TCP server,
+and the CBC connects as TCP client.  This would require the CBC to have
+out-of-band knowledge of all the BSCs in the network (and their IP
+addresses).
+
+In order to comply with the specifications, OsmoCBC supports this mode
+of operation as CBSP TCP client.  However, to make network operation and
+configuration more simple, it also can operate in TCP server mode,
+accepting incoming connections from the BSCs.  This way the BSCs need to
+know the CBC IP address, but not vice-versa.
+
+The CBC related configuration of OsmoBSC can be found in the `cbc` configuration
+node of the VTY interface.
+
+The default port number for the CBSP server is 48049, according to the CBSP
+specification.
+
+.Example: Configure TCP server mode and allow arbitrary BSCs to connect
+----
+cbc
+ unknown-peers accept
+----
+
+
+.Example: Configure TCP client mode and define each BSC
+----
+cbc
+ peer my-bsc-1
+  protocol cbsp
+  remote-port 46133
+  remote-ip 1.2.3.4
+ peer my-bsc-2
+  remote-port 46133
+  remote-ip 1.2.3.4
+----
+
+For more details on the available configuration commands, please check the OsmoCBC VTY Reference.
