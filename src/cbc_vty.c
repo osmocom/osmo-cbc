@@ -267,6 +267,7 @@ DEFUN(show_messages_etws, show_messages_etws_cmd,
 enum cbc_vty_node {
 	CBC_NODE = _LAST_OSMOVTY_NODE + 1,
 	PEER_NODE,
+	CBSP_NODE,
 };
 
 static struct cmd_node cbc_node = {
@@ -309,6 +310,51 @@ static int config_write_cbc(struct vty *vty)
 		g_cbc->config.permit_unknown_peers ? "accept" : "reject", VTY_NEWLINE);
 	return CMD_SUCCESS;
 }
+
+DEFUN(cfg_cbsp, cfg_cbsp_cmd,
+	"cbsp",
+	"Cell Broadcast Service Protocol\n")
+{
+	vty->node = CBSP_NODE;
+	return CMD_SUCCESS;
+}
+
+
+/* CBSP */
+
+static struct cmd_node cbsp_node = {
+	CBSP_NODE,
+	"%s(config-cbsp)# ",
+	1,
+};
+
+static int config_write_cbsp(struct vty *vty)
+{
+	vty_out(vty, " cbsp%s", VTY_NEWLINE);
+	vty_out(vty, "  local-ip %s%s", g_cbc->config.cbsp.local_host, VTY_NEWLINE);
+	vty_out(vty, "  local-port %u%s", g_cbc->config.cbsp.local_port, VTY_NEWLINE);
+
+	return CMD_SUCCESS;
+}
+
+DEFUN(cfg_cbsp_local_ip, cfg_cbsp_local_ip_cmd,
+	"local-ip (A.B.C.D|X:X::X:X)",
+	"Local IP address for CBSP\n"
+	"Local IPv4 address for CBSP\n" "Local IPv6 address for CBSP\n")
+{
+	osmo_talloc_replace_string(g_cbc, &g_cbc->config.cbsp.local_host, argv[0]);
+	return CMD_SUCCESS;
+}
+
+DEFUN(cfg_cbsp_local_port, cfg_cbsp_local_port_cmd,
+	"local-port <0-65535>",
+	"Local TCP port for CBSP\n"
+	"Local TCP port for CBSP\n")
+{
+	g_cbc->config.cbsp.local_port = atoi(argv[0]);
+	return CMD_SUCCESS;
+}
+
 
 /* PEER */
 
@@ -417,6 +463,11 @@ void cbc_vty_init(void)
 	install_lib_element(CONFIG_NODE, &cfg_cbc_cmd);
 	install_node(&cbc_node, config_write_cbc);
 	install_lib_element(CBC_NODE, &cfg_permit_unknown_peers_cmd);
+
+	install_lib_element(CBC_NODE, &cfg_cbsp_cmd);
+	install_node(&cbsp_node, config_write_cbsp);
+	install_lib_element(CBSP_NODE, &cfg_cbsp_local_ip_cmd);
+	install_lib_element(CBSP_NODE, &cfg_cbsp_local_port_cmd);
 
 	install_lib_element(CBC_NODE, &cfg_cbc_peer_cmd);
 	install_lib_element(CBC_NODE, &cfg_cbc_no_peer_cmd);

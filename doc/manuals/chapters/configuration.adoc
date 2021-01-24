@@ -45,3 +45,18 @@ cbc
 ----
 
 For more details on the available configuration commands, please check the OsmoCBC VTY Reference.
+
+=== Configuring the IP/Port for CBSP to bind to
+
+It can be configure to which IP and TCP port the CBSP protocol binds to.
+
+The default is to bind to the 3GPP standard port number 48049 for CBSP at the
+loopback IP address 127.0.0.1.
+
+.Example: Configure CBSP to bind to 127.0.0.1:48049
+----
+cbc
+ cbsp
+  local-ip 127.0.0.1
+  local-port 48049
+----

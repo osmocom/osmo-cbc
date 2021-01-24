@@ -219,6 +219,8 @@ int main(int argc, char **argv)
 	INIT_LLIST_HEAD(&g_cbc->peers);
 	INIT_LLIST_HEAD(&g_cbc->messages);
 	INIT_LLIST_HEAD(&g_cbc->expired_messages);
+	g_cbc->config.cbsp.local_host = talloc_strdup(g_cbc, "127.0.0.1");
+	g_cbc->config.cbsp.local_port = CBSP_TCP_PORT;
 
 	cbc_vty_init();
 
@@ -240,7 +242,8 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	cbsp_cbc_create(tall_cbc_ctx, NULL, -1, &cbc_client_rx_cb);
+	cbsp_cbc_create(tall_cbc_ctx, g_cbc->config.cbsp.local_host, g_cbc->config.cbsp.local_port,
+			&cbc_client_rx_cb);
 
 	rest_api_init(tall_rest_ctx, 12345);
 

@@ -165,6 +165,10 @@ struct cbc_message {
 struct cbc {
 	struct {
 		bool permit_unknown_peers;
+		struct {
+			char *local_host;
+			int local_port;
+		} cbsp;
 	} config;
 
 	struct llist_head messages;	/* cbc_message.list */
