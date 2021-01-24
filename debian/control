@@ -27,6 +27,12 @@ Multi-Arch: foreign
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: OsmoCBC: Osmocom's Cell Broadcast Center
 
+Package: osmo-cbc-utils
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends}, python3
+Description: Utilities for OsmoCBC: Osmocom's Cell Broadcast Center
+
 Package: osmo-cbc-dbg
 Section: debug
 Architecture: any
