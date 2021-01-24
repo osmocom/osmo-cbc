@@ -47,6 +47,14 @@ BuildRequires:  pkgconfig(libulfius)
 %description
 OsmoCBC: Osmocom's Cell Broadcast Centre for 3GPP mobile networks.
 
+%package utils
+Summary:	CLI utility to interface osmo-cbc REST interface
+License:	AGPL-3.0-or-later
+Group:		Productivity/Telephony/Utilities
+
+%description utils
+CLI utility to interface with the osmo-cbc REST interface (ECBE).
+
 %prep
 %setup -q
 
@@ -60,6 +68,7 @@ make %{?_smp_mflags}
 
 %install
 %make_install
+install -m 755 contrib/cbc-apitool.py %{buildroot}/usr/bin/cbc-apitool.py
 
 %if 0%{?suse_version}
 %preun
@@ -88,5 +97,8 @@ make %{?_smp_mflags} check || (find . -name testsuite.log -exec cat {} +)
 %dir %{_sysconfdir}/osmocom
 %config(noreplace) %{_sysconfdir}/osmocom/osmo-cbc.cfg
 %{_unitdir}/%{name}.service
+
+%files utils
+%{_bindir}/cbc-apitool.py
 
 %changelog
