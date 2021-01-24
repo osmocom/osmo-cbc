@@ -1,0 +1,17 @@
+digraph G {
+  rankdir = RL;
+  CBC [color=red];
+  CBE -> CBC [label="REST/JSON"];
+  CBC -> BSC [label="CBSP"];
+  CBC -> RNC [label="SABP"];
+  CBC -> MME [label="SBc-AP"];
+
+  BSC -> BTS [label="A-bis RSL"];
+  RNC -> NodeB [label="Iub"];
+  MME -> eNodeB [label="S1-AP"];
+
+  BTS -> UE [label="CBCH"];
+  NodeB -> UE [label="BMC/CTCH"];
+  eNodeB -> UE [label="SIB10/11/12"];
+
+}

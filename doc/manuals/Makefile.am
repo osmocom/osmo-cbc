@@ -3,6 +3,7 @@ EXTRA_DIST = osmocbc-usermanual.adoc \
     osmocbc-vty-reference.xml \
     regen_doc.sh \
     chapters \
+    images \
     vty
 
 if BUILD_MANUALS

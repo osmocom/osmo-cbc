@@ -10,6 +10,12 @@ It acts as a gateway between external applications / users, such as government
 authorities for civil protection, and the various components within the 3GPP
 network to actually deliver those broadcast and/or emergency messages.
 
+.Role of the CBC inside the 3GPP network architecture
+[graphviz]
+----
+include::../images/cbc-in-network.dot[]
+----
+
 [[about]]
 === About OsmoCBC
 
