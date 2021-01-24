@@ -244,10 +244,17 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	cbsp_cbc_create(tall_cbc_ctx, g_cbc->config.cbsp.local_host, g_cbc->config.cbsp.local_port,
-			&cbc_client_rx_cb);
+	if (cbsp_cbc_create(tall_cbc_ctx, g_cbc->config.cbsp.local_host, g_cbc->config.cbsp.local_port,
+			     &cbc_client_rx_cb) == NULL) {
+		perror("Error binidng CBSP port\n");
+		exit(1);
+	}
 
-	rest_api_init(tall_rest_ctx, g_cbc->config.ecbe.local_host, g_cbc->config.ecbe.local_port);
+	rc = rest_api_init(tall_rest_ctx, g_cbc->config.ecbe.local_host, g_cbc->config.ecbe.local_port);
+	if (rc < 0) {
+		perror("Error binidng ECBE port\n");
+		exit(1);
+	}
 
 	LOGP(DREST, LOGL_INFO, "Main thread tid: %lu\n", pthread_self());
 	g_cbc->it_q.rest2main = osmo_it_q_alloc(g_cbc, "rest2main", 10, rest2main_read_cb, NULL);
