@@ -26,6 +26,7 @@ struct cbc_peer {
 
 	char *remote_host;	/* remote IP address in string format */
 	int remote_port;		/* remote port number or -1 for random */
+	bool unknown_dynamic_peer;	/* dynamic/unknown peer; not saved in VTY */
 
 	enum cbc_peer_protocol proto;
 	union {

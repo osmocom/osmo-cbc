@@ -494,8 +494,12 @@ static void write_one_peer(struct vty *vty, struct cbc_peer *peer)
 static int config_write_peer(struct vty *vty)
 {
 	struct cbc_peer *peer;
-	llist_for_each_entry(peer, &g_cbc->peers, list)
+	llist_for_each_entry(peer, &g_cbc->peers, list) {
+		/* only save those configured via the VTY, not the "unknown" peers */
+		if (peer->unknown_dynamic_peer)
+			continue;
 		write_one_peer(vty, peer);
+	}
 	return CMD_SUCCESS;
 }
 

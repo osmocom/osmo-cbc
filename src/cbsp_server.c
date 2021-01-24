@@ -150,6 +150,7 @@ static int cbsp_cbc_accept_cb(struct osmo_stream_srv_link *link, int fd)
 				remote_ip, remote_port);
 			client->peer = cbc_peer_create(NULL, CBC_PEER_PROTO_CBSP);
 			OSMO_ASSERT(client->peer);
+			client->peer->unknown_dynamic_peer = true;
 		} else {
 			LOGPCC(client, LOGL_NOTICE, "Rejecting unknown CBSP peer %s:%d (not permitted)\n",
 				remote_ip, remote_port);
