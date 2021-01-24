@@ -377,7 +377,7 @@ DEFUN(cfg_peer_no_remote_port, cfg_peer_no_remote_port_cmd,
 
 
 DEFUN(cfg_peer_remote_ip, cfg_peer_remote_ip_cmd,
-	"remote-ip A.B.C.D",
+	"remote-ip (A.B.C.D|X:X::X:X)",
 	"Configure remote IP of peer\n"
 	"Remote IP address of peer\n")
 {
