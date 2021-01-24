@@ -20,7 +20,7 @@ Name:           osmo-cbc
 Version:        @VERSION@
 Release:        0
 Summary:        OsmoCBC: Osmocom's Cell Broadcast Centre for 3GPP mobile networks
-License:        AGPL-3.0-or-later AND GPL-2.0-or-later
+License:        AGPL-3.0-or-later
 Group:          Hardware/Mobile
 URL:            https://osmocom.org/projects/osmo-cbc
 Source:         %{name}-%{version}.tar.xz
@@ -49,7 +49,7 @@ OsmoCBC: Osmocom's Cell Broadcast Centre for 3GPP mobile networks.
 
 %package utils
 Summary:	CLI utility to interface osmo-cbc REST interface
-License:	AGPL-3.0-or-later
+License:	MIT
 Group:		Productivity/Telephony/Utilities
 
 %description utils
