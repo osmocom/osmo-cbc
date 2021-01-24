@@ -1,5 +1,33 @@
-osmo-cbc (0.1) UNRELEASED; urgency=medium
+osmo-cbc (0.2.0) unstable; urgency=medium
 
+  [ Harald Welte ]
   * Initial release.
+  * add link to upstream bug related to custom malloc/free
+  * Add simplistic cbc-apitool.py as example on how to use the REST API
+  * Add RPM spec file
+  * Add README.md file
+  * debian/osmo-cbc.install: Fix typo (extra apostrophe at EOL)
+  * charset: Fix padding of USSD messages in 7bit GSM alphabet
+  * spec file: Add missing libulfius dependency
+  * cbc-apitool.py: Generalize, make parameters configurable
+  * osmo-cbc.spec: Don't depend on libosmo-mgcp-client
+  * osmo-cbc.spec: No AUTHORS file; correct name of README.md
+  * manual: Chapters on configuration + vty introspection
+  * vty: Allow IPv6 address for peer remote-ip
+  * Make CBSP local bind IP+port VTY-configurable
+  * Make ECBE (REST interface) local bind IP + port VTY-configurable
+  * terminate if CBSP or ECBE ports cannot be bound
+  * cbc-apitool: Fix parsing if no argument is goven
+  * Makefile.am: cosmetic changes
+  * Makefile.am: add *.json to EXTRA_DIST
+  * manual: Document ECBE; include JSON schema; cross-references
+  * manual: Add dotty graph on position of CBC in network
+  * manual: Document cbc-apitool.py
+  * debian: Package cbc-apitool.py as a sub-package
+  * contrib/osmo-cbc.spec: Add sub-package osmo-cbc-utils
+  * osmo-cbc.spec: License is AGPLv3-or-later + MIT
 
- -- Harald Welte <lafore@gnumonks.org>  Wed, 06 Jan 2021 12:13:12 +0100
+  [ Oliver Smith ]
+  * contrib/jenkins: don't build osmo-gsm-manuals
+
+ -- Harald Welte <laforge@osmocom.org>  Sun, 24 Jan 2021 16:15:49 +0100
