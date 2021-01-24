@@ -7,6 +7,8 @@ EXTRA_DIST = .version \
 	README.md \
 	git-version-gen \
 	contrib/osmo-cbc.spec.in \
+	cbc.schema.json \
+	smscb.schema.json \
 	$(NULL)
 
 AM_DISTCHECK_CONFIGURE_FLAGS = \
