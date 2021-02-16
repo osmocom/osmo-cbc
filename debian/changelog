@@ -1,3 +1,14 @@
+osmo-cbc (0.2.1) unstable; urgency=medium
+
+  [ Harald Welte ]
+  * VTY: don't save dynamically-allocated "unknown" peers
+  * cbc-apitool: compatibility with python < 3.7
+
+  [ Oliver Smith ]
+  * configure.ac: set -std=gnu11
+
+ -- Harald Welte <laforge@osmocom.org>  Tue, 16 Feb 2021 22:39:23 +0100
+
 osmo-cbc (0.2.0) unstable; urgency=medium
 
   [ Harald Welte ]
