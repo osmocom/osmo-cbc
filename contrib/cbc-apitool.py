@@ -117,7 +117,7 @@ def main(argv):
     parser.add_argument("-p", "--port", help="TCP port to connect to", default=12345)
     parser.add_argument("-v", "--verbose", help="increase output verbosity", action='count', default=0)
 
-    subparsers = parser.add_subparsers(required=True)
+    subparsers = parser.add_subparsers()
 
     parser_c_cbs = subparsers.add_parser('create-cbs', help='Create a new CBS message')
     parser_c_cbs.add_argument("--msg-id", type=int, help='Message Identifier', required=True)
