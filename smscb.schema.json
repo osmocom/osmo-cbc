@@ -67,7 +67,7 @@
 				"dcs_class": { "$ref": "#/definitions/dcs_class" },
 				"data_utf8": { "type": "string" }
 			},
-			"required": [ "data" ]
+			"required": [ "data_utf8" ]
 		},
 		"page": {
 			"type": "string"

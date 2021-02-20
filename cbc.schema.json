@@ -42,7 +42,7 @@
 				"num_of_bcast": { "$ref": "#/definitions/number_of_broadcasts" },
 				"scope": { "$ref": "#/definitions/scope" },
 				"warning_period_sec": { "$ref": "#/definitions/warning_period_sec" },
-				"smscb": { "$ref": "smscb.schema.json#definitions/smscb_message" }
+				"smscb_message": { "$ref": "smscb.schema.json#definitions/smscb_message" }
 			},
 			"required": [ "scope", "smscb" }
 		}
