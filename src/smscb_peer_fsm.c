@@ -149,25 +149,28 @@ static void cci_from_cbsp(struct cbc_cell_id *cci, enum CELL_IDENT id_discr,
 static void cbsp_from_cci(union gsm0808_cell_id_u *u, const struct cbc_cell_id *cci)
 {
 	switch (cci->id_discr) {
-	case CELL_IDENT_NO_CELL:
+	case CBC_CELL_ID_NONE:
 		break;
-	case CELL_IDENT_WHOLE_GLOBAL:
+	case CBC_CELL_ID_CGI:
 		u->global = cci->u.cgi;
+		printf("u->gobal: %s\n", osmo_hexdump((uint8_t *) &u->global, sizeof(u->global)));
 		break;
-	case CELL_IDENT_LAC_AND_CI:
+	case CBC_CELL_ID_LAC_CI:
 		u->lac_and_ci = cci->u.lac_and_ci;
 		break;
-	case CELL_IDENT_CI:
+	case CBC_CELL_ID_CI:
 		u->ci = cci->u.ci;
 		break;
-	case CELL_IDENT_LAI:
+	case CBC_CELL_ID_LAI:
 		u->lai_and_lac = cci->u.lai;
 		break;
-	case CELL_IDENT_LAC:
+	case CBC_CELL_ID_LAC:
 		u->lac = cci->u.lac;
 		break;
-	case CELL_IDENT_BSS:
+	case CBC_CELL_ID_BSS:
 		break;
+	default:
+		OSMO_ASSERT(0);
 	}
 }
 
