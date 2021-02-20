@@ -589,7 +589,7 @@ static int api_cb_message_post(const struct _u_request *req, struct _u_response 
 	return U_CALLBACK_COMPLETE;
 err:
 	jsonstr = json_dumps(json_req, 0);
-	LOGP(DREST, LOGL_ERROR, "ERROR: %s (%s)", errstr, jsonstr);
+	LOGP(DREST, LOGL_ERROR, "ERROR: %s (%s)\n", errstr, jsonstr);
 	free(jsonstr);
 	json_decref(json_req);
 	talloc_free(riop);
