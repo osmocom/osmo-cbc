@@ -1,3 +1,12 @@
+osmo-cbc (0.2.2) unstable; urgency=medium
+
+  * rest_api.c: Add missing \n in log line after error message
+  * bring JSON schema in sync with reality
+  * fix encoding of CBSP cell identifiers
+  * Update dependencies to current libosmocore & co
+
+ -- Harald Welte <laforge@osmocom.org>  Tue, 23 Feb 2021 20:40:44 +0100
+
 osmo-cbc (0.2.1) unstable; urgency=medium
 
   [ Harald Welte ]
