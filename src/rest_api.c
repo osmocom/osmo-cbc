@@ -602,7 +602,7 @@ static int api_cb_message_del(const struct _u_request *req, struct _u_response *
 {
 	const char *message_id_str = u_map_get(req->map_url, "message_id");
 	struct rest_it_op *riop = talloc_zero(g_cbc, struct rest_it_op);
-	uint16_t message_id;
+	int message_id;
 	int status = 404;
 	int rc;
 
