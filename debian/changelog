@@ -1,3 +1,10 @@
+osmo-cbc (0.2.3) unstable; urgency=medium
+
+  [ Harald Welte ]
+  * varaible for atoi() result shouild be signed integer
+
+ -- Pau Espin Pedrol <pespin@sysmocom.de>  Tue, 16 Nov 2021 18:05:21 +0100
+
 osmo-cbc (0.2.2) unstable; urgency=medium
 
   * rest_api.c: Add missing \n in log line after error message
