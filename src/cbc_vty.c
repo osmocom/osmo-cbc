@@ -347,7 +347,7 @@ static int config_write_cbsp(struct vty *vty)
 }
 
 DEFUN(cfg_cbsp_local_ip, cfg_cbsp_local_ip_cmd,
-	"local-ip (A.B.C.D|X:X::X:X)",
+	"local-ip " VTY_IPV46_CMD,
 	"Local IP address for CBSP\n"
 	"Local IPv4 address for CBSP\n" "Local IPv6 address for CBSP\n")
 {
@@ -383,7 +383,7 @@ static int config_write_ecbe(struct vty *vty)
 }
 
 DEFUN(cfg_ecbe_local_ip, cfg_ecbe_local_ip_cmd,
-	"local-ip (A.B.C.D|X:X::X:X)",
+	"local-ip " VTY_IPV46_CMD,
 	"Local IP address for CBSP\n"
 	"Local IPv4 address for ECBE REST Interface\n"
 	"Local IPv6 address for ECBE REST Interface\n")
@@ -469,7 +469,7 @@ DEFUN(cfg_peer_no_remote_port, cfg_peer_no_remote_port_cmd,
 
 
 DEFUN(cfg_peer_remote_ip, cfg_peer_remote_ip_cmd,
-	"remote-ip (A.B.C.D|X:X::X:X)",
+	"remote-ip " VTY_IPV46_CMD,
 	"Configure remote IP of peer\n"
 	"Remote IP address of peer\n")
 {
