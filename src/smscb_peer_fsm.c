@@ -411,16 +411,24 @@ static void smscb_p_fsm_wait_replace_ack(struct osmo_fsm_inst *fi, uint32_t even
 static void smscb_p_fsm_wait_delete_ack(struct osmo_fsm_inst *fi, uint32_t event, void *data)
 {
 	struct cbc_message_peer *mp = (struct cbc_message_peer *) fi->priv;
+	struct osmo_cbsp_decoded *dec = NULL;
 
 	switch (event) {
 	case SMSCB_E_CBSP_DELETE_ACK:
-		/* TODO: append results */
+		dec = data;
+		/* append results */
+		msg_peer_append_cbsp_compl(mp, &dec->u.kill_compl.num_compl_list);
+		msg_peer_append_cbsp_cell(mp, &dec->u.kill_compl.cell_list);
 		/* Signal parent fsm about completion */
 		osmo_fsm_inst_dispatch(fi->proc.parent, SMSCB_E_CBSP_DELETE_ACK, mp);
 		osmo_fsm_inst_state_chg(fi, SMSCB_S_DELETED, 0, 0);
 		break;
 	case SMSCB_E_CBSP_DELETE_NACK:
-		/* TODO: append results */
+		dec = data;
+		/* append results */
+		msg_peer_append_cbsp_compl(mp, &dec->u.kill_fail.num_compl_list);
+		msg_peer_append_cbsp_cell(mp, &dec->u.kill_fail.cell_list);
+		msg_peer_append_cbsp_fail(mp, &dec->u.kill_fail.fail_list);
 		/* Signal parent fsm about completion */
 		osmo_fsm_inst_dispatch(fi->proc.parent, SMSCB_E_CBSP_DELETE_NACK, mp);
 		osmo_fsm_inst_state_chg(fi, SMSCB_S_DELETED, 0, 0);
