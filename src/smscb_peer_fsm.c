@@ -479,6 +479,12 @@ static void smscb_p_fsm_allstate(struct osmo_fsm_inst *fi, uint32_t event, void 
 		cbsp->u.kill.old_serial_nr = mp->cbcmsg->msg.serial_nr;
 		/* TODO: we assume that the delete will always affect all original cells */
 		cbsp_append_cell_list(&cbsp->u.kill.cell_list, cbsp, mp);
+		if (!mp->cbcmsg->msg.is_etws) {
+			/* Channel Indication IE is only present in CBS, not in ETWS! */
+			cbsp->u.kill.channel_ind = talloc_zero(cbsp, enum cbsp_channel_ind);
+			OSMO_ASSERT(cbsp->u.kill.channel_ind);
+			*(cbsp->u.kill.channel_ind) = CBSP_CHAN_IND_BASIC;
+		}
 		cbsp_cbc_client_tx(mp->peer->client.cbsp, cbsp);
 		osmo_fsm_inst_state_chg(fi, SMSCB_S_WAIT_DELETE_ACK, 10, T_WAIT_DELETE_ACK);
 		break;
