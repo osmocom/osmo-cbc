@@ -48,7 +48,8 @@ static void dump_one_cbc_peer(struct vty *vty, const struct cbc_peer *peer)
 	}
 
 	vty_out(vty, "|%-20s| %-15s| %-5d| %-6s| %-20s|%s",
-		peer->name ? peer->name : "<unnamed>", peer->remote_host, peer->remote_port,
+		peer->name ? peer->name : "<unnamed>",
+		peer->remote_host ? peer->remote_host : "<unset>", peer->remote_port,
 		get_value_string(cbc_peer_proto_name, peer->proto), state, VTY_NEWLINE);
 }
 
@@ -488,7 +489,8 @@ static void write_one_peer(struct vty *vty, struct cbc_peer *peer)
 		vty_out(vty, "  no remote-port%s", VTY_NEWLINE);
 	else
 		vty_out(vty, "  remote-port %d%s", peer->remote_port, VTY_NEWLINE);
-	vty_out(vty, "  remote-ip %s%s", peer->remote_host, VTY_NEWLINE);
+	if (peer->remote_host)
+		vty_out(vty, "  remote-ip %s%s", peer->remote_host, VTY_NEWLINE);
 }
 
 static int config_write_peer(struct vty *vty)

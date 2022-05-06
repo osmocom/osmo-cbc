@@ -99,6 +99,8 @@ struct cbc_peer *cbc_peer_by_addr_proto(const char *remote_host, uint16_t remote
 	struct cbc_peer *peer;
 
 	llist_for_each_entry(peer, &g_cbc->peers, list) {
+		if (!peer->remote_host)
+			continue;
 		if (!strcasecmp(remote_host, peer->remote_host)) {
 			if (peer->remote_port == -1)
 				return peer;
