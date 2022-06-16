@@ -269,7 +269,7 @@ static int get_msg_id(const struct osmo_cbsp_decoded *dec)
 }
 
 /* message was received from remote CBSP peer (BSC) */
-int cbc_client_rx_cb(struct osmo_cbsp_cbc_client *client, struct osmo_cbsp_decoded *dec)
+int cbsp_cbc_client_rx_cb(struct osmo_cbsp_cbc_client *client, struct osmo_cbsp_decoded *dec)
 {
 	struct cbc_message *smscb;
 	struct cbc_message_peer *mp;

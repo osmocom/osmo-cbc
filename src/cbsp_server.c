@@ -206,18 +206,18 @@ void cbsp_cbc_client_close(struct osmo_cbsp_cbc_client *client)
 }
 
 /* initialize the CBC-side CBSP server */
-struct osmo_cbsp_cbc *cbsp_cbc_create(void *ctx, const char *bind_ip, int bind_port,
-				      int (*rx_cb)(struct osmo_cbsp_cbc_client *client,
-						   struct osmo_cbsp_decoded *dec))
+struct osmo_cbsp_cbc *cbsp_cbc_create(void *ctx)
 {
 	struct osmo_cbsp_cbc *cbc = talloc_zero(ctx, struct osmo_cbsp_cbc);
 	int rc;
+	char *bind_ip = g_cbc->config.cbsp.local_host;
+	int bind_port = g_cbc->config.cbsp.local_port;
 
 	if (bind_port == -1)
 		bind_port = CBSP_TCP_PORT;
 
 	OSMO_ASSERT(cbc);
-	cbc->rx_cb = rx_cb;
+	cbc->rx_cb = cbsp_cbc_client_rx_cb;
 	INIT_LLIST_HEAD(&cbc->clients);
 	cbc->link = osmo_stream_srv_link_create(cbc);
 	osmo_stream_srv_link_set_data(cbc->link, cbc);

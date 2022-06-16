@@ -244,8 +244,7 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	if (cbsp_cbc_create(tall_cbc_ctx, g_cbc->config.cbsp.local_host, g_cbc->config.cbsp.local_port,
-			     &cbc_client_rx_cb) == NULL) {
+	if (cbsp_cbc_create(tall_cbc_ctx) == NULL) {
 		perror("Error binidng CBSP port\n");
 		exit(1);
 	}
