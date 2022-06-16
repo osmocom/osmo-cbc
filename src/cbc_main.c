@@ -46,6 +46,7 @@
 
 #include <osmocom/cbc/internal.h>
 #include <osmocom/cbc/cbsp_server.h>
+#include <osmocom/cbc/sbcap_server.h>
 #include <osmocom/cbc/cbc_data.h>
 
 static void *tall_cbc_ctx;
@@ -59,10 +60,17 @@ static const struct log_info_cat log_info_cat[] = {
 		.enabled = 1,
 		.loglevel = LOGL_NOTICE,
 	},
+	[DSBcAP] = {
+		.name = "DSBcAP",
+		.description = "SBc Application Part (CBC-MME)",
+		.color = "\033[1;32m",
+		.enabled = 1,
+		.loglevel = LOGL_NOTICE,
+	},
 	[DREST] = {
 		.name = "DREST",
 		.description = "REST interface",
-		.color = "\033[1;32m",
+		.color = "\033[1;33m",
 		.enabled = 1,
 		.loglevel = LOGL_NOTICE,
 	},
@@ -72,6 +80,27 @@ static const struct log_info log_info = {
 	.cat = log_info_cat,
 	.num_cat = ARRAY_SIZE(log_info_cat),
 };
+
+static int cbc_vty_go_parent(struct vty *vty)
+{
+	switch (vty->node) {
+	case SBcAP_NODE:
+		/* If no local addr set, add a default one: */
+		if (g_cbc->config.sbcap.num_local_host) {
+			g_cbc->config.sbcap.local_host[0] = talloc_strdup(g_cbc, "127.0.0.1");
+				g_cbc->config.sbcap.num_local_host = 1;
+		}
+		vty->node = CONFIG_NODE;
+		vty->index = NULL;
+		break;
+	default:
+		vty->node = CONFIG_NODE;
+		vty->index = NULL;
+		break;
+	}
+
+	return vty->node;
+}
 
 static const char cbc_copyright[] =
         "Copyright (C) 2019-2021 by Harald Welte <laforge@gnumonks.org>\r\n"
@@ -83,6 +112,7 @@ static const char cbc_copyright[] =
 static struct vty_app_info vty_info = {
 	.name = "OsmoCBC",
 	.copyright = cbc_copyright,
+	.go_parent_cb	= cbc_vty_go_parent,
 	.version = PACKAGE_VERSION,
 	.go_parent_cb = NULL,
 	.is_config_node = NULL,
@@ -201,8 +231,6 @@ static void signal_handler(int signal)
 	}
 }
 
-extern int cbc_client_rx_cb(struct osmo_cbsp_cbc_client *client, struct osmo_cbsp_decoded *dec);
-
 int main(int argc, char **argv)
 {
 	void *tall_rest_ctx;
@@ -222,6 +250,8 @@ int main(int argc, char **argv)
 	INIT_LLIST_HEAD(&g_cbc->expired_messages);
 	g_cbc->config.cbsp.local_host = talloc_strdup(g_cbc, "127.0.0.1");
 	g_cbc->config.cbsp.local_port = CBSP_TCP_PORT;
+	/* g_cbc->config.sbcap local_host set up during VTY (and vty_go_parent) */
+	g_cbc->config.sbcap.local_port = SBcAP_SCTP_PORT;
 	g_cbc->config.ecbe.local_host = talloc_strdup(g_cbc, "127.0.0.1");
 	g_cbc->config.ecbe.local_port = 12345;
 
@@ -247,6 +277,11 @@ int main(int argc, char **argv)
 
 	if (cbsp_cbc_create(tall_cbc_ctx) == NULL) {
 		perror("Error binding CBSP port");
+		exit(1);
+	}
+
+	if (sbcap_cbc_create(tall_cbc_ctx) == NULL) {
+		perror("Error binding SBc-AP port\n");
 		exit(1);
 	}
 

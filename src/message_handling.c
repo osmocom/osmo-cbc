@@ -29,6 +29,8 @@
 
 #include <osmocom/cbc/cbc_data.h>
 #include <osmocom/cbc/cbsp_server.h>
+#include <osmocom/cbc/sbcap_server.h>
+#include <osmocom/cbc/sbcap_msg.h>
 #include <osmocom/cbc/rest_it_op.h>
 #include <osmocom/cbc/internal.h>
 
@@ -128,6 +130,7 @@ static bool is_peer_in_scope(const struct cbc_peer *peer, const struct cbc_messa
 int peer_new_cbc_message(struct cbc_peer *peer, struct cbc_message *cbcmsg)
 {
 	struct osmo_cbsp_decoded *cbsp;
+	SBcAP_SBC_AP_PDU_t *sbcap;
 
 	switch (peer->proto) {
 	case CBC_PEER_PROTO_CBSP:
@@ -144,6 +147,24 @@ int peer_new_cbc_message(struct cbc_peer *peer, struct cbc_message *cbcmsg)
 		}
 		cbsp_cbc_client_tx(peer->client.cbsp, cbsp);
 		break;
+	case CBC_PEER_PROTO_SBcAP:
+		/* skip peers without any current SBc-AP connection */
+		if (!peer->client.sbcap) {
+			LOGP(DSBcAP, LOGL_NOTICE, "[%s] Tx SBc-AP: not connected\n",
+			     peer->name);
+			return -ENOTCONN;
+		}
+		if (!(sbcap = cbcmsg_to_sbcap(peer, cbcmsg))) {
+			LOGP(DSBcAP, LOGL_ERROR, "[%s] Tx SBc-AP: msg gen failed\n",
+			     peer->name);
+			return -EINVAL;
+		}
+		sbcap_cbc_client_tx(peer->client.sbcap, sbcap);
+		break;
+	case CBC_PEER_PROTO_SABP:
+		LOGP(DLGLOBAL, LOGL_ERROR, "Sending message to peer proto %s not implemented!\n",
+		     get_value_string(cbc_peer_proto_name, peer->proto));
+		return -1;
 	default:
 		OSMO_ASSERT(0);
 	}

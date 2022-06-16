@@ -11,6 +11,8 @@ struct osmo_cbsp_cbc_client;
 struct osmo_sabp_cbc_client;
 struct rest_it_op;
 
+#define CBC_MAX_ADDRS 8
+
 /*********************************************************************************
  * CBC Peer
  *********************************************************************************/
@@ -18,13 +20,15 @@ struct rest_it_op;
 enum cbc_peer_protocol {
 	CBC_PEER_PROTO_CBSP,
 	CBC_PEER_PROTO_SABP,
+	CBC_PEER_PROTO_SBcAP
 };
 
 struct cbc_peer {
 	struct llist_head list;		/* linked to cbc.peers */
 	const char *name;
 
-	char *remote_host;	/* remote IP address in string format */
+	char *remote_host[CBC_MAX_ADDRS];	/* remote IP address in string format */
+	unsigned int num_remote_host;	/* number of addresses present in remote_host */
 	int remote_port;		/* remote port number or -1 for random */
 	bool unknown_dynamic_peer;	/* dynamic/unknown peer; not saved in VTY */
 
@@ -32,6 +36,7 @@ struct cbc_peer {
 	union {
 		struct osmo_cbsp_cbc_client *cbsp;
 		struct osmo_sabp_cbc_client *sabp;
+		struct osmo_sbcap_cbc_client *sbcap;
 	} client;
 };
 
@@ -171,6 +176,11 @@ struct cbc {
 			int local_port;
 		} cbsp;
 		struct {
+			char *local_host[CBC_MAX_ADDRS];
+			unsigned int num_local_host;
+			int local_port;
+		} sbcap;
+		struct {
 			char *local_host;
 			int local_port;
 		} ecbe;
@@ -197,4 +207,3 @@ struct cbc_peer *cbc_peer_by_addr_proto(const char *remote_host, uint16_t remote
 					enum cbc_peer_protocol proto);
 struct cbc_peer *cbc_peer_create(const char *name, enum cbc_peer_protocol proto);
 void cbc_peer_remove(struct cbc_peer *peer);
-

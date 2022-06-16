@@ -34,6 +34,7 @@
 const struct value_string cbc_peer_proto_name[] = {
 	{ CBC_PEER_PROTO_CBSP, "CBSP" },
 	{ CBC_PEER_PROTO_SABP, "SABP" },
+	{ CBC_PEER_PROTO_SBcAP, "SBc-AP" },
 	{ 0, NULL }
 };
 
@@ -99,13 +100,16 @@ struct cbc_peer *cbc_peer_by_addr_proto(const char *remote_host, uint16_t remote
 	struct cbc_peer *peer;
 
 	llist_for_each_entry(peer, &g_cbc->peers, list) {
-		if (!peer->remote_host)
-			continue;
-		if (!strcasecmp(remote_host, peer->remote_host)) {
-			if (peer->remote_port == -1)
-				return peer;
-			else if (remote_port == peer->remote_port)
-				return peer;
+		unsigned int i;
+		for (i = 0; i < peer->num_remote_host; i++) {
+			if (peer->proto != proto)
+				continue;
+			if (!strcasecmp(remote_host, peer->remote_host[i])) {
+				if (peer->remote_port == -1)
+					return peer;
+				else if (remote_port == peer->remote_port)
+					return peer;
+			}
 		}
 	}
 	return NULL;

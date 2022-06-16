@@ -30,6 +30,7 @@ BuildRequires:  pkgconfig >= 0.20
 %if 0%{?suse_version}
 BuildRequires:  systemd-rpm-macros
 %endif
+BuildRequires:  pkgconfig(libsctp)
 BuildRequires:  pkgconfig(libosmocore) >= 1.7.0
 BuildRequires:  pkgconfig(libosmogsm) >= 1.7.0
 BuildRequires:  pkgconfig(libosmovty) >= 1.7.0

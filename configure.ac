@@ -48,6 +48,18 @@ AC_SUBST([ASN1C_SKELETON_PATH])
 AC_SUBST([ASN1C_BIN_PATH])
 AC_SUBST([ASN_MODULE_CFLAGS])
 
+AC_CHECK_HEADERS(netinet/sctp.h,,AC_MSG_ERROR(netinet/sctp.h not found))
+old_LIBS=$LIBS
+AC_SEARCH_LIBS([sctp_recvmsg], [sctp], [
+	AC_DEFINE(HAVE_LIBSCTP, 1, [Define 1 to enable SCTP support])
+	AC_SUBST(HAVE_LIBSCTP, [1])
+	if test -n "$ac_lib"; then
+		AC_SUBST(LIBSCTP_LIBS, [-l$ac_lib])
+	fi
+	], [
+	AC_MSG_ERROR([sctp_recvmsg not found in searched libs])])
+LIBS=$old_LIBS
+
 AC_ARG_ENABLE(sanitize,
 	[AS_HELP_STRING(
 		[--enable-sanitize],

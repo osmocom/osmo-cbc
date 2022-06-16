@@ -15,6 +15,7 @@ Build-Depends: debhelper (>=9),
                libosmo-netif-dev (>= 1.2.0),
                libulfius-dev,
                libjansson-dev,
+               libsctp-dev,
                osmo-gsm-manuals-dev
 Standards-Version: 3.9.8
 Vcs-Git: https://gitea.osmocom.org/cellular-infrastructure/osmo-cbc

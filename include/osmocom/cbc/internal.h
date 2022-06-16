@@ -4,11 +4,13 @@
 
 #include <osmocom/core/logging.h>
 #include <osmocom/core/fsm.h>
+#include <osmocom/vty/command.h>
 
 #include <osmocom/cbc/cbc_data.h>
 
 enum {
 	DCBSP,
+	DSBcAP,
 	DREST,
 };
 
@@ -23,12 +25,30 @@ enum cbsp_server_event {
 	CBSP_SRV_E_CMD_CLOSE,		/* CLOSE command from CBC */
 };
 
+extern struct osmo_fsm sbcap_server_fsm;
+
+enum sbcap_server_event {
+	SBcAP_SRV_E_RX_RST_COMPL,	/* reset complete received */
+	SBcAP_SRV_E_RX_RST_FAIL,		/* reset failure received */
+	SBcAP_SRV_E_RX_KA_COMPL,		/* keep-alive complete received */
+	SBcAP_SRV_E_RX_RESTART,		/* restart received */
+	SBcAP_SRV_E_CMD_RESET,		/* RESET command from CBC */
+	SBcAP_SRV_E_CMD_CLOSE,		/* CLOSE command from CBC */
+};
+
 
 /* rest_api.c */
 int rest_api_init(void *ctx, const char *bind_addr, uint16_t port);
 void rest_api_fin(void);
 
 /* cbc_vty.c */
+enum cbc_vty_node {
+	CBC_NODE = _LAST_OSMOVTY_NODE + 1,
+	PEER_NODE,
+	CBSP_NODE,
+	SBcAP_NODE,
+	ECBE_NODE,
+};
 void cbc_vty_init(void);
 
 /* message_handling.c */
@@ -65,6 +85,12 @@ enum smscb_fsm_event {
 	/* CBSP peer confirms status query */
 	SMSCB_E_CBSP_STATUS_ACK,
 	SMSCB_E_CBSP_STATUS_NACK,
+	/* SBc-AP peer confirms write */
+	SMSCB_E_SBCAP_WRITE_ACK,
+	SMSCB_E_SBCAP_WRITE_NACK,
+	/* SBc-AP peer confirms delete */
+	SMSCB_E_SBCAP_DELETE_ACK,
+	SMSCB_E_SBCAP_DELETE_NACK,
 };
 
 enum smscb_fsm_state {

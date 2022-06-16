@@ -62,6 +62,8 @@ static void smscb_fsm_wait_write_ack(struct osmo_fsm_inst *fi, uint32_t event, v
 	switch (event) {
 	case SMSCB_E_CBSP_WRITE_ACK:
 	case SMSCB_E_CBSP_WRITE_NACK:
+	case SMSCB_E_SBCAP_WRITE_ACK:
+	case SMSCB_E_SBCAP_WRITE_NACK:
 		/* check if any per-peer children have not yet received the ACK or
 		 * timed out */
 		llist_for_each_entry(peer_fi, &fi->proc.children, proc.child) {
@@ -179,6 +181,8 @@ static void smscb_fsm_wait_delete_ack(struct osmo_fsm_inst *fi, uint32_t event, 
 	switch (event) {
 	case SMSCB_E_CBSP_DELETE_ACK:
 	case SMSCB_E_CBSP_DELETE_NACK:
+	case SMSCB_E_SBCAP_DELETE_ACK:
+	case SMSCB_E_SBCAP_DELETE_NACK:
 		llist_for_each_entry(peer_fi, &fi->proc.children, proc.child) {
 			if (peer_fi->state != SMSCB_S_DELETED)
 				return;
@@ -225,7 +229,9 @@ static struct osmo_fsm_state smscb_fsm_states[] = {
 	[SMSCB_S_WAIT_WRITE_ACK] = {
 		.name = "WAIT_WRITE_ACK",
 		.in_event_mask = S(SMSCB_E_CBSP_WRITE_ACK) |
-				 S(SMSCB_E_CBSP_WRITE_NACK),
+				 S(SMSCB_E_CBSP_WRITE_NACK) |
+				 S(SMSCB_E_SBCAP_WRITE_ACK) |
+				 S(SMSCB_E_SBCAP_WRITE_NACK),
 		.out_state_mask = S(SMSCB_S_ACTIVE),
 		.action = smscb_fsm_wait_write_ack,
 		.onleave = smscb_fsm_wait_write_ack_onleave,
@@ -260,7 +266,9 @@ static struct osmo_fsm_state smscb_fsm_states[] = {
 	[SMSCB_S_WAIT_DELETE_ACK] = {
 		.name = "WAIT_DELETE_ACK",
 		.in_event_mask = S(SMSCB_E_CBSP_DELETE_ACK) |
-				 S(SMSCB_E_CBSP_DELETE_NACK),
+				 S(SMSCB_E_CBSP_DELETE_NACK) |
+				 S(SMSCB_E_SBCAP_DELETE_ACK) |
+				 S(SMSCB_E_SBCAP_DELETE_NACK),
 		.out_state_mask = S(SMSCB_S_DELETED),
 		.action = smscb_fsm_wait_delete_ack,
 		.onleave = smscb_fsm_wait_delete_ack_onleave,

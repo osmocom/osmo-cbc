@@ -33,10 +33,14 @@
 #include <osmocom/cbc/cbc_data.h>
 #include <osmocom/cbc/internal.h>
 #include <osmocom/cbc/cbsp_server.h>
+#include <osmocom/cbc/sbcap_server.h>
 
 static void dump_one_cbc_peer(struct vty *vty, const struct cbc_peer *peer)
 {
 	const char *state = "<disconnected>";
+	char rem_addrs[1024] = "<unset>";
+	struct osmo_strbuf sb = { .buf = rem_addrs, .len = sizeof(rem_addrs) };
+	unsigned int i;
 
 	switch (peer->proto) {
 	case CBC_PEER_PROTO_CBSP:
@@ -45,11 +49,21 @@ static void dump_one_cbc_peer(struct vty *vty, const struct cbc_peer *peer)
 		break;
 	case CBC_PEER_PROTO_SABP:
 		break;
+	case CBC_PEER_PROTO_SBcAP:
+		if (peer->client.sbcap)
+			state = osmo_fsm_inst_state_name(peer->client.sbcap->fi);
+		break;
+	}
+
+	for (i = 0; i < peer->num_remote_host; i++) {
+		if (i > 0)
+			OSMO_STRBUF_PRINTF(sb, ",");
+		OSMO_STRBUF_PRINTF(sb, peer->remote_host[i]);
 	}
 
 	vty_out(vty, "|%-20s| %-15s| %-5d| %-6s| %-20s|%s",
 		peer->name ? peer->name : "<unnamed>",
-		peer->remote_host ? peer->remote_host : "<unset>", peer->remote_port,
+		rem_addrs, peer->remote_port,
 		get_value_string(cbc_peer_proto_name, peer->proto), state, VTY_NEWLINE);
 }
 
@@ -265,13 +279,6 @@ DEFUN(show_messages_etws, show_messages_etws_cmd,
 /* TODO: Re-send all messages to one peer / all peers? */
 /* TODO: Completed / Load status */
 
-enum cbc_vty_node {
-	CBC_NODE = _LAST_OSMOVTY_NODE + 1,
-	PEER_NODE,
-	CBSP_NODE,
-	ECBE_NODE,
-};
-
 static struct cmd_node cbc_node = {
 	CBC_NODE,
 	"%s(config-cbc)# ",
@@ -318,6 +325,14 @@ DEFUN(cfg_cbsp, cfg_cbsp_cmd,
 	"Cell Broadcast Service Protocol\n")
 {
 	vty->node = CBSP_NODE;
+	return CMD_SUCCESS;
+}
+
+DEFUN(cfg_sbcap, cfg_sbcap_cmd,
+	"sbcap",
+	"SBc Application Part\n")
+{
+	vty->node = SBcAP_NODE;
 	return CMD_SUCCESS;
 }
 
@@ -402,6 +417,87 @@ DEFUN(cfg_ecbe_local_port, cfg_ecbe_local_port_cmd,
 	return CMD_SUCCESS;
 }
 
+/* SBc-AP */
+
+static struct cmd_node sbcap_node = {
+	SBcAP_NODE,
+	"%s(config-sbcap)# ",
+	1,
+};
+
+static int config_write_sbcap(struct vty *vty)
+{
+	unsigned int i;
+
+	vty_out(vty, " sbcap%s", VTY_NEWLINE);
+	for (i = 0; i < g_cbc->config.sbcap.num_local_host; i++)
+		vty_out(vty, "  local-ip %s%s", g_cbc->config.sbcap.local_host[i], VTY_NEWLINE);
+	vty_out(vty, "  local-port %u%s", g_cbc->config.sbcap.local_port, VTY_NEWLINE);
+
+	return CMD_SUCCESS;
+}
+
+DEFUN(cfg_sbcap_local_ip, cfg_sbcap_local_ip_cmd,
+	"local-ip " VTY_IPV46_CMD,
+	"Local IP address for SBc-AP\n"
+	"Local IPv4 address for SBc-AP Interface\n"
+	"Local IPv6 address for SBc-AP Interface\n")
+{
+	unsigned int i;
+	const char *newaddr = argv[0];
+
+	if (g_cbc->config.sbcap.num_local_host >= ARRAY_SIZE(g_cbc->config.sbcap.local_host)) {
+		vty_out(vty, "%% Only up to %zu addresses allowed%s",
+			ARRAY_SIZE(g_cbc->config.sbcap.local_host), VTY_NEWLINE);
+		return CMD_WARNING;
+	}
+
+	/* Check for repeated entries: */
+	for (i = 0; i < g_cbc->config.sbcap.num_local_host; i++) {
+		if (strcmp(g_cbc->config.sbcap.local_host[i], newaddr) == 0) {
+			vty_out(vty, "%% IP address %s already in list%s", newaddr, VTY_NEWLINE);
+			return CMD_WARNING;
+		}
+	}
+	osmo_talloc_replace_string(g_cbc,
+		&g_cbc->config.sbcap.local_host[g_cbc->config.sbcap.num_local_host], newaddr);
+	g_cbc->config.sbcap.num_local_host++;
+	return CMD_SUCCESS;
+}
+
+DEFUN(cfg_sbcap_no_local_ip, cfg_sbcap_no_local_ip_cmd,
+	"no local-ip " VTY_IPV46_CMD,
+	NO_STR "Local IP address for SBc-AP\n"
+	"Local IPv4 address for SBc-AP Interface\n"
+	"Local IPv6 address for SBc-AP Interface\n")
+{
+	unsigned int i, j;
+	const char *rmaddr = argv[0];
+
+	for (i = 0; i < g_cbc->config.sbcap.num_local_host; i++) {
+		if (strcmp(g_cbc->config.sbcap.local_host[i], rmaddr) == 0) {
+			talloc_free(g_cbc->config.sbcap.local_host[i]);
+			g_cbc->config.sbcap.num_local_host--;
+			for (j = i; j < g_cbc->config.sbcap.num_local_host; j++) {
+				g_cbc->config.sbcap.local_host[j] = g_cbc->config.sbcap.local_host[j + 1];
+			}
+			g_cbc->config.sbcap.local_host[j] = NULL;
+			return CMD_SUCCESS;
+		}
+	}
+	vty_out(vty, "%% IP address %s not in list%s", rmaddr, VTY_NEWLINE);
+	return CMD_WARNING;
+}
+
+DEFUN(cfg_sbcap_local_port, cfg_sbcap_local_port_cmd,
+	"local-port <0-65535>",
+	"Local TCP port for SBc-AP Interface\n"
+	"Local TCP port for SBc-AP Interface\n")
+{
+	g_cbc->config.sbcap.local_port = atoi(argv[0]);
+	return CMD_SUCCESS;
+}
+
 
 /* PEER */
 
@@ -441,12 +537,15 @@ DEFUN(cfg_cbc_no_peer, cfg_cbc_no_peer_cmd,
 
 
 DEFUN(cfg_peer_proto, cfg_peer_proto_cmd,
-	"protocol (cbsp)",
+	"protocol (cbsp|sbcap)",
 	"Configure Protocol of Peer\n"
 	"Cell Broadcast Service Protocol (GSM)\n")
 {
 	struct cbc_peer *peer = (struct cbc_peer *) vty->index;
-	peer->proto = CBC_PEER_PROTO_CBSP;
+	if (strcmp(argv[0], "cbsp") == 0)
+		peer->proto = CBC_PEER_PROTO_CBSP;
+	else
+		peer->proto = CBC_PEER_PROTO_SBcAP;
 	return CMD_SUCCESS;
 }
 
@@ -477,22 +576,69 @@ DEFUN(cfg_peer_remote_ip, cfg_peer_remote_ip_cmd,
 	"IPv4 address of peer\n" "IPv6 address of peer\n")
 {
 	struct cbc_peer *peer = (struct cbc_peer *) vty->index;
-	osmo_talloc_replace_string(peer, &peer->remote_host, argv[0]);
+	unsigned int allowed_address;
+	unsigned int i;
+	const char *newaddr = argv[0];
+
+	if (peer->proto == CBC_PEER_PROTO_SBcAP)
+		allowed_address = ARRAY_SIZE(peer->remote_host);
+	else
+		allowed_address = 1;
+
+	if (peer->num_remote_host >= allowed_address) {
+		vty_out(vty, "%% Only up to %u addresses allowed%s",
+			allowed_address, VTY_NEWLINE);
+		return CMD_WARNING;
+	}
+
+	/* Check for repeated entries: */
+	for (i = 0; i < peer->num_remote_host; i++) {
+		if (strcmp(peer->remote_host[i], newaddr) == 0) {
+			vty_out(vty, "%% IP address %s already in list%s", newaddr, VTY_NEWLINE);
+			return CMD_WARNING;
+		}
+	}
+	osmo_talloc_replace_string(peer, &peer->remote_host[peer->num_remote_host], newaddr);
+	peer->num_remote_host++;
+
 	return CMD_SUCCESS;
 }
 
+DEFUN(cfg_peer_no_remote_ip, cfg_peer_no_remote_ip_cmd,
+	"no remote-ip " VTY_IPV46_CMD,
+	NO_STR "Keep remote IP of peer\n"
+	"IPv4 address of peer\n" "IPv6 address of peer\n")
+{
+	struct cbc_peer *peer = (struct cbc_peer *) vty->index;
+	unsigned int i, j;
+	const char *rmaddr = argv[0];
 
+	for (i = 0; i < peer->num_remote_host; i++) {
+		if (strcmp(peer->remote_host[i], rmaddr) == 0) {
+			talloc_free(peer->remote_host[i]);
+			peer->num_remote_host--;
+			for (j = i; j < peer->num_remote_host; j++) {
+				peer->remote_host[j] = peer->remote_host[j + 1];
+			}
+			peer->remote_host[j] = NULL;
+			return CMD_SUCCESS;
+		}
+	}
+	vty_out(vty, "%% IP address %s not in list%s", rmaddr, VTY_NEWLINE);
+	return CMD_WARNING;
+}
 
 static void write_one_peer(struct vty *vty, struct cbc_peer *peer)
 {
+	unsigned int i;
 	vty_out(vty, " peer %s%s", peer->name, VTY_NEWLINE);
 	vty_out(vty, "  protocol cbsp%s", VTY_NEWLINE);
 	if (peer->remote_port == -1)
 		vty_out(vty, "  no remote-port%s", VTY_NEWLINE);
 	else
 		vty_out(vty, "  remote-port %d%s", peer->remote_port, VTY_NEWLINE);
-	if (peer->remote_host)
-		vty_out(vty, "  remote-ip %s%s", peer->remote_host, VTY_NEWLINE);
+	for (i = 0; i < peer->num_remote_host; i++)
+		vty_out(vty, "  remote-ip %s%s", peer->remote_host[i], VTY_NEWLINE);
 }
 
 static int config_write_peer(struct vty *vty)
@@ -528,6 +674,12 @@ void cbc_vty_init(void)
 	install_lib_element(ECBE_NODE, &cfg_ecbe_local_ip_cmd);
 	install_lib_element(ECBE_NODE, &cfg_ecbe_local_port_cmd);
 
+	install_lib_element(CBC_NODE, &cfg_sbcap_cmd);
+	install_node(&sbcap_node, config_write_sbcap);
+	install_lib_element(SBcAP_NODE, &cfg_sbcap_local_ip_cmd);
+	install_lib_element(SBcAP_NODE, &cfg_sbcap_no_local_ip_cmd);
+	install_lib_element(SBcAP_NODE, &cfg_sbcap_local_port_cmd);
+
 	install_lib_element(CBC_NODE, &cfg_cbc_peer_cmd);
 	install_lib_element(CBC_NODE, &cfg_cbc_no_peer_cmd);
 	install_node(&peer_node, config_write_peer);
@@ -535,5 +687,6 @@ void cbc_vty_init(void)
 	install_lib_element(PEER_NODE, &cfg_peer_remote_port_cmd);
 	install_lib_element(PEER_NODE, &cfg_peer_no_remote_port_cmd);
 	install_lib_element(PEER_NODE, &cfg_peer_remote_ip_cmd);
+	install_lib_element(PEER_NODE, &cfg_peer_no_remote_ip_cmd);
 
 }
