@@ -395,8 +395,8 @@ DEFUN(cfg_ecbe_local_ip, cfg_ecbe_local_ip_cmd,
 
 DEFUN(cfg_ecbe_local_port, cfg_ecbe_local_port_cmd,
 	"local-port <0-65535>",
-	"Local TCP port for ECBE RESET Interface\n"
-	"Local TCP port for ECBE RESET Interface\n")
+	"Local TCP port for ECBE REST Interface\n"
+	"Local TCP port for ECBE REST Interface\n")
 {
 	g_cbc->config.ecbe.local_port = atoi(argv[0]);
 	return CMD_SUCCESS;
@@ -407,7 +407,8 @@ DEFUN(cfg_ecbe_local_port, cfg_ecbe_local_port_cmd,
 
 DEFUN(cfg_cbc_peer, cfg_cbc_peer_cmd,
 	"peer NAME",
-	"Remote Peer\n")
+	"Remote Peer\n"
+	"Name identifying the peer\n")
 {
 	struct cbc_peer *peer;
 
@@ -424,7 +425,8 @@ DEFUN(cfg_cbc_peer, cfg_cbc_peer_cmd,
 
 DEFUN(cfg_cbc_no_peer, cfg_cbc_no_peer_cmd,
 	"no peer NAME",
-	NO_STR "Remote Peer\n")
+	NO_STR "Remote Peer\n"
+	"Name identifying the peer\n")
 {
 	struct cbc_peer *peer;
 
