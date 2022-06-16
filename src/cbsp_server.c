@@ -126,6 +126,8 @@ static int cbsp_cbc_accept_cb(struct osmo_stream_srv_link *link, int fd)
 	osmo_sock_get_ip_and_port(fd, remote_ip, sizeof(remote_ip), portbuf, sizeof(portbuf), false);
 	remote_port = atoi(portbuf);
 
+	LOGP(DCBSP, LOGL_NOTICE, "New CBSP client connection from %s:%u\n", remote_ip, remote_port);
+
 	client->conn = osmo_stream_srv_create(link, link, fd, cbsp_cbc_read_cb, cbsp_cbc_closed_cb, client);
 	if (!client->conn) {
 		LOGP(DCBSP, LOGL_ERROR, "Unable to create stream server for %s:%d\n",
@@ -167,9 +169,7 @@ static int cbsp_cbc_accept_cb(struct osmo_stream_srv_link *link, int fd)
 		client->peer->client.cbsp = client;
 	}
 
-	LOGPCC(client, LOGL_NOTICE, "New CBSP client connection from %s:%u\n", remote_ip, remote_port);
 	osmo_fsm_inst_dispatch(client->fi, CBSP_SRV_E_CMD_RESET, NULL);
-
 	return 0;
 }
 
