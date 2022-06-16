@@ -23,6 +23,10 @@ struct osmo_cbsp_cbc {
 	int (*rx_cb)(struct osmo_cbsp_cbc_client *client, struct osmo_cbsp_decoded *dec);
 };
 
+struct osmo_cbsp_cbc *cbsp_cbc_create(void *ctx, const char *bind_ip, int bind_port,
+				      int (*rx_cb)(struct osmo_cbsp_cbc_client *client,
+						   struct osmo_cbsp_decoded *dec));
+
 /* a single (remote) client connected to the (local) CBC server */
 struct osmo_cbsp_cbc_client {
 	/* entry in osmo_cbsp_cbc.clients */
@@ -40,6 +44,3 @@ struct osmo_cbsp_cbc_client {
 const char *cbsp_cbc_client_name(const struct osmo_cbsp_cbc_client *client);
 void cbsp_cbc_client_tx(struct osmo_cbsp_cbc_client *client, struct osmo_cbsp_decoded *cbsp);
 void cbsp_cbc_client_close(struct osmo_cbsp_cbc_client *client);
-struct osmo_cbsp_cbc *cbsp_cbc_create(void *ctx, const char *bind_ip, int bind_port,
-				      int (*rx_cb)(struct osmo_cbsp_cbc_client *client,
-						   struct osmo_cbsp_decoded *dec));
