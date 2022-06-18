@@ -28,9 +28,9 @@ GIT Repository
 
 You can clone from the official osmo-cbc.git repository using
 
-	git clone https://git.osmocom.org/osmo-cbc.git
+	git clone https://gitea.osmocom.org/cellular-infrastructure/osmo-cbc
 
-There is a cgit interface at https://git.osmocom.org/osmo-cbc/
+There is a web interface at <https://gitea.osmocom.org/cellular-infrastructure/osmo-cbc>
 
 Documentation
 -------------
