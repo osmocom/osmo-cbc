@@ -1,3 +1,26 @@
+osmo-cbc (0.3.0) unstable; urgency=medium
+
+  [ Vadim Yanitskiy ]
+  * doc/examples: make osmo-cbc.cfg file more informative
+  * VTY: cosmetic: use VTY_IPV46_CMD in the command string
+  * VTY: fix incomplete 'remote-ip' command description
+
+  [ Harald Welte ]
+  * CBSP: Set Channel Indication IE in KILL for CBS
+  * CBSP: Append/store results in KILL COMPLETE + KILL FAIL
+  * cbc: Don't crash if peer->remote_host is NULL
+  * update git URLs (git -> https; gitea)
+
+  [ Pau Espin Pedrol ]
+  * vty. Fix several typos and missing param descriptions
+  * src/Makefile: Reformat files one per line
+  * cbsp_server.h: Move function to the proper section
+  * Rework cbsp_cbc_create() params
+  * cbsp_server: Reorder logged message
+  * .gitignore: add configure~
+
+ -- Pau Espin Pedrol <pespin@sysmocom.de>  Wed, 29 Jun 2022 12:00:03 +0200
+
 osmo-cbc (0.2.3) unstable; urgency=medium
 
   [ Harald Welte ]
