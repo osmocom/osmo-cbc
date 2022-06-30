@@ -212,6 +212,7 @@ int main(int argc, char **argv)
 	tall_rest_ctx = talloc_named_const(tall_cbc_ctx, 0, "REST");
 	msgb_talloc_ctx_init(tall_cbc_ctx, 0);
 	osmo_init_logging2(tall_cbc_ctx, &log_info);
+	log_enable_multithread();
 	osmo_stats_init(tall_cbc_ctx);
 	vty_init(&vty_info);
 
