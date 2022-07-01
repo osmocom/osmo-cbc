@@ -246,13 +246,13 @@ int main(int argc, char **argv)
 	}
 
 	if (cbsp_cbc_create(tall_cbc_ctx) == NULL) {
-		perror("Error binidng CBSP port\n");
+		perror("Error binding CBSP port\n");
 		exit(1);
 	}
 
 	rc = rest_api_init(tall_rest_ctx, g_cbc->config.ecbe.local_host, g_cbc->config.ecbe.local_port);
 	if (rc < 0) {
-		perror("Error binidng ECBE port\n");
+		perror("Error binding ECBE port\n");
 		exit(1);
 	}
 
