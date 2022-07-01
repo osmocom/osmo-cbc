@@ -241,18 +241,18 @@ int main(int argc, char **argv)
 
 	rc = telnet_init_dynif(tall_cbc_ctx, NULL, vty_get_bind_addr(), OSMO_VTY_PORT_CBC);
 	if (rc < 0) {
-		perror("Error binding VTY port\n");
+		perror("Error binding VTY port");
 		exit(1);
 	}
 
 	if (cbsp_cbc_create(tall_cbc_ctx) == NULL) {
-		perror("Error binding CBSP port\n");
+		perror("Error binding CBSP port");
 		exit(1);
 	}
 
 	rc = rest_api_init(tall_rest_ctx, g_cbc->config.ecbe.local_host, g_cbc->config.ecbe.local_port);
 	if (rc < 0) {
-		perror("Error binding ECBE port\n");
+		perror("Error binding ECBE port");
 		exit(1);
 	}
 
