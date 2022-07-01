@@ -227,7 +227,11 @@ struct osmo_cbsp_cbc *cbsp_cbc_create(void *ctx)
 		osmo_stream_srv_link_set_addr(cbc->link, bind_ip);
 	osmo_stream_srv_link_set_accept_cb(cbc->link, cbsp_cbc_accept_cb);
 	rc = osmo_stream_srv_link_open(cbc->link);
-	OSMO_ASSERT(rc == 0);
+	if (rc < 0) {
+		osmo_stream_srv_link_destroy(cbc->link);
+		talloc_free(cbc);
+		return NULL;
+	}
 	LOGP(DCBSP, LOGL_NOTICE, "Listening for CBSP at %s\n",
 		osmo_stream_srv_link_get_sockname(cbc->link));
 
