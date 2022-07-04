@@ -31,8 +31,8 @@
 #include <osmocom/gsm/protocol/gsm_48_049.h>
 #include <osmocom/netif/stream.h>
 
-#include "internal.h"
-#include "cbsp_server.h"
+#include <osmocom/cbc/internal.h>
+#include <osmocom/cbc/cbsp_server.h>
 
 #if 0
 struct osmo_cbsp_bsc {

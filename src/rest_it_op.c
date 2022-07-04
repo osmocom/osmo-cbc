@@ -26,8 +26,8 @@
 #include <osmocom/core/linuxlist.h>
 #include <osmocom/core/it_q.h>
 
-#include "rest_it_op.h"
-#include "internal.h"
+#include <osmocom/cbc/rest_it_op.h>
+#include <osmocom/cbc/internal.h>
 
 /***********************************************************************
  * HTTP THREAD

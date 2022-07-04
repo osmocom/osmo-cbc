@@ -37,10 +37,10 @@
 
 #define PREFIX  "/api/ecbe/v1"
 
-#include "internal.h"
-#include "charset.h"
-#include "cbc_data.h"
-#include "rest_it_op.h"
+#include <osmocom/cbc/internal.h>
+#include <osmocom/cbc/charset.h>
+#include <osmocom/cbc/cbc_data.h>
+#include <osmocom/cbc/rest_it_op.h>
 
 /* get an integer value for field "key" in object "parent" */
 static int json_get_integer(int *out, json_t *parent, const char *key)

@@ -5,7 +5,7 @@
 #include <osmocom/core/logging.h>
 #include <osmocom/core/fsm.h>
 
-#include "cbc_data.h"
+#include <osmocom/cbc/cbc_data.h>
 
 enum {
 	DCBSP,

@@ -44,9 +44,9 @@
 #include <osmocom/vty/logging.h>
 #include <osmocom/vty/misc.h>
 
-#include "internal.h"
-#include "cbsp_server.h"
-#include "cbc_data.h"
+#include <osmocom/cbc/internal.h>
+#include <osmocom/cbc/cbsp_server.h>
+#include <osmocom/cbc/cbc_data.h>
 
 static void *tall_cbc_ctx;
 struct cbc *g_cbc;

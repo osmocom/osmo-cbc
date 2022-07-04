@@ -24,7 +24,7 @@
 #include <osmocom/gsm/gsm_utils.h>
 #include <osmocom/core/utils.h>
 
-#include "charset.h"
+#include <osmocom/cbc/charset.h>
 
 /* pad the entire "remainder" of a buffer with repeated instances of the given pad character */
 static void pad_with_septets(uint8_t *buf, size_t buf_len, int num_septets, char pad_char)

@@ -3,7 +3,7 @@
 #include <osmocom/gsm/cbsp.h>
 #include <osmocom/netif/stream.h>
 
-#include "cbc_data.h"
+#include <osmocom/cbc/cbc_data.h>
 
 #define LOGPCC(client, level, fmt, args...) \
 	LOGP(DCBSP, level, "%s: " fmt, cbsp_cbc_client_name(client), ## args)

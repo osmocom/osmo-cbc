@@ -22,8 +22,8 @@
 
 #include <osmocom/gsm/cbsp.h>
 
-#include "cbsp_server.h"
-#include "internal.h"
+#include <osmocom/cbc/cbsp_server.h>
+#include <osmocom/cbc/internal.h>
 
 #define S(x)	(1 << (x))
 

@@ -1,17 +1,9 @@
-AM_CPPFLAGS = $(all_includes) -I$(top_srcdir)/src
+AM_CPPFLAGS = $(all_includes) -I$(top_srcdir)/include
 AM_CFLAGS=-Wall -g $(LIBOSMOCORE_CFLAGS) $(LIBOSMOGSM_CFLAGS) $(LIBOSMOVTY_CFLAGS) \
 		   $(LIBOSMONETIF_CFLAGS) \
 		   $(ULFIUS_CFLAGS) $(JANSSON_CFLAGS) $(ORCANIA_CFLAGS) \
 		   $(COVERAGE_CFLAGS)
 AM_LDFLAGS=$(COVERAGE_LDFLAGS)
-
-EXTRA_DIST = \
-	cbc_data.h \
-	cbsp_server.h \
-	charset.h \
-	internal.h \
-	rest_it_op.h \
-	$(NULL)
 
 bin_PROGRAMS = osmo-cbc
 

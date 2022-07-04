@@ -169,6 +169,9 @@ AC_MSG_RESULT([CPPFLAGS="$CPPFLAGS"])
 
 AC_OUTPUT(
     src/Makefile
+    include/Makefile
+    include/osmocom/Makefile
+    include/osmocom/cbc/Makefile
     contrib/Makefile
     contrib/osmo-cbc.spec
     tests/Makefile

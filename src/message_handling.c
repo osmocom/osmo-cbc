@@ -27,10 +27,10 @@
 #include <osmocom/core/utils.h>
 #include <osmocom/gsm/cbsp.h>
 
-#include "cbc_data.h"
-#include "cbsp_server.h"
-#include "rest_it_op.h"
-#include "internal.h"
+#include <osmocom/cbc/cbc_data.h>
+#include <osmocom/cbc/cbsp_server.h>
+#include <osmocom/cbc/rest_it_op.h>
+#include <osmocom/cbc/internal.h>
 
 /* convert cbc_message to osmo_cbsp_cell_list */
 static int cbcmsg_to_cbsp_cell_list(const void *ctx, struct osmo_cbsp_cell_list *list,

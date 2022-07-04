@@ -32,9 +32,9 @@
 #include <osmocom/gsm/gsm0808_utils.h>
 #include <osmocom/gsm/cbsp.h>
 
-#include "cbc_data.h"
-#include "cbsp_server.h"
-#include "internal.h"
+#include <osmocom/cbc/cbc_data.h>
+#include <osmocom/cbc/cbsp_server.h>
+#include <osmocom/cbc/internal.h>
 
 #define S(x)	(1 << (x))
 

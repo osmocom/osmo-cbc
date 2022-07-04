@@ -30,9 +30,9 @@
 #include <osmocom/vty/buffer.h>
 #include <osmocom/vty/vty.h>
 
-#include "cbc_data.h"
-#include "internal.h"
-#include "cbsp_server.h"
+#include <osmocom/cbc/cbc_data.h>
+#include <osmocom/cbc/internal.h>
+#include <osmocom/cbc/cbsp_server.h>
 
 static void dump_one_cbc_peer(struct vty *vty, const struct cbc_peer *peer)
 {

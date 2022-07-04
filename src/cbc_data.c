@@ -28,8 +28,8 @@
 #include <osmocom/core/talloc.h>
 #include <osmocom/core/utils.h>
 
-#include "cbc_data.h"
-#include "cbsp_server.h"
+#include <osmocom/cbc/cbc_data.h>
+#include <osmocom/cbc/cbsp_server.h>
 
 const struct value_string cbc_peer_proto_name[] = {
 	{ CBC_PEER_PROTO_CBSP, "CBSP" },
