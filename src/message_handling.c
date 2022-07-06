@@ -132,9 +132,16 @@ int peer_new_cbc_message(struct cbc_peer *peer, struct cbc_message *cbcmsg)
 	switch (peer->proto) {
 	case CBC_PEER_PROTO_CBSP:
 		/* skip peers without any current CBSP connection */
-		if (!peer->client.cbsp)
-			return 0;
-		cbsp = cbcmsg_to_cbsp(peer, cbcmsg);
+		if (!peer->client.cbsp) {
+			LOGP(DCBSP, LOGL_NOTICE, "[%s] Tx CBSP: not connected\n",
+			     peer->name);
+			return -ENOTCONN;
+		}
+		if (!(cbsp = cbcmsg_to_cbsp(peer, cbcmsg))) {
+			LOGP(DCBSP, LOGL_ERROR, "[%s] Tx CBSP: msg gen failed\n",
+			     peer->name);
+			return -EINVAL;
+		}
 		cbsp_cbc_client_tx(peer->client.cbsp, cbsp);
 		break;
 	default:

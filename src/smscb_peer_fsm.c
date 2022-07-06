@@ -279,13 +279,17 @@ static void cbsp_append_cell_list(struct osmo_cbsp_cell_list *out, void *ctx,
 static void smscb_p_fsm_init(struct osmo_fsm_inst *fi, uint32_t event, void *data)
 {
 	struct cbc_message_peer *mp = (struct cbc_message_peer *) fi->priv;
+	int rc;
 
 	switch (event) {
 	case SMSCB_E_CREATE:
 		/* send it to peer */
-		peer_new_cbc_message(mp->peer, mp->cbcmsg);
-		/* wait for peers' response */
-		osmo_fsm_inst_state_chg(fi, SMSCB_S_WAIT_WRITE_ACK, 10, T_WAIT_WRITE_ACK);
+		rc = peer_new_cbc_message(mp->peer, mp->cbcmsg);
+		if (rc == 0) {
+			/* wait for peers' response */
+			osmo_fsm_inst_state_chg(fi, SMSCB_S_WAIT_WRITE_ACK, 10,
+						T_WAIT_WRITE_ACK);
+		}
 		break;
 	default:
 		OSMO_ASSERT(0);
