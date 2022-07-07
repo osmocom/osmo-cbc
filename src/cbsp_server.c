@@ -107,7 +107,8 @@ static int cbsp_cbc_closed_cb(struct osmo_stream_srv *conn)
 	if (client->peer)
 		client->peer->client.cbsp = NULL;
 	client->conn = NULL;
-	osmo_fsm_inst_dispatch(client->fi, CBSP_SRV_E_CMD_CLOSE, NULL);
+	if (client->fi)
+		osmo_fsm_inst_dispatch(client->fi, CBSP_SRV_E_CMD_CLOSE, NULL);
 
 	return 0;
 }
@@ -157,7 +158,6 @@ static int cbsp_cbc_accept_cb(struct osmo_stream_srv_link *link, int fd)
 			LOGPCC(client, LOGL_NOTICE, "Rejecting unknown CBSP peer %s:%d (not permitted)\n",
 				remote_ip, remote_port);
 			osmo_stream_srv_destroy(client->conn);
-			/* FIXME: further cleanup needed? or does close_cb handle everything? */
 			return -1;
 		}
 	} else {
@@ -199,10 +199,7 @@ void cbsp_cbc_client_tx(struct osmo_cbsp_cbc_client *client, struct osmo_cbsp_de
 
 void cbsp_cbc_client_close(struct osmo_cbsp_cbc_client *client)
 {
-	if (client->fi)
-		osmo_fsm_inst_dispatch(client->fi, CBSP_SRV_E_CMD_CLOSE, NULL);
 	osmo_stream_srv_destroy(client->conn);
-	/* FIXME: do we need to unlink/free the client? */
 }
 
 /* initialize the CBC-side CBSP server */
