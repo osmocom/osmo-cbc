@@ -317,7 +317,7 @@ static int json2payload(struct smscb_message *out, json_t *in, const char **errs
 
 	if ((jtmp = json_object_get(in, "payload_encoded"))) {
 		json_t *jpage_arr, *jpage;
-		int i, dcs, num_pages;
+		int i, dcs, num_pages, len;
 
 		out->is_etws = false;
 		/* Data Coding Scheme */
@@ -340,6 +340,7 @@ static int json2payload(struct smscb_message *out, json_t *in, const char **errs
 			return -EINVAL;
 		}
 		out->cbs.num_pages = num_pages;
+		out->cbs.data_user_len = 0;
 		json_array_foreach(jpage_arr, i, jpage) {
 			const char *hexstr;
 			if (!json_is_string(jpage)) {
@@ -351,10 +352,12 @@ static int json2payload(struct smscb_message *out, json_t *in, const char **errs
 				*errstr = "'pages' array must contain strings up to 88 hex nibbles";
 				return -EINVAL;
 			}
-			if (osmo_hexparse(hexstr, out->cbs.data[i], sizeof(out->cbs.data[i])) < 0) {
+			len = osmo_hexparse(hexstr, out->cbs.data[i], sizeof(out->cbs.data[i]));
+			if (len < 0) {
 				*errstr = "'pages' array must contain hex strings";
 				return -EINVAL;
 			}
+			out->cbs.data_user_len += len;
 		}
 		return 0;
 	} else if ((jtmp = json_object_get(in, "payload_decoded"))) {
