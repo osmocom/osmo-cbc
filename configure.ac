@@ -186,6 +186,7 @@ AC_OUTPUT(
     contrib/Makefile
     contrib/osmo-cbc.spec
     tests/Makefile
+    tests/sbcap/Makefile
     doc/Makefile
     doc/examples/Makefile
     doc/manuals/Makefile

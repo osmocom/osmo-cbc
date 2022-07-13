@@ -1,0 +1,8 @@
+AT_INIT
+AT_BANNER([Regression tests.])
+
+AT_SETUP([sbcap])
+AT_KEYWORDS([sbcap])
+cat $abs_srcdir/sbcap/sbcap_test.ok > expout
+AT_CHECK([$abs_top_builddir/tests/sbcap/sbcap_test], [], [expout], [ignore])
+AT_CLEANUP
