@@ -6,7 +6,7 @@ AC_INIT([osmo-cbc],
 dnl *This* is the root dir, even if an install-sh exists in ../ or ../../
 AC_CONFIG_AUX_DIR([.])
 
-AM_INIT_AUTOMAKE([dist-bzip2])
+AM_INIT_AUTOMAKE([dist-bzip2 subdir-objects])
 AC_CONFIG_TESTDIR(tests)
 
 CFLAGS="$CFLAGS -std=gnu11"
@@ -38,6 +38,15 @@ PKG_CHECK_MODULES(LIBOSMONETIF, libosmo-netif >= 1.2.0)
 PKG_CHECK_MODULES(ULFIUS, libulfius)
 PKG_CHECK_MODULES(JANSSON, jansson)
 PKG_CHECK_MODULES(ORCANIA, liborcania)
+
+# Define asn1c skeleton files directory (See "asn1c -S <dir>").
+# Used during "make -C src/ regen" to copy header files from there
+ASN1C_SKELETON_PATH="/usr/share/asn1c"
+ASN1C_BIN_PATH="/usr/bin/asn1c"
+ASN_MODULE_CFLAGS="-DASN_DISABLE_BER_SUPPORT -DASN_DISABLE_XER_SUPPORT -DASN_DISABLE_JER_SUPPORT -DASN_DISABLE_OER_SUPPORT -DASN_DISABLE_UPER_SUPPORT"
+AC_SUBST([ASN1C_SKELETON_PATH])
+AC_SUBST([ASN1C_BIN_PATH])
+AC_SUBST([ASN_MODULE_CFLAGS])
 
 AC_ARG_ENABLE(sanitize,
 	[AS_HELP_STRING(
@@ -169,9 +178,11 @@ AC_MSG_RESULT([CPPFLAGS="$CPPFLAGS"])
 
 AC_OUTPUT(
     src/Makefile
+    src/sbcap/Makefile
     include/Makefile
     include/osmocom/Makefile
     include/osmocom/cbc/Makefile
+    include/osmocom/sbcap/Makefile
     contrib/Makefile
     contrib/osmo-cbc.spec
     tests/Makefile

@@ -1,1 +1,1 @@
-SUBDIRS = cbc
+SUBDIRS = cbc sbcap

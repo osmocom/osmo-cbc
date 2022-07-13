@@ -1,4 +1,6 @@
-AM_CPPFLAGS = $(all_includes) -I$(top_srcdir)/include
+SUBDIRS = sbcap
+
+AM_CPPFLAGS = $(all_includes) -I$(top_srcdir)/include -I$(top_srcdir)/src/sbcap/skel
 AM_CFLAGS=-Wall -g $(LIBOSMOCORE_CFLAGS) $(LIBOSMOGSM_CFLAGS) $(LIBOSMOVTY_CFLAGS) \
 		   $(LIBOSMONETIF_CFLAGS) \
 		   $(ULFIUS_CFLAGS) $(JANSSON_CFLAGS) $(ORCANIA_CFLAGS) \
@@ -23,4 +25,8 @@ osmo_cbc_SOURCES = \
 
 osmo_cbc_LDADD = $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS) $(LIBOSMOVTY_LIBS) \
 		 $(LIBOSMONETIF_LIBS) \
-		 $(ULFIUS_LIBS) $(JANSSON_LIBS) $(ORCANIA_LIBS)
+		 $(ULFIUS_LIBS) $(JANSSON_LIBS) $(ORCANIA_LIBS) \
+		 sbcap/libosmo-sbcap.la
+
+regen:
+	$(MAKE) -C sbcap regen
