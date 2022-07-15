@@ -1,0 +1,4 @@
+[gerrit]
+host=gerrit.osmocom.org
+project=osmo-cbc
+
