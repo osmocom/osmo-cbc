@@ -206,7 +206,7 @@ static int get_msg_id(struct osmo_sbcap_cbc_client *client, const SBcAP_SBC_AP_P
 	if (!ie)
 		return -1;
 	if (ie->size != 2) {
-		LOGPSBCAPC(client, LOGL_ERROR, "get_msg_id wrong size %ld\n", ie->size);
+		LOGPSBCAPC(client, LOGL_ERROR, "get_msg_id wrong size %zu\n", ie->size);
 		return -1;
 	}
 	return osmo_load16be(ie->buf);
