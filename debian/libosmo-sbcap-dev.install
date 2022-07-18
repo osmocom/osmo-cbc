@@ -1,3 +1,4 @@
 usr/include/osmocom/sbcap
 usr/lib/*/libosmo-sbcap.so
 usr/lib/*/libosmo-sbcap.a
+usr/lib/*/pkgconfig/libosmo-sbcap.pc

@@ -191,4 +191,5 @@ AC_OUTPUT(
     doc/examples/Makefile
     doc/manuals/Makefile
     contrib/systemd/Makefile
+    libosmo-sbcap.pc
     Makefile)

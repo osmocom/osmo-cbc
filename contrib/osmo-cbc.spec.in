@@ -119,6 +119,7 @@ make %{?_smp_mflags} check || (find . -name testsuite.log -exec cat {} +)
 
 %files -n libosmo-sbcap-devel
 %{_libdir}/libosmo-sbcap.so
+%{_libdir}/pkgconfig/libosmo-sbcap.pc
 %dir %{_includedir}/osmocom
 %dir %{_includedir}/osmocom/sbcap
 %{_includedir}/osmocom/sbcap/*.h

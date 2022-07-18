@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: Osmocom SBc-AP encoding/decoding library
+Description: C Utility Library
+Version: @VERSION@
+Libs: -L${libdir} -losmo-sbcap
+Cflags: -I${includedir}/
