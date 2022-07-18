@@ -10,7 +10,7 @@ It acts as a gateway between external applications / users, such as government
 authorities for civil protection, and the various components within the 3GPP
 network to actually deliver those broadcast and/or emergency messages.
 
-.Role of the CBC inside the 3GPP network architecture
+.Role of the CBC inside the 3GPP network architecture (3GPP TS 23.041 §3)
 [graphviz]
 ----
 include::../images/cbc-in-network.dot[]
@@ -23,6 +23,7 @@ OsmoCBC is the Osmocom implementation of a Cellular Broadcast Centre (CBC). It
 implements:
 
 - the BSC-CBC interface using the CBSP protocol
+- The MME-CBC interface using the SBc-AP protocol
 - a HTTP/JSON/RESTful interface for external applications
 - a telnet-based command line interface for configuration and introspection called VTY
 
@@ -30,12 +31,10 @@ OsmoCBC provides mainly the following functionality:
 
 - establishing communication with the various Radio Access Network elements such as BSCs within the network
 - receiving requests to start or remove CBS and ETWS messages from external applications
-- distributing the CBS and/or ETWS messages
-has connection with the various RANs of the 3GPP cellular network
+- distributing the CBS and/or ETWS messages to the various RANs of the 3GPP cellular network
 
-Future versions of OsmoCBC are expected to contain the RNC-CBC interface
-with the SABP protocol, as well as the MME-CBC interface using the SBcAP
-protocol.  Should you be interested in contributing to this effort,
+Future versions of OsmoCBC are expected to contain the RNC-CBC interface with
+the SABP protocol.  Should you be interested in contributing to this effort,
 please contact the author of this document.
 
 === CBSP implementation
@@ -56,6 +55,20 @@ the CBC doesn't need to know each and every BSC in the network.  It
 simply only accepts incoming CBSP connections.
 
 For more information, see <<config-cbsp>> on how CBSP is configured.
+
+=== SBc-AP implementation
+
+SBc-AP (SBc Application Part) is the  interface between the Mobility Management
+Entity (MME) and the Cell Broadcast Centre (CBC) in 4G networks. It is also the
+interface between the Public Warning System – Inter Working Function (PWS-IWF)
+and the CBC in 5G networks. It is specified in 3GPP TS 29.168.
+
+Similarly to what's done with CBSP, OsmoCBC also supports operating SBc-AP as an
+SCTP client or an SCTP server. In the first case, OsmoCBC must be passed a list
+of MMEs to connect to, while in the second one it will only accept incoming SCTP
+connections.
+
+For more information, see <<config-sbcap>> on how SBc-AP is configured.
 
 === ECBE REST interface
 
