@@ -58,7 +58,7 @@ static void dump_one_cbc_peer(struct vty *vty, const struct cbc_peer *peer)
 	for (i = 0; i < peer->num_remote_host; i++) {
 		if (i > 0)
 			OSMO_STRBUF_PRINTF(sb, ",");
-		OSMO_STRBUF_PRINTF(sb, peer->remote_host[i]);
+		OSMO_STRBUF_PRINTF(sb, "%s", peer->remote_host[i]);
 	}
 
 	vty_out(vty, "|%-20s| %-15s| %-5d| %-6s| %-20s|%s",
