@@ -49,6 +49,24 @@ Group:		Productivity/Telephony/Utilities
 %description utils
 CLI utility to interface with the osmo-cbc REST interface (ECBE).
 
+%package -n libosmo-sbcap0
+Summary:	Osmocom's library to encode/decode SBc-AP messages
+Group:          System/Libraries
+
+%description -n libosmo-sbcap0
+Osmocom's library to encode/decode SBc-AP messages.
+
+%package -n libosmo-sbcap-devel
+Summary:        Development files for libosmo-sbcap
+Group:          Development/Libraries/C and C++
+Requires:       libosmo-sbcap0 = %{version}
+
+%description -n libosmo-sbcap-devel
+Osmocom's library to encode/decode SBc-AP messages.
+
+This subpackage contains libraries and header files for developing
+applications that want to make use of libosmo-sbcap.
+
 %prep
 %setup -q
 
@@ -63,6 +81,7 @@ make %{?_smp_mflags}
 %install
 %make_install
 install -m 755 contrib/cbc-apitool.py %{buildroot}/usr/bin/cbc-apitool.py
+find %{buildroot} \( -name '*.la' -o -name '*.a' \) -delete -print
 
 %if 0%{?suse_version}
 %preun
@@ -94,5 +113,14 @@ make %{?_smp_mflags} check || (find . -name testsuite.log -exec cat {} +)
 
 %files utils
 %{_bindir}/cbc-apitool.py
+
+%files -n libosmo-sbcap0
+%{_libdir}/libosmo-sbcap.so.0*
+
+%files -n libosmo-sbcap-devel
+%{_libdir}/libosmo-sbcap.so
+%dir %{_includedir}/osmocom
+%dir %{_includedir}/osmocom/sbcap
+%{_includedir}/osmocom/sbcap/*.h
 
 %changelog
