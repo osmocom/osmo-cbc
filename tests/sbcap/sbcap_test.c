@@ -161,7 +161,7 @@ SBc Application Part
 	OSMO_ASSERT(rval.code == RC_OK);
 	OSMO_ASSERT(pdu);
 
-	OSMO_ASSERT(pdu->present = SBcAP_SBC_AP_PDU_PR_successfulOutcome);
+	OSMO_ASSERT(pdu->present == SBcAP_SBC_AP_PDU_PR_successfulOutcome);
 	OSMO_ASSERT(pdu->choice.successfulOutcome.procedureCode == SBcAP_ProcedureId_Write_Replace_Warning);
 	OSMO_ASSERT(pdu->choice.successfulOutcome.criticality == SBcAP_Criticality_reject);
 
