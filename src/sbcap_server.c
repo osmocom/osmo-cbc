@@ -59,7 +59,7 @@ static int sbcap_cbc_read_cb(struct osmo_stream_srv *conn)
 	struct osmo_sbcap_cbc *cbc = osmo_stream_srv_link_get_data(link);
 	struct osmo_fd *ofd = osmo_stream_srv_get_ofd(conn);
 	SBcAP_SBC_AP_PDU_t *pdu;
-	struct msgb *msg = msgb_alloc_c(client, 1500, "SBcAP-rx");
+	struct msgb *msg = msgb_alloc_c(g_cbc, 1500, "SBcAP-rx");
 	struct sctp_sndrcvinfo sinfo;
 	int flags = 0;
 	int rc;
