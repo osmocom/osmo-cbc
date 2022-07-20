@@ -37,14 +37,6 @@
 #include <osmocom/cbc/cbsp_server_fsm.h>
 #include <osmocom/cbc/cbc_peer.h>
 
-#if 0
-struct osmo_cbsp_bsc {
-	/* libosmo-netif stream client */
-	struct osmo_stream_cli *stream;
-};
-#endif
-
-
 const char *cbsp_cbc_client_name(const struct osmo_cbsp_cbc_client *client)
 {
 	OSMO_ASSERT(client);
