@@ -50,3 +50,4 @@ struct rest_it_op {
 int rest_it_op_send_and_wait(struct rest_it_op *op);
 void rest_it_op_set_http_result(struct rest_it_op *op, uint32_t code, const char *body);
 void rest_it_op_complete(struct rest_it_op *op);
+void rest2main_read_cb(struct osmo_it_q *q, struct llist_head *item);
