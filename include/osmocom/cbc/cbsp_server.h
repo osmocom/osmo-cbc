@@ -10,6 +10,7 @@
 
 struct osmo_cbsp_cbc_client;
 struct osmo_fsm_inst;
+struct cbc_peer;
 
 /* a CBC server */
 struct osmo_cbsp_cbc {

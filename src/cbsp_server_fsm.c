@@ -22,6 +22,7 @@
 
 #include <osmocom/gsm/cbsp.h>
 
+#include <osmocom/cbc/cbc_peer.h>
 #include <osmocom/cbc/cbsp_server.h>
 #include <osmocom/cbc/internal.h>
 

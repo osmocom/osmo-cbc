@@ -12,6 +12,7 @@ bin_PROGRAMS = osmo-cbc
 osmo_cbc_SOURCES = \
 	cbc_main.c \
 	cbc_data.c \
+	cbc_peer.c \
 	cbc_vty.c \
 	cbsp_server.c \
 	cbsp_server_fsm.c \

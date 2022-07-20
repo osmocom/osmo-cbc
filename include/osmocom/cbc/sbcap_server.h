@@ -13,6 +13,7 @@ typedef struct SBcAP_SBC_AP_PDU SBcAP_SBC_AP_PDU_t;
 
 struct osmo_sbcap_cbc_client;
 struct osmo_fsm_inst;
+struct cbc_peer;
 
 /* a CBC server */
 struct osmo_sbcap_cbc {

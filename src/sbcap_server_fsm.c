@@ -27,6 +27,7 @@
 
 #include <osmocom/cbc/sbcap_server.h>
 #include <osmocom/cbc/internal.h>
+#include <osmocom/cbc/cbc_peer.h>
 
 #define S(x)	(1 << (x))
 

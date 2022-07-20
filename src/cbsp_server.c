@@ -33,6 +33,7 @@
 
 #include <osmocom/cbc/internal.h>
 #include <osmocom/cbc/cbsp_server.h>
+#include <osmocom/cbc/cbc_peer.h>
 
 #if 0
 struct osmo_cbsp_bsc {
