@@ -93,7 +93,6 @@ static int sbcap_cbc_read_cb(struct osmo_stream_srv *conn)
 			break;
 		}
 		rc = 0;
-		goto out;
 	}
 
 	if (rc == 0)
