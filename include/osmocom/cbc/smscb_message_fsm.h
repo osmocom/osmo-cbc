@@ -1,48 +1,8 @@
 #pragma once
 
 #include <stdint.h>
-
-#include <osmocom/core/logging.h>
 #include <osmocom/core/fsm.h>
-#include <osmocom/vty/command.h>
 
-#include <osmocom/cbc/cbc_data.h>
-
-enum {
-	DCBSP,
-	DSBcAP,
-	DREST,
-};
-
-extern struct osmo_fsm cbsp_server_fsm;
-
-enum cbsp_server_event {
-	CBSP_SRV_E_RX_RST_COMPL,	/* reset complete received */
-	CBSP_SRV_E_RX_RST_FAIL,		/* reset failure received */
-	CBSP_SRV_E_RX_KA_COMPL,		/* keep-alive complete received */
-	CBSP_SRV_E_RX_RESTART,		/* restart received */
-	CBSP_SRV_E_CMD_RESET,		/* RESET command from CBC */
-	CBSP_SRV_E_CMD_CLOSE,		/* CLOSE command from CBC */
-};
-
-extern struct osmo_fsm sbcap_server_fsm;
-
-enum sbcap_server_event {
-	SBcAP_SRV_E_RX_RST_COMPL,	/* reset complete received */
-	SBcAP_SRV_E_RX_RST_FAIL,		/* reset failure received */
-	SBcAP_SRV_E_RX_KA_COMPL,		/* keep-alive complete received */
-	SBcAP_SRV_E_RX_RESTART,		/* restart received */
-	SBcAP_SRV_E_CMD_RESET,		/* RESET command from CBC */
-	SBcAP_SRV_E_CMD_CLOSE,		/* CLOSE command from CBC */
-};
-
-
-/* rest_api.c */
-int rest_api_init(void *ctx, const char *bind_addr, uint16_t port);
-void rest_api_fin(void);
-
-
-/* smscb_*fsm.c */
 enum smscb_fsm_event {
 	SMSCB_E_CHILD_DIED,
 	/* create a message (from REST) */

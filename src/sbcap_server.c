@@ -35,9 +35,11 @@
 
 #include <osmocom/sbcap/sbcap_common.h>
 
-#include <osmocom/cbc/internal.h>
+#include <osmocom/cbc/cbc_data.h>
 #include <osmocom/cbc/sbcap_server.h>
+#include <osmocom/cbc/sbcap_server_fsm.h>
 #include <osmocom/cbc/cbc_peer.h>
+#include <osmocom/cbc/debug.h>
 
 const char *sbcap_cbc_client_name(const struct osmo_sbcap_cbc_client *client)
 {

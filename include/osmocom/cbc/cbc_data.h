@@ -6,8 +6,6 @@
 #include <osmocom/gsm/protocol/gsm_48_049.h>
 #include <osmocom/gsm/gsm23003.h>
 
-struct rest_it_op;
-
 #define CBC_MAX_LOC_ADDRS 8
 
 enum cbc_cell_id_type {
@@ -72,3 +70,7 @@ struct cbc {
 };
 
 extern struct cbc *g_cbc;
+
+/* rest_api.c */
+int rest_api_init(void *ctx, const char *bind_addr, uint16_t port);
+void rest_api_fin(void);

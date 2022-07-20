@@ -37,7 +37,7 @@
 
 #define PREFIX  "/api/ecbe/v1"
 
-#include <osmocom/cbc/internal.h>
+#include <osmocom/cbc/debug.h>
 #include <osmocom/cbc/charset.h>
 #include <osmocom/cbc/cbc_data.h>
 #include <osmocom/cbc/rest_it_op.h>

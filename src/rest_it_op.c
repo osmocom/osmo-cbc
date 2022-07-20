@@ -23,11 +23,13 @@
 #include <errno.h>
 #include <pthread.h>
 
+#include <osmocom/core/talloc.h>
 #include <osmocom/core/linuxlist.h>
 #include <osmocom/core/it_q.h>
 
+#include <osmocom/cbc/cbc_data.h>
 #include <osmocom/cbc/rest_it_op.h>
-#include <osmocom/cbc/internal.h>
+#include <osmocom/cbc/debug.h>
 
 /***********************************************************************
  * HTTP THREAD

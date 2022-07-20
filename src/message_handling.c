@@ -32,8 +32,9 @@
 #include <osmocom/cbc/sbcap_server.h>
 #include <osmocom/cbc/sbcap_msg.h>
 #include <osmocom/cbc/rest_it_op.h>
-#include <osmocom/cbc/internal.h>
+#include <osmocom/cbc/debug.h>
 #include <osmocom/cbc/cbc_peer.h>
+#include <osmocom/cbc/smscb_message_fsm.h>
 
 /* convert cbc_message to osmo_cbsp_cell_list */
 static int cbcmsg_to_cbsp_cell_list(const void *ctx, struct osmo_cbsp_cell_list *list,

@@ -27,12 +27,14 @@
 #include <osmocom/core/socket.h>
 #include <osmocom/core/msgb.h>
 #include <osmocom/core/logging.h>
+#include <osmocom/core/fsm.h>
 #include <osmocom/gsm/cbsp.h>
 #include <osmocom/gsm/protocol/gsm_48_049.h>
 #include <osmocom/netif/stream.h>
 
-#include <osmocom/cbc/internal.h>
+#include <osmocom/cbc/debug.h>
 #include <osmocom/cbc/cbsp_server.h>
+#include <osmocom/cbc/cbsp_server_fsm.h>
 #include <osmocom/cbc/cbc_peer.h>
 
 #if 0

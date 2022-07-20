@@ -39,7 +39,8 @@
 #include <osmocom/cbc/cbsp_server.h>
 #include <osmocom/cbc/sbcap_server.h>
 #include <osmocom/cbc/sbcap_msg.h>
-#include <osmocom/cbc/internal.h>
+#include <osmocom/cbc/debug.h>
+#include <osmocom/cbc/smscb_message_fsm.h>
 
 #define S(x)	(1 << (x))
 

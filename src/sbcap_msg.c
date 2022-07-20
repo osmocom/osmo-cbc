@@ -33,7 +33,7 @@
 
 #include <osmocom/cbc/cbc_message.h>
 #include <osmocom/cbc/sbcap_server.h>
-#include <osmocom/cbc/internal.h>
+#include <osmocom/cbc/debug.h>
 
 /* 3GPP TS 36.413 9.2.1.53 */
 #define SBCAP_WARN_MSG_CONTENTS_IE_MAX_LEN 9600
