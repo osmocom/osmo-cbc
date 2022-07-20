@@ -37,6 +37,13 @@
 #include <osmocom/cbc/cbsp_link.h>
 #include <osmocom/cbc/sbcap_link.h>
 
+static const struct value_string cbc_peer_proto_name_vty[] = {
+	{ CBC_PEER_PROTO_CBSP, "cbsp" },
+	{ CBC_PEER_PROTO_SABP, "sabp" },
+	{ CBC_PEER_PROTO_SBcAP, "sbcap" },
+	{ 0, NULL }
+};
+
 static void dump_one_cbc_peer(struct vty *vty, const struct cbc_peer *peer)
 {
 	const char *state = "<disconnected>";
@@ -544,10 +551,7 @@ DEFUN(cfg_peer_proto, cfg_peer_proto_cmd,
 	"Cell Broadcast Service Protocol (GSM)\n")
 {
 	struct cbc_peer *peer = (struct cbc_peer *) vty->index;
-	if (strcmp(argv[0], "cbsp") == 0)
-		peer->proto = CBC_PEER_PROTO_CBSP;
-	else
-		peer->proto = CBC_PEER_PROTO_SBcAP;
+	peer->proto = get_string_value(cbc_peer_proto_name_vty, argv[0]);
 	return CMD_SUCCESS;
 }
 
