@@ -138,7 +138,7 @@ static int cbsp_cbc_accept_cb(struct osmo_stream_srv_link *srv_link, int fd)
 		talloc_free(link);
 		return -1;
 	}
-	llist_add_tail(&link->list, &cbc->clients);
+	llist_add_tail(&link->list, &cbc->links);
 
 	/* Match link to peer */
 	link->peer = cbc_peer_by_addr_proto(remote_ip, remote_port, CBC_PEER_PROTO_CBSP);
@@ -210,22 +210,22 @@ struct cbc_cbsp_mgr *cbc_cbsp_mgr_create(void *ctx)
 
 	OSMO_ASSERT(cbc);
 	cbc->rx_cb = cbc_cbsp_link_rx_cb;
-	INIT_LLIST_HEAD(&cbc->clients);
-	cbc->link = osmo_stream_srv_link_create(cbc);
-	osmo_stream_srv_link_set_data(cbc->link, cbc);
-	osmo_stream_srv_link_set_nodelay(cbc->link, true);
-	osmo_stream_srv_link_set_port(cbc->link, bind_port);
+	INIT_LLIST_HEAD(&cbc->links);
+	cbc->srv_link = osmo_stream_srv_link_create(cbc);
+	osmo_stream_srv_link_set_data(cbc->srv_link, cbc);
+	osmo_stream_srv_link_set_nodelay(cbc->srv_link, true);
+	osmo_stream_srv_link_set_port(cbc->srv_link, bind_port);
 	if (bind_ip)
-		osmo_stream_srv_link_set_addr(cbc->link, bind_ip);
-	osmo_stream_srv_link_set_accept_cb(cbc->link, cbsp_cbc_accept_cb);
-	rc = osmo_stream_srv_link_open(cbc->link);
+		osmo_stream_srv_link_set_addr(cbc->srv_link, bind_ip);
+	osmo_stream_srv_link_set_accept_cb(cbc->srv_link, cbsp_cbc_accept_cb);
+	rc = osmo_stream_srv_link_open(cbc->srv_link);
 	if (rc < 0) {
-		osmo_stream_srv_link_destroy(cbc->link);
+		osmo_stream_srv_link_destroy(cbc->srv_link);
 		talloc_free(cbc);
 		return NULL;
 	}
 	LOGP(DCBSP, LOGL_NOTICE, "Listening for CBSP at %s\n",
-		osmo_stream_srv_link_get_sockname(cbc->link));
+		osmo_stream_srv_link_get_sockname(cbc->srv_link));
 
 	return cbc;
 }

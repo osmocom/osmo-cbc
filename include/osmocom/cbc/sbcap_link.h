@@ -18,10 +18,10 @@ struct cbc_peer;
 /* Holder of all SBc-AP conn related information: */
 struct cbc_sbcap_mgr {
 	/* libosmo-netif stream server */
-	struct osmo_stream_srv_link *link;
+	struct osmo_stream_srv_link *srv_link;
 
-	/* MMEs / clients connected to this CBC */
-	struct llist_head clients;
+	/* MMEs / links connected to this CBC */
+	struct llist_head links;
 
 	/* receive call-back; called for every received message */
 	int (*rx_cb)(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu);
@@ -30,7 +30,7 @@ struct cbc_sbcap_mgr *cbc_sbcap_mgr_create(void *ctx);
 
 /* an SBc-AP link with a single (remote) peer connected to us */
 struct cbc_sbcap_link {
-	/* entry in osmo_sbcap_cbc.clients */
+	/* entry in osmo_sbcap_cbc.links */
 	struct llist_head list;
 	/* stream server connection for this link */
 	struct osmo_stream_srv *conn;

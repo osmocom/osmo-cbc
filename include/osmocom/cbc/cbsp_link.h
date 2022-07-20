@@ -15,10 +15,10 @@ struct cbc_peer;
 /* Holder of all CBSP conn related information: */
 struct cbc_cbsp_mgr {
 	/* libosmo-netif stream server */
-	struct osmo_stream_srv_link *link;
+	struct osmo_stream_srv_link *srv_link;
 
-	/* BSCs / clients connected to this CBC */
-	struct llist_head clients;
+	/* BSCs / links connected to this CBC */
+	struct llist_head links;
 
 	/* receive call-back; called for every received message */
 	int (*rx_cb)(struct cbc_cbsp_link *link, struct osmo_cbsp_decoded *dec);
@@ -28,7 +28,7 @@ struct cbc_cbsp_mgr *cbc_cbsp_mgr_create(void *ctx);
 
 /* a CBSP link with a single (remote) peer connected to us */
 struct cbc_cbsp_link {
-	/* entry in osmo_cbsp_cbc.clients */
+	/* entry in osmo_cbsp_cbc.links */
 	struct llist_head list;
 	/* stream server connection for this link */
 	struct osmo_stream_srv *conn;

@@ -166,7 +166,7 @@ static int sbcap_cbc_accept_cb(struct osmo_stream_srv_link *srv_link, int fd)
 		talloc_free(link);
 		return -1;
 	}
-	llist_add_tail(&link->list, &cbc->clients);
+	llist_add_tail(&link->list, &cbc->links);
 
 	/* Match link to peer */
 	link->peer = cbc_peer_by_addr_proto(remote_ip, remote_port, CBC_PEER_PROTO_SBcAP);
@@ -238,19 +238,19 @@ struct cbc_sbcap_mgr *cbc_sbcap_mgr_create(void *ctx)
 
 	OSMO_ASSERT(cbc);
 	cbc->rx_cb = cbc_sbcap_link_rx_cb;
-	INIT_LLIST_HEAD(&cbc->clients);
-	cbc->link = osmo_stream_srv_link_create(cbc);
-	osmo_stream_srv_link_set_proto(cbc->link, IPPROTO_SCTP);
-	osmo_stream_srv_link_set_data(cbc->link, cbc);
-	osmo_stream_srv_link_set_nodelay(cbc->link, true);
-	osmo_stream_srv_link_set_port(cbc->link, bind_port);
-	osmo_stream_srv_link_set_addrs(cbc->link, (const char **)g_cbc->config.sbcap.local_host,
+	INIT_LLIST_HEAD(&cbc->links);
+	cbc->srv_link = osmo_stream_srv_link_create(cbc);
+	osmo_stream_srv_link_set_proto(cbc->srv_link, IPPROTO_SCTP);
+	osmo_stream_srv_link_set_data(cbc->srv_link, cbc);
+	osmo_stream_srv_link_set_nodelay(cbc->srv_link, true);
+	osmo_stream_srv_link_set_port(cbc->srv_link, bind_port);
+	osmo_stream_srv_link_set_addrs(cbc->srv_link, (const char **)g_cbc->config.sbcap.local_host,
 				       g_cbc->config.sbcap.num_local_host);
-	osmo_stream_srv_link_set_accept_cb(cbc->link, sbcap_cbc_accept_cb);
-	rc = osmo_stream_srv_link_open(cbc->link);
+	osmo_stream_srv_link_set_accept_cb(cbc->srv_link, sbcap_cbc_accept_cb);
+	rc = osmo_stream_srv_link_open(cbc->srv_link);
 	OSMO_ASSERT(rc == 0);
 	LOGP(DSBcAP, LOGL_NOTICE, "Listening for SBc-AP at %s\n",
-		osmo_stream_srv_link_get_sockname(cbc->link));
+		osmo_stream_srv_link_get_sockname(cbc->srv_link));
 
 	return cbc;
 }
