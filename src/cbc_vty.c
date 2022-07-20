@@ -638,7 +638,8 @@ static void write_one_peer(struct vty *vty, struct cbc_peer *peer)
 {
 	unsigned int i;
 	vty_out(vty, " peer %s%s", peer->name, VTY_NEWLINE);
-	vty_out(vty, "  protocol cbsp%s", VTY_NEWLINE);
+	vty_out(vty, "  protocol %s%s",
+		get_value_string(cbc_peer_proto_name_vty, peer->proto), VTY_NEWLINE);
 	if (peer->remote_port == -1)
 		vty_out(vty, "  no remote-port%s", VTY_NEWLINE);
 	else
