@@ -34,11 +34,7 @@ struct osmo_sbcap_cbc_client {
 	struct llist_head list;
 	/* stream server connection for this client */
 	struct osmo_stream_srv *conn;
-	/* partially received sbcap message (rx completion pending) */
-	struct msgb *rx_msg;
-
 	struct osmo_fsm_inst *fi;
-
 	struct cbc_peer *peer;
 };
 
