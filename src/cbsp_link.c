@@ -75,7 +75,7 @@ static int cbsp_cbc_read_cb(struct osmo_stream_srv *conn)
 
 		}
 		/* destroy connection */
-		osmo_stream_srv_destroy(conn);
+		cbc_cbsp_link_close(link);
 		return -EBADF;
 	}
 	OSMO_ASSERT(msg);
@@ -134,7 +134,7 @@ static int cbsp_cbc_accept_cb(struct osmo_stream_srv_link *srv_link, int fd)
 	link->fi = osmo_fsm_inst_alloc(&cbsp_link_fsm, link, link, LOGL_DEBUG, NULL);
 	if (!link->fi) {
 		LOGPCC(link, LOGL_ERROR, "Unable to allocate FSM\n");
-		osmo_stream_srv_destroy(link->conn);
+		cbc_cbsp_link_close(link);
 		talloc_free(link);
 		return -1;
 	}
@@ -152,7 +152,7 @@ static int cbsp_cbc_accept_cb(struct osmo_stream_srv_link *srv_link, int fd)
 		} else {
 			LOGPCC(link, LOGL_NOTICE, "Rejecting unknown CBSP peer %s:%d (not permitted)\n",
 				remote_ip, remote_port);
-			osmo_stream_srv_destroy(link->conn);
+			cbc_cbsp_link_close(link);
 			return -1;
 		}
 	} else {
@@ -194,7 +194,8 @@ void cbc_cbsp_link_tx(struct cbc_cbsp_link *link, struct osmo_cbsp_decoded *cbsp
 
 void cbc_cbsp_link_close(struct cbc_cbsp_link *link)
 {
-	osmo_stream_srv_destroy(link->conn);
+	if (link->conn)
+		osmo_stream_srv_destroy(link->conn);
 }
 
 /* initialize the CBC-side CBSP server */

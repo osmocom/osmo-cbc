@@ -73,10 +73,10 @@ static int sbcap_cbc_read_cb(struct osmo_stream_srv *conn)
 	LOGPSBCAPC(link, LOGL_DEBUG, "%s(): sctp_recvmsg() returned %d (flags=0x%x)\n",
 		   __func__, rc, flags);
 	if (rc < 0) {
-		osmo_stream_srv_destroy(conn);
+		cbc_sbcap_link_close(link);
 		goto out;
 	} else if (rc == 0) {
-		osmo_stream_srv_destroy(conn);
+		cbc_sbcap_link_close(link);
 	} else {
 		msgb_put(msg, rc);
 	}
@@ -87,7 +87,7 @@ static int sbcap_cbc_read_cb(struct osmo_stream_srv *conn)
 			osmo_sctp_sn_type_str(notif->sn_header.sn_type));
 		switch (notif->sn_header.sn_type) {
 		case SCTP_SHUTDOWN_EVENT:
-			osmo_stream_srv_destroy(conn);
+			cbc_sbcap_link_close(link);
 			break;
 		case SCTP_ASSOC_CHANGE:
 			LOGPSBCAPC(link, LOGL_DEBUG, "Rx sctp notif SCTP_ASSOC_CHANGE: %s\n",
@@ -162,7 +162,7 @@ static int sbcap_cbc_accept_cb(struct osmo_stream_srv_link *srv_link, int fd)
 	link->fi = osmo_fsm_inst_alloc(&sbcap_link_fsm, link, link, LOGL_DEBUG, NULL);
 	if (!link->fi) {
 		LOGPSBCAPC(link, LOGL_ERROR, "Unable to allocate FSM\n");
-		osmo_stream_srv_destroy(link->conn);
+		cbc_sbcap_link_close(link);
 		talloc_free(link);
 		return -1;
 	}
@@ -180,7 +180,7 @@ static int sbcap_cbc_accept_cb(struct osmo_stream_srv_link *srv_link, int fd)
 		} else {
 			LOGPSBCAPC(link, LOGL_NOTICE, "Rejecting unknown SBc-AP peer %s:%d (not permitted)\n",
 				remote_ip, remote_port);
-			osmo_stream_srv_destroy(link->conn);
+			cbc_sbcap_link_close(link);
 			return -1;
 		}
 	} else {
@@ -223,7 +223,8 @@ ret_free:
 
 void cbc_sbcap_link_close(struct cbc_sbcap_link *link)
 {
-	osmo_stream_srv_destroy(link->conn);
+	if (link->conn)
+		osmo_stream_srv_destroy(link->conn);
 }
 
 /* initialize the CBC-side SBc-AP server */

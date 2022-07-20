@@ -94,8 +94,7 @@ static void sbcap_link_fsm_cleanup(struct osmo_fsm_inst *fi, enum osmo_fsm_term_
 {
 	struct cbc_sbcap_link *link = (struct cbc_sbcap_link *) fi->priv;
 
-	if (link->conn)
-		osmo_stream_srv_destroy(link->conn);
+	cbc_sbcap_link_close(link);
 	llist_del(&link->list);
 	link->fi = NULL;
 
