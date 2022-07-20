@@ -25,6 +25,7 @@
 
 #include <osmocom/sbcap/sbcap_common.h>
 
+#include <osmocom/cbc/cbc_message.h>
 #include <osmocom/cbc/sbcap_server.h>
 #include <osmocom/cbc/internal.h>
 #include <osmocom/cbc/cbc_peer.h>

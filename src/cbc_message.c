@@ -28,8 +28,7 @@
 #include <osmocom/core/talloc.h>
 #include <osmocom/core/utils.h>
 
-#include <osmocom/cbc/cbc_data.h>
-#include <osmocom/cbc/cbsp_server.h>
+#include <osmocom/cbc/cbc_message.h>
 
 /* remove a peer from the message */
 int cbc_message_del_peer(struct cbc_message *cbcmsg, struct cbc_peer *peer)

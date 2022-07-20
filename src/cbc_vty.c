@@ -31,6 +31,7 @@
 #include <osmocom/vty/vty.h>
 
 #include <osmocom/cbc/cbc_data.h>
+#include <osmocom/cbc/cbc_message.h>
 #include <osmocom/cbc/cbc_peer.h>
 #include <osmocom/cbc/cbc_vty.h>
 #include <osmocom/cbc/internal.h>

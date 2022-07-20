@@ -7,7 +7,7 @@
 #include <osmocom/core/linuxlist.h>
 #include <osmocom/core/it_q.h>
 
-#include <osmocom/cbc/cbc_data.h>
+#include <osmocom/cbc/cbc_message.h>
 
 enum rest_it_operation {
 	REST_IT_OP_NONE,
