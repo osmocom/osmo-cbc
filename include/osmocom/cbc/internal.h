@@ -41,16 +41,6 @@ enum sbcap_server_event {
 int rest_api_init(void *ctx, const char *bind_addr, uint16_t port);
 void rest_api_fin(void);
 
-/* cbc_vty.c */
-enum cbc_vty_node {
-	CBC_NODE = _LAST_OSMOVTY_NODE + 1,
-	PEER_NODE,
-	CBSP_NODE,
-	SBcAP_NODE,
-	ECBE_NODE,
-};
-void cbc_vty_init(void);
-
 /* message_handling.c */
 struct cbc_message *cbc_message_alloc(void *ctx, const struct cbc_message *cbcmsg);
 int cbc_message_new(const struct cbc_message *cbcmsg, struct rest_it_op *op);
