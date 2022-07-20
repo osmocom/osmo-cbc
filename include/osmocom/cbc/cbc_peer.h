@@ -3,9 +3,9 @@
 #include <stdbool.h>
 #include <osmocom/core/linuxlist.h>
 
-struct osmo_cbsp_cbc_client;
-struct osmo_sabp_cbc_client;
-struct osmo_sbcap_cbc_client;
+struct cbc_cbsp_link;
+struct cbc_sabp_link;
+struct cbc_sbcap_link;
 
 #define CBC_MAX_REM_ADDRS 8
 
@@ -30,10 +30,10 @@ struct cbc_peer {
 
 	enum cbc_peer_protocol proto;
 	union {
-		struct osmo_cbsp_cbc_client *cbsp;
-		struct osmo_sabp_cbc_client *sabp;
-		struct osmo_sbcap_cbc_client *sbcap;
-	} client;
+		struct cbc_cbsp_link *cbsp;
+		struct cbc_sabp_link *sabp;
+		struct cbc_sbcap_link *sbcap;
+	} link;
 };
 
 extern const struct value_string cbc_peer_proto_name[];

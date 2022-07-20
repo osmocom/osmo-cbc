@@ -8,15 +8,15 @@
 
 #define SBcAP_SCTP_PORT 29168
 typedef struct SBcAP_SBC_AP_PDU SBcAP_SBC_AP_PDU_t;
-#define LOGPSBCAPC(client, level, fmt, args...) \
-	LOGP(DSBcAP, level, "%s: " fmt, sbcap_cbc_client_name(client), ## args)
+#define LOGPSBCAPC(link, level, fmt, args...) \
+	LOGP(DSBcAP, level, "%s: " fmt, cbc_sbcap_link_name(link), ## args)
 
-struct osmo_sbcap_cbc_client;
+struct cbc_sbcap_link;
 struct osmo_fsm_inst;
 struct cbc_peer;
 
-/* a CBC server */
-struct osmo_sbcap_cbc {
+/* Holder of all SBc-AP conn related information: */
+struct cbc_sbcap_mgr {
 	/* libosmo-netif stream server */
 	struct osmo_stream_srv_link *link;
 
@@ -24,21 +24,21 @@ struct osmo_sbcap_cbc {
 	struct llist_head clients;
 
 	/* receive call-back; called for every received message */
-	int (*rx_cb)(struct osmo_sbcap_cbc_client *client, SBcAP_SBC_AP_PDU_t *pdu);
+	int (*rx_cb)(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu);
 };
-struct osmo_sbcap_cbc *sbcap_cbc_create(void *ctx);
+struct cbc_sbcap_mgr *cbc_sbcap_mgr_create(void *ctx);
 
-/* a single (remote) client connected to the (local) CBC server */
-struct osmo_sbcap_cbc_client {
+/* an SBc-AP link with a single (remote) peer connected to us */
+struct cbc_sbcap_link {
 	/* entry in osmo_sbcap_cbc.clients */
 	struct llist_head list;
-	/* stream server connection for this client */
+	/* stream server connection for this link */
 	struct osmo_stream_srv *conn;
 	struct osmo_fsm_inst *fi;
 	struct cbc_peer *peer;
 };
 
-const char *sbcap_cbc_client_name(const struct osmo_sbcap_cbc_client *client);
-void sbcap_cbc_client_tx(struct osmo_sbcap_cbc_client *client, SBcAP_SBC_AP_PDU_t *pdu);
-void sbcap_cbc_client_close(struct osmo_sbcap_cbc_client *client);
-int sbcap_cbc_client_rx_cb(struct osmo_sbcap_cbc_client *client, SBcAP_SBC_AP_PDU_t *pdu);
+const char *cbc_sbcap_link_name(const struct cbc_sbcap_link *link);
+void cbc_sbcap_link_tx(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu);
+void cbc_sbcap_link_close(struct cbc_sbcap_link *link);
+int cbc_sbcap_link_rx_cb(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu);

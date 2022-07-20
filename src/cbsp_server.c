@@ -37,14 +37,14 @@
 #include <osmocom/cbc/cbsp_server_fsm.h>
 #include <osmocom/cbc/cbc_peer.h>
 
-const char *cbsp_cbc_client_name(const struct osmo_cbsp_cbc_client *client)
+const char *cbc_cbsp_link_name(const struct cbc_cbsp_link *link)
 {
-	OSMO_ASSERT(client);
+	OSMO_ASSERT(link);
 
-	if (client->peer && client->peer->name) {
-		return client->peer->name;
+	if (link->peer && link->peer->name) {
+		return link->peer->name;
 	} else {
-		struct osmo_fd *ofd = osmo_stream_srv_get_ofd(client->conn);
+		struct osmo_fd *ofd = osmo_stream_srv_get_ofd(link->conn);
 		return osmo_sock_get_name2(ofd->fd);
 	}
 }
@@ -52,18 +52,18 @@ const char *cbsp_cbc_client_name(const struct osmo_cbsp_cbc_client *client)
 /* data from BSC has arrived at CBC */
 static int cbsp_cbc_read_cb(struct osmo_stream_srv *conn)
 {
-	struct osmo_stream_srv_link *link = osmo_stream_srv_get_master(conn);
-	struct osmo_cbsp_cbc_client *client = osmo_stream_srv_get_data(conn);
-	struct osmo_cbsp_cbc *cbc = osmo_stream_srv_link_get_data(link);
+	struct osmo_stream_srv_link *srv_link = osmo_stream_srv_get_master(conn);
+	struct cbc_cbsp_link *link = osmo_stream_srv_get_data(conn);
+	struct cbc_cbsp_mgr *cbc = osmo_stream_srv_link_get_data(srv_link);
 	struct osmo_fd *ofd = osmo_stream_srv_get_ofd(conn);
 	struct osmo_cbsp_decoded *decoded;
 	struct msgb *msg = NULL;
 	int rc;
 
-	LOGPCC(client, LOGL_DEBUG, "read_cb rx_msg=%p\n", client->rx_msg);
+	LOGPCC(link, LOGL_DEBUG, "read_cb rx_msg=%p\n", link->rx_msg);
 
 	/* message de-segmentation */
-	rc = osmo_cbsp_recv_buffered(conn, ofd->fd, &msg, &client->rx_msg);
+	rc = osmo_cbsp_recv_buffered(conn, ofd->fd, &msg, &link->rx_msg);
 	if (rc <= 0) {
 		if (rc == -EAGAIN || rc == -EINTR) {
 			/* more data needs to be read */
@@ -79,15 +79,15 @@ static int cbsp_cbc_read_cb(struct osmo_stream_srv *conn)
 		return -EBADF;
 	}
 	OSMO_ASSERT(msg);
-	LOGPCC(client, LOGL_DEBUG, "Received CBSP %s\n", msgb_hexdump(msg));
+	LOGPCC(link, LOGL_DEBUG, "Received CBSP %s\n", msgb_hexdump(msg));
 	/* decode + dispatch message */
-	decoded = osmo_cbsp_decode(client, msg);
+	decoded = osmo_cbsp_decode(link, msg);
 	if (decoded) {
-		LOGPCC(client, LOGL_INFO, "Received CBSP %s\n",
+		LOGPCC(link, LOGL_INFO, "Received CBSP %s\n",
 			get_value_string(cbsp_msg_type_names, decoded->msg_type));
-		cbc->rx_cb(client, decoded);
+		cbc->rx_cb(link, decoded);
 	} else {
-		LOGPCC(client, LOGL_ERROR, "Unable to decode %s\n", msgb_hexdump(msg));
+		LOGPCC(link, LOGL_ERROR, "Unable to decode %s\n", msgb_hexdump(msg));
 	}
 	msgb_free(msg);
 	return 0;
@@ -96,111 +96,111 @@ static int cbsp_cbc_read_cb(struct osmo_stream_srv *conn)
 /* connection from BSC to CBC has been closed */
 static int cbsp_cbc_closed_cb(struct osmo_stream_srv *conn)
 {
-	struct osmo_cbsp_cbc_client *client = osmo_stream_srv_get_data(conn);
-	LOGPCC(client, LOGL_NOTICE, "connection closed\n");
+	struct cbc_cbsp_link *link = osmo_stream_srv_get_data(conn);
+	LOGPCC(link, LOGL_NOTICE, "connection closed\n");
 
-	if (client->peer)
-		client->peer->client.cbsp = NULL;
-	client->conn = NULL;
-	if (client->fi)
-		osmo_fsm_inst_dispatch(client->fi, CBSP_SRV_E_CMD_CLOSE, NULL);
+	if (link->peer)
+		link->peer->link.cbsp = NULL;
+	link->conn = NULL;
+	if (link->fi)
+		osmo_fsm_inst_dispatch(link->fi, CBSP_SRV_E_CMD_CLOSE, NULL);
 
 	return 0;
 }
 
 /* new connection from BSC has arrived at CBC */
-static int cbsp_cbc_accept_cb(struct osmo_stream_srv_link *link, int fd)
+static int cbsp_cbc_accept_cb(struct osmo_stream_srv_link *srv_link, int fd)
 {
-	struct osmo_cbsp_cbc *cbc = osmo_stream_srv_link_get_data(link);
-	struct osmo_cbsp_cbc_client *client = talloc_zero(cbc, struct osmo_cbsp_cbc_client);
+	struct cbc_cbsp_mgr *cbc = osmo_stream_srv_link_get_data(srv_link);
+	struct cbc_cbsp_link *link = talloc_zero(cbc, struct cbc_cbsp_link);
 	char remote_ip[INET6_ADDRSTRLEN], portbuf[6];
 	int remote_port;
-	OSMO_ASSERT(client);
+	OSMO_ASSERT(link);
 
 	remote_ip[0] = '\0';
 	portbuf[0] = '\0';
 	osmo_sock_get_ip_and_port(fd, remote_ip, sizeof(remote_ip), portbuf, sizeof(portbuf), false);
 	remote_port = atoi(portbuf);
 
-	LOGP(DCBSP, LOGL_NOTICE, "New CBSP client connection from %s:%u\n", remote_ip, remote_port);
+	LOGP(DCBSP, LOGL_NOTICE, "New CBSP link connection from %s:%u\n", remote_ip, remote_port);
 
-	client->conn = osmo_stream_srv_create(link, link, fd, cbsp_cbc_read_cb, cbsp_cbc_closed_cb, client);
-	if (!client->conn) {
+	link->conn = osmo_stream_srv_create(srv_link, srv_link, fd, cbsp_cbc_read_cb, cbsp_cbc_closed_cb, link);
+	if (!link->conn) {
 		LOGP(DCBSP, LOGL_ERROR, "Unable to create stream server for %s:%d\n",
 			remote_ip, remote_port);
-		talloc_free(client);
+		talloc_free(link);
 		return -1;
 	}
-	client->fi = osmo_fsm_inst_alloc(&cbsp_server_fsm, client, client, LOGL_DEBUG, NULL);
-	if (!client->fi) {
-		LOGPCC(client, LOGL_ERROR, "Unable to allocate FSM\n");
-		osmo_stream_srv_destroy(client->conn);
-		talloc_free(client);
+	link->fi = osmo_fsm_inst_alloc(&cbsp_server_fsm, link, link, LOGL_DEBUG, NULL);
+	if (!link->fi) {
+		LOGPCC(link, LOGL_ERROR, "Unable to allocate FSM\n");
+		osmo_stream_srv_destroy(link->conn);
+		talloc_free(link);
 		return -1;
 	}
-	llist_add_tail(&client->list, &cbc->clients);
+	llist_add_tail(&link->list, &cbc->clients);
 
-	/* Match client to peer */
-	client->peer = cbc_peer_by_addr_proto(remote_ip, remote_port, CBC_PEER_PROTO_CBSP);
-	if (!client->peer) {
+	/* Match link to peer */
+	link->peer = cbc_peer_by_addr_proto(remote_ip, remote_port, CBC_PEER_PROTO_CBSP);
+	if (!link->peer) {
 		if (g_cbc->config.permit_unknown_peers) {
-			LOGPCC(client, LOGL_NOTICE, "Accepting unknown CBSP peer %s:%d\n",
+			LOGPCC(link, LOGL_NOTICE, "Accepting unknown CBSP peer %s:%d\n",
 				remote_ip, remote_port);
-			client->peer = cbc_peer_create(NULL, CBC_PEER_PROTO_CBSP);
-			OSMO_ASSERT(client->peer);
-			client->peer->unknown_dynamic_peer = true;
+			link->peer = cbc_peer_create(NULL, CBC_PEER_PROTO_CBSP);
+			OSMO_ASSERT(link->peer);
+			link->peer->unknown_dynamic_peer = true;
 		} else {
-			LOGPCC(client, LOGL_NOTICE, "Rejecting unknown CBSP peer %s:%d (not permitted)\n",
+			LOGPCC(link, LOGL_NOTICE, "Rejecting unknown CBSP peer %s:%d (not permitted)\n",
 				remote_ip, remote_port);
-			osmo_stream_srv_destroy(client->conn);
+			osmo_stream_srv_destroy(link->conn);
 			return -1;
 		}
 	} else {
-		if (client->peer->client.cbsp) {
-			LOGPCC(client, LOGL_ERROR, "We already have a connection for peer %s\n",
-				client->peer->name);
+		if (link->peer->link.cbsp) {
+			LOGPCC(link, LOGL_ERROR, "We already have a connection for peer %s\n",
+				link->peer->name);
 			/* FIXME */
 		}
-		client->peer->client.cbsp = client;
+		link->peer->link.cbsp = link;
 	}
 
-	osmo_fsm_inst_dispatch(client->fi, CBSP_SRV_E_CMD_RESET, NULL);
+	osmo_fsm_inst_dispatch(link->fi, CBSP_SRV_E_CMD_RESET, NULL);
 	return 0;
 }
 
-void cbsp_cbc_client_tx(struct osmo_cbsp_cbc_client *client, struct osmo_cbsp_decoded *cbsp)
+void cbc_cbsp_link_tx(struct cbc_cbsp_link *link, struct osmo_cbsp_decoded *cbsp)
 {
 	struct msgb *msg;
 
-	if (!client) {
+	if (!link) {
 		LOGP(DCBSP, LOGL_NOTICE, "Cannot transmit %s: no connection\n",
 			get_value_string(cbsp_msg_type_names, cbsp->msg_type));
 		return ;
 	}
 
-	LOGPCC(client, LOGL_INFO, "Transmitting %s\n",
+	LOGPCC(link, LOGL_INFO, "Transmitting %s\n",
 		get_value_string(cbsp_msg_type_names, cbsp->msg_type));
 
-	msg = osmo_cbsp_encode(client, cbsp);
+	msg = osmo_cbsp_encode(link, cbsp);
 	if (!msg) {
-		LOGPCC(client, LOGL_ERROR, "Failed to encode CBSP %s: %s\n",
+		LOGPCC(link, LOGL_ERROR, "Failed to encode CBSP %s: %s\n",
 			get_value_string(cbsp_msg_type_names, cbsp->msg_type), osmo_cbsp_errstr);
 		talloc_free(cbsp);
 		return;
 	}
 	talloc_free(cbsp);
-	osmo_stream_srv_send(client->conn, msg);
+	osmo_stream_srv_send(link->conn, msg);
 }
 
-void cbsp_cbc_client_close(struct osmo_cbsp_cbc_client *client)
+void cbc_cbsp_link_close(struct cbc_cbsp_link *link)
 {
-	osmo_stream_srv_destroy(client->conn);
+	osmo_stream_srv_destroy(link->conn);
 }
 
 /* initialize the CBC-side CBSP server */
-struct osmo_cbsp_cbc *cbsp_cbc_create(void *ctx)
+struct cbc_cbsp_mgr *cbc_cbsp_mgr_create(void *ctx)
 {
-	struct osmo_cbsp_cbc *cbc = talloc_zero(ctx, struct osmo_cbsp_cbc);
+	struct cbc_cbsp_mgr *cbc = talloc_zero(ctx, struct cbc_cbsp_mgr);
 	int rc;
 	char *bind_ip = g_cbc->config.cbsp.local_host;
 	int bind_port = g_cbc->config.cbsp.local_port;
@@ -209,7 +209,7 @@ struct osmo_cbsp_cbc *cbsp_cbc_create(void *ctx)
 		bind_port = CBSP_TCP_PORT;
 
 	OSMO_ASSERT(cbc);
-	cbc->rx_cb = cbsp_cbc_client_rx_cb;
+	cbc->rx_cb = cbc_cbsp_link_rx_cb;
 	INIT_LLIST_HEAD(&cbc->clients);
 	cbc->link = osmo_stream_srv_link_create(cbc);
 	osmo_stream_srv_link_set_data(cbc->link, cbc);

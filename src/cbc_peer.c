@@ -63,22 +63,22 @@ void cbc_peer_remove(struct cbc_peer *peer)
 {
 	struct cbc_message *cbcmsg;
 
-	/* close any existing client connection */
+	/* close any existing peer link connection */
 	switch (peer->proto) {
 	case CBC_PEER_PROTO_CBSP:
-		if (peer->client.cbsp)
-			cbsp_cbc_client_close(peer->client.cbsp);
+		if (peer->link.cbsp)
+			cbc_cbsp_link_close(peer->link.cbsp);
 		break;
 	case CBC_PEER_PROTO_SBcAP:
-		if (peer->client.sbcap)
-			sbcap_cbc_client_close(peer->client.sbcap);
+		if (peer->link.sbcap)
+			cbc_sbcap_link_close(peer->link.sbcap);
 		break;
 	case CBC_PEER_PROTO_SABP:
 	default:
 		OSMO_ASSERT(0);
 	}
 
-	/* iterate over messages; remove client from all message_peers */
+	/* iterate over messages; remove peer from all message_peers */
 	llist_for_each_entry(cbcmsg, &g_cbc->messages, list) {
 		cbc_message_del_peer(cbcmsg, peer);
 	}

@@ -137,7 +137,7 @@ int peer_new_cbc_message(struct cbc_peer *peer, struct cbc_message *cbcmsg)
 	switch (peer->proto) {
 	case CBC_PEER_PROTO_CBSP:
 		/* skip peers without any current CBSP connection */
-		if (!peer->client.cbsp) {
+		if (!peer->link.cbsp) {
 			LOGP(DCBSP, LOGL_NOTICE, "[%s] Tx CBSP: not connected\n",
 			     peer->name);
 			return -ENOTCONN;
@@ -147,11 +147,11 @@ int peer_new_cbc_message(struct cbc_peer *peer, struct cbc_message *cbcmsg)
 			     peer->name);
 			return -EINVAL;
 		}
-		cbsp_cbc_client_tx(peer->client.cbsp, cbsp);
+		cbc_cbsp_link_tx(peer->link.cbsp, cbsp);
 		break;
 	case CBC_PEER_PROTO_SBcAP:
 		/* skip peers without any current SBc-AP connection */
-		if (!peer->client.sbcap) {
+		if (!peer->link.sbcap) {
 			LOGP(DSBcAP, LOGL_NOTICE, "[%s] Tx SBc-AP: not connected\n",
 			     peer->name);
 			return -ENOTCONN;
@@ -161,7 +161,7 @@ int peer_new_cbc_message(struct cbc_peer *peer, struct cbc_message *cbcmsg)
 			     peer->name);
 			return -EINVAL;
 		}
-		sbcap_cbc_client_tx(peer->client.sbcap, sbcap);
+		cbc_sbcap_link_tx(peer->link.sbcap, sbcap);
 		break;
 	case CBC_PEER_PROTO_SABP:
 		LOGP(DLGLOBAL, LOGL_ERROR, "Sending message to peer proto %s not implemented!\n",

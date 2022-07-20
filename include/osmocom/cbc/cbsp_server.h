@@ -5,15 +5,15 @@
 
 #include <osmocom/cbc/cbc_data.h>
 
-#define LOGPCC(client, level, fmt, args...) \
-	LOGP(DCBSP, level, "%s: " fmt, cbsp_cbc_client_name(client), ## args)
+#define LOGPCC(link, level, fmt, args...) \
+	LOGP(DCBSP, level, "%s: " fmt, cbc_cbsp_link_name(link), ## args)
 
-struct osmo_cbsp_cbc_client;
+struct cbc_cbsp_link;
 struct osmo_fsm_inst;
 struct cbc_peer;
 
-/* a CBC server */
-struct osmo_cbsp_cbc {
+/* Holder of all CBSP conn related information: */
+struct cbc_cbsp_mgr {
 	/* libosmo-netif stream server */
 	struct osmo_stream_srv_link *link;
 
@@ -21,16 +21,16 @@ struct osmo_cbsp_cbc {
 	struct llist_head clients;
 
 	/* receive call-back; called for every received message */
-	int (*rx_cb)(struct osmo_cbsp_cbc_client *client, struct osmo_cbsp_decoded *dec);
+	int (*rx_cb)(struct cbc_cbsp_link *link, struct osmo_cbsp_decoded *dec);
 };
 
-struct osmo_cbsp_cbc *cbsp_cbc_create(void *ctx);
+struct cbc_cbsp_mgr *cbc_cbsp_mgr_create(void *ctx);
 
-/* a single (remote) client connected to the (local) CBC server */
-struct osmo_cbsp_cbc_client {
+/* a CBSP link with a single (remote) peer connected to us */
+struct cbc_cbsp_link {
 	/* entry in osmo_cbsp_cbc.clients */
 	struct llist_head list;
-	/* stream server connection for this client */
+	/* stream server connection for this link */
 	struct osmo_stream_srv *conn;
 	/* partially received CBSP message (rx completion pending) */
 	struct msgb *rx_msg;
@@ -40,7 +40,7 @@ struct osmo_cbsp_cbc_client {
 	struct cbc_peer *peer;
 };
 
-const char *cbsp_cbc_client_name(const struct osmo_cbsp_cbc_client *client);
-void cbsp_cbc_client_tx(struct osmo_cbsp_cbc_client *client, struct osmo_cbsp_decoded *cbsp);
-void cbsp_cbc_client_close(struct osmo_cbsp_cbc_client *client);
-int cbsp_cbc_client_rx_cb(struct osmo_cbsp_cbc_client *client, struct osmo_cbsp_decoded *dec);
+const char *cbc_cbsp_link_name(const struct cbc_cbsp_link *link);
+void cbc_cbsp_link_tx(struct cbc_cbsp_link *link, struct osmo_cbsp_decoded *cbsp);
+void cbc_cbsp_link_close(struct cbc_cbsp_link *link);
+int cbc_cbsp_link_rx_cb(struct cbc_cbsp_link *link, struct osmo_cbsp_decoded *dec);

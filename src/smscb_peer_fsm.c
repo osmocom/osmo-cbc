@@ -362,7 +362,7 @@ static void smscb_p_fsm_active(struct osmo_fsm_inst *fi, uint32_t event, void *d
 		/* TODO: we assume that the replace will always affect all original cells */
 		cbsp_append_cell_list(&cbsp->u.write_replace.cell_list, cbsp, mp);
 		// TODO: ALL OTHER DATA
-		cbsp_cbc_client_tx(mp->peer->client.cbsp, cbsp);
+		cbc_cbsp_link_tx(mp->peer->link.cbsp, cbsp);
 		osmo_fsm_inst_state_chg(fi, SMSCB_S_WAIT_REPLACE_ACK, 10, T_WAIT_REPLACE_ACK);
 		break;
 	case SMSCB_E_STATUS: /* send MSG-STATUS-QUERY to BSC */
@@ -372,7 +372,7 @@ static void smscb_p_fsm_active(struct osmo_fsm_inst *fi, uint32_t event, void *d
 		cbsp->u.msg_status_query.old_serial_nr = mp->cbcmsg->msg.serial_nr;
 		cbsp_append_cell_list(&cbsp->u.msg_status_query.cell_list, cbsp, mp);
 		cbsp->u.msg_status_query.channel_ind = CBSP_CHAN_IND_BASIC;
-		cbsp_cbc_client_tx(mp->peer->client.cbsp, cbsp);
+		cbc_cbsp_link_tx(mp->peer->link.cbsp, cbsp);
 		osmo_fsm_inst_state_chg(fi, SMSCB_S_WAIT_STATUS_ACK, 10, T_WAIT_STATUS_ACK);
 		break;
 	default:
@@ -558,11 +558,11 @@ static void smscb_p_fsm_allstate(struct osmo_fsm_inst *fi, uint32_t event, void 
 				OSMO_ASSERT(cbsp->u.kill.channel_ind);
 				*(cbsp->u.kill.channel_ind) = CBSP_CHAN_IND_BASIC;
 			}
-			cbsp_cbc_client_tx(mp->peer->client.cbsp, cbsp);
+			cbc_cbsp_link_tx(mp->peer->link.cbsp, cbsp);
 			break;
 		case CBC_PEER_PROTO_SBcAP:
 			if ((sbcap = sbcap_gen_stop_warning_req(mp->peer, mp->cbcmsg))) {
-				sbcap_cbc_client_tx(mp->peer->client.sbcap, sbcap);
+				cbc_sbcap_link_tx(mp->peer->link.sbcap, sbcap);
 			} else {
 				LOGP(DSBcAP, LOGL_ERROR,
 				     "[%s] Tx SBc-AP Stop-Warning-Request: msg gen failed\n",

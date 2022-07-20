@@ -35,7 +35,7 @@
 #define S(x)	(1 << (x))
 
 enum sbcap_server_state {
-	/* initial state after client SCTP connection established */
+	/* initial state after link SCTP connection established */
 	SBcAP_SRV_S_INIT,
 	/* normal operation (idle) */
 	SBcAP_SRV_S_IDLE,
@@ -72,7 +72,7 @@ static void sbcap_server_s_idle(struct osmo_fsm_inst *fi, uint32_t event, void *
 
 static void sbcap_server_fsm_allstate(struct osmo_fsm_inst *fi, uint32_t event, void *data)
 {
-	struct osmo_sbcap_cbc_client *client = (struct osmo_sbcap_cbc_client *) fi->priv;
+	struct cbc_sbcap_link *link = (struct cbc_sbcap_link *) fi->priv;
 	//SBcAP_SBC_AP_PDU_t *pdu;
 
 	switch (event) {
@@ -83,7 +83,7 @@ static void sbcap_server_fsm_allstate(struct osmo_fsm_inst *fi, uint32_t event, 
 		//pdu = data;
 		/* TODO: delete any CBS state we have for this peer */
 		/* TODO: re-send messages we have matching the scope of the peer */
-		LOGPSBCAPC(client, LOGL_NOTICE, "RESTART  but re-sending not implemented yet\n");
+		LOGPSBCAPC(link, LOGL_NOTICE, "RESTART  but re-sending not implemented yet\n");
 		break;
 	default:
 		OSMO_ASSERT(0);
@@ -92,17 +92,17 @@ static void sbcap_server_fsm_allstate(struct osmo_fsm_inst *fi, uint32_t event, 
 
 static void sbcap_server_fsm_cleanup(struct osmo_fsm_inst *fi, enum osmo_fsm_term_cause cause)
 {
-	struct osmo_sbcap_cbc_client *client = (struct osmo_sbcap_cbc_client *) fi->priv;
+	struct cbc_sbcap_link *link = (struct cbc_sbcap_link *) fi->priv;
 
-	if (client->conn)
-		osmo_stream_srv_destroy(client->conn);
-	llist_del(&client->list);
-	client->fi = NULL;
+	if (link->conn)
+		osmo_stream_srv_destroy(link->conn);
+	llist_del(&link->list);
+	link->fi = NULL;
 
 	/* reparent the fsm_inst to the cbc as we're about to free() it's talloc
-	 * parent 'client' */
+	 * parent 'link' */
 	talloc_steal(g_cbc, fi);
-	talloc_free(client);
+	talloc_free(link);
 }
 
 static const struct osmo_fsm_state sbcap_server_fsm_states[] = {
@@ -146,7 +146,7 @@ static void *sbcap_as_find_ie(void *void_list, SBcAP_ProtocolIE_ID_t ie_id)
 	return NULL;
 }
 
-static SBcAP_Message_Identifier_t *get_msg_id_ie(struct osmo_sbcap_cbc_client *client,
+static SBcAP_Message_Identifier_t *get_msg_id_ie(struct cbc_sbcap_link *link,
 						 const SBcAP_SBC_AP_PDU_t *pdu)
 {
 	A_SEQUENCE_OF(void) *as_pdu = NULL;
@@ -168,7 +168,7 @@ static SBcAP_Message_Identifier_t *get_msg_id_ie(struct osmo_sbcap_cbc_client *c
 				return NULL;
 			return &((SBcAP_Stop_Warning_Indication_IEs_t *)ie)->value.choice.Message_Identifier;
 		default:
-			LOGPSBCAPC(client, LOGL_ERROR, "get_msg_id initiatingMessage procedure=%ld not implemented\n",
+			LOGPSBCAPC(link, LOGL_ERROR, "get_msg_id initiatingMessage procedure=%ld not implemented\n",
 			       pdu->choice.unsuccessfulOutcome.procedureCode);
 			return NULL;
 		}
@@ -186,7 +186,7 @@ static SBcAP_Message_Identifier_t *get_msg_id_ie(struct osmo_sbcap_cbc_client *c
 				return NULL;
 			return &((SBcAP_Stop_Warning_Response_IEs_t *)ie)->value.choice.Message_Identifier;
 		default:
-			LOGPSBCAPC(client, LOGL_ERROR, "get_msg_id successfulOutcome procedure=%ld not implemented\n",
+			LOGPSBCAPC(link, LOGL_ERROR, "get_msg_id successfulOutcome procedure=%ld not implemented\n",
 			       pdu->choice.unsuccessfulOutcome.procedureCode);
 			return NULL;
 		}
@@ -194,7 +194,7 @@ static SBcAP_Message_Identifier_t *get_msg_id_ie(struct osmo_sbcap_cbc_client *c
 	case SBcAP_SBC_AP_PDU_PR_unsuccessfulOutcome:
 		switch (pdu->choice.unsuccessfulOutcome.procedureCode) {
 		default:
-			LOGPSBCAPC(client, LOGL_ERROR, "get_msg_id unsuccessfulOutcome procedure=%ld not implemented\n",
+			LOGPSBCAPC(link, LOGL_ERROR, "get_msg_id unsuccessfulOutcome procedure=%ld not implemented\n",
 			       pdu->choice.unsuccessfulOutcome.procedureCode);
 			return NULL;
 		}
@@ -204,20 +204,20 @@ static SBcAP_Message_Identifier_t *get_msg_id_ie(struct osmo_sbcap_cbc_client *c
 	}
 }
 
-static int get_msg_id(struct osmo_sbcap_cbc_client *client, const SBcAP_SBC_AP_PDU_t *pdu)
+static int get_msg_id(struct cbc_sbcap_link *link, const SBcAP_SBC_AP_PDU_t *pdu)
 {
-	SBcAP_Message_Identifier_t *ie = get_msg_id_ie(client, pdu);
+	SBcAP_Message_Identifier_t *ie = get_msg_id_ie(link, pdu);
 	if (!ie)
 		return -1;
 	if (ie->size != 2) {
-		LOGPSBCAPC(client, LOGL_ERROR, "get_msg_id wrong size %zu\n", ie->size);
+		LOGPSBCAPC(link, LOGL_ERROR, "get_msg_id wrong size %zu\n", ie->size);
 		return -1;
 	}
 	return osmo_load16be(ie->buf);
 }
 
 /* message was received from remote SBcAP peer (BSC) */
-int sbcap_cbc_client_rx_cb(struct osmo_sbcap_cbc_client *client, SBcAP_SBC_AP_PDU_t *pdu)
+int cbc_sbcap_link_rx_cb(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu)
 {
 	struct cbc_message *smscb;
 	struct cbc_message_peer *mp;
@@ -229,19 +229,19 @@ int sbcap_cbc_client_rx_cb(struct osmo_sbcap_cbc_client *client, SBcAP_SBC_AP_PD
 		switch (pdu->choice.initiatingMessage.procedureCode) {
 		case SBcAP_ProcedureId_Write_Replace_Warning:
 		case SBcAP_ProcedureId_Stop_Warning:
-			LOGPSBCAPC(client, LOGL_ERROR,
+			LOGPSBCAPC(link, LOGL_ERROR,
 				   "SBcAP initiatingMessage procedure=%ld MME->CBC not expected\n",
 				   pdu->choice.initiatingMessage.procedureCode);
 			return -EINVAL;
 		case SBcAP_ProcedureId_PWS_Restart_Indication:
-			return osmo_fsm_inst_dispatch(client->fi, SBcAP_SRV_E_RX_RESTART, pdu);
+			return osmo_fsm_inst_dispatch(link->fi, SBcAP_SRV_E_RX_RESTART, pdu);
 		case SBcAP_ProcedureId_Stop_Warning_Indication:
 		case SBcAP_ProcedureId_Write_Replace_Warning_Indication:
 			break; /* Handle msg id below */
 		case SBcAP_ProcedureId_Error_Indication:
 		case SBcAP_ProcedureId_PWS_Failure_Indication:
 		default:
-			LOGPSBCAPC(client, LOGL_ERROR, "SBcAP initiatingMessage procedure=%ld not implemented?\n",
+			LOGPSBCAPC(link, LOGL_ERROR, "SBcAP initiatingMessage procedure=%ld not implemented?\n",
 			       pdu->choice.initiatingMessage.procedureCode);
 			return 0;
 		}
@@ -249,7 +249,7 @@ int sbcap_cbc_client_rx_cb(struct osmo_sbcap_cbc_client *client, SBcAP_SBC_AP_PD
 	case SBcAP_SBC_AP_PDU_PR_successfulOutcome:
 		switch (pdu->choice.successfulOutcome.procedureCode) {
 		default:
-			LOGPSBCAPC(client, LOGL_INFO, "SBcAP SuccessfulOutcome procedure=%ld\n",
+			LOGPSBCAPC(link, LOGL_INFO, "SBcAP SuccessfulOutcome procedure=%ld\n",
 			       pdu->choice.successfulOutcome.procedureCode);
 			break;
 		}
@@ -257,37 +257,37 @@ int sbcap_cbc_client_rx_cb(struct osmo_sbcap_cbc_client *client, SBcAP_SBC_AP_PD
 	case SBcAP_SBC_AP_PDU_PR_unsuccessfulOutcome:
 		switch (pdu->choice.unsuccessfulOutcome.procedureCode) {
 		default:
-			LOGPSBCAPC(client, LOGL_ERROR, "SBcAP UnsuccessfulOutcome procedure=%ld\n",
+			LOGPSBCAPC(link, LOGL_ERROR, "SBcAP UnsuccessfulOutcome procedure=%ld\n",
 			       pdu->choice.unsuccessfulOutcome.procedureCode);
 			break;
 		}
 		break;
 	case SBcAP_SBC_AP_PDU_PR_NOTHING:
 	default:
-		LOGPSBCAPC(client, LOGL_ERROR, "Rx SBc-AP unexpected message type %d\n",
+		LOGPSBCAPC(link, LOGL_ERROR, "Rx SBc-AP unexpected message type %d\n",
 		       pdu->present);
 		return 0;
 	}
 
 
 	/* messages with reference to a specific SMSCB message handled below*/
-	msg_id = get_msg_id(client, pdu);
+	msg_id = get_msg_id(link, pdu);
 	OSMO_ASSERT(msg_id >= 0);
 
 	/* look-up smscb_message */
 	smscb = cbc_message_by_id(msg_id);
 	if (!smscb) {
-		LOGPSBCAPC(client, LOGL_ERROR, "Rx SBc-AP msg for unknown message-id 0x%04x\n",
+		LOGPSBCAPC(link, LOGL_ERROR, "Rx SBc-AP msg for unknown message-id 0x%04x\n",
 			   msg_id);
 		/* TODO: inform peer? */
 		return 0;
 	}
 
 	/* look-up smscb_message_peer */
-	mp = cbc_message_peer_get(smscb, client->peer);
+	mp = cbc_message_peer_get(smscb, link->peer);
 	if (!mp) {
-		LOGPSBCAPC(client, LOGL_ERROR, "Rx SBc-AP msg for message-id 0x%04x without peer %s\n",
-			   msg_id, client->peer->name);
+		LOGPSBCAPC(link, LOGL_ERROR, "Rx SBc-AP msg for message-id 0x%04x without peer %s\n",
+			   msg_id, link->peer->name);
 		/* TODO: inform peer? */
 		return 0;
 	}

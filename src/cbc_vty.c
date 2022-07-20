@@ -46,14 +46,14 @@ static void dump_one_cbc_peer(struct vty *vty, const struct cbc_peer *peer)
 
 	switch (peer->proto) {
 	case CBC_PEER_PROTO_CBSP:
-		if (peer->client.cbsp)
-			state = osmo_fsm_inst_state_name(peer->client.cbsp->fi);
+		if (peer->link.cbsp)
+			state = osmo_fsm_inst_state_name(peer->link.cbsp->fi);
 		break;
 	case CBC_PEER_PROTO_SABP:
 		break;
 	case CBC_PEER_PROTO_SBcAP:
-		if (peer->client.sbcap)
-			state = osmo_fsm_inst_state_name(peer->client.sbcap->fi);
+		if (peer->link.sbcap)
+			state = osmo_fsm_inst_state_name(peer->link.sbcap->fi);
 		break;
 	}
 

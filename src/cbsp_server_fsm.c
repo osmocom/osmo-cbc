@@ -41,7 +41,7 @@
 #define T_WAIT_RESET_RESP_SECS		5
 
 enum cbsp_server_state {
-	/* initial state after client TCP connection established */
+	/* initial state after link TCP connection established */
 	CBSP_SRV_S_INIT,
 	/* RESET has been sent to BSC, waiting for response */
 	CBSP_SRV_S_RESET_PENDING,
@@ -74,7 +74,7 @@ static void cbsp_server_s_init(struct osmo_fsm_inst *fi, uint32_t event, void *d
 
 static void cbsp_server_s_reset_pending_onenter(struct osmo_fsm_inst *fi, uint32_t prev_state)
 {
-	struct osmo_cbsp_cbc_client *client = (struct osmo_cbsp_cbc_client *) fi->priv;
+	struct cbc_cbsp_link *link = (struct cbc_cbsp_link *) fi->priv;
 	struct osmo_cbsp_decoded *cbspd;
 
 	if (prev_state == CBSP_SRV_S_RESET_PENDING)
@@ -86,7 +86,7 @@ static void cbsp_server_s_reset_pending_onenter(struct osmo_fsm_inst *fi, uint32
 	cbspd->u.reset.cell_list.id_discr = CELL_IDENT_BSS;
 	INIT_LLIST_HEAD(&cbspd->u.reset.cell_list.list);
 
-	cbsp_cbc_client_tx(client, cbspd);
+	cbc_cbsp_link_tx(link, cbspd);
 	/* wait for response */
 	osmo_fsm_inst_state_chg(fi, CBSP_SRV_S_RESET_PENDING, T_WAIT_RESET_RESP_SECS,
 				T_WAIT_RESET_RESP);
@@ -136,7 +136,7 @@ static void cbsp_server_s_idle(struct osmo_fsm_inst *fi, uint32_t event, void *d
 
 static int cbsp_server_fsm_timer_cb(struct osmo_fsm_inst *fi)
 {
-	struct osmo_cbsp_cbc_client *client = (struct osmo_cbsp_cbc_client *) fi->priv;
+	struct cbc_cbsp_link *link = (struct cbc_cbsp_link *) fi->priv;
 	struct osmo_cbsp_decoded *cbspd;
 
 	switch (fi->T) {
@@ -146,7 +146,7 @@ static int cbsp_server_fsm_timer_cb(struct osmo_fsm_inst *fi)
 		OSMO_ASSERT(cbspd);
 		cbspd->msg_type = CBSP_MSGT_KEEP_ALIVE;
 		cbspd->u.keep_alive.repetition_period = T_KEEPALIVE_SECS;
-		cbsp_cbc_client_tx(client, cbspd);
+		cbc_cbsp_link_tx(link, cbspd);
 		/* wait for response */
 		osmo_fsm_inst_state_chg(fi, CBSP_SRV_S_KEEPALIVE_PENDING, T_WAIT_KEEPALIVE_RESP_SECS,
 					T_WAIT_KEEPALIVE_RESP);
@@ -162,7 +162,7 @@ static int cbsp_server_fsm_timer_cb(struct osmo_fsm_inst *fi)
 
 static void cbsp_server_fsm_allstate(struct osmo_fsm_inst *fi, uint32_t event, void *data)
 {
-	struct osmo_cbsp_cbc_client *client = (struct osmo_cbsp_cbc_client *) fi->priv;
+	struct cbc_cbsp_link *link = (struct cbc_cbsp_link *) fi->priv;
 	struct osmo_cbsp_decoded *dec;
 
 	switch (event) {
@@ -178,12 +178,12 @@ static void cbsp_server_fsm_allstate(struct osmo_fsm_inst *fi, uint32_t event, v
 		case 0: /* CBS */
 			/* TODO: delete any CBS state we have for this peer */
 			/* TODO: re-send CBS messages we have matching the scope of the peer */
-			LOGPCC(client, LOGL_NOTICE, "RESTART (CBS) but re-sending not implemented yet\n");
+			LOGPCC(link, LOGL_NOTICE, "RESTART (CBS) but re-sending not implemented yet\n");
 			break;
 		case 1: /* ETWS */
 			/* TODO: delete any ETWS state we have for this peer */
 			/* TODO: re-send ETWS messages we have matching the scope of the peer */
-			LOGPCC(client, LOGL_NOTICE, "RESTART (ETWS) but re-sending not implemented yet\n");
+			LOGPCC(link, LOGL_NOTICE, "RESTART (ETWS) but re-sending not implemented yet\n");
 			break;
 		}
 		break;
@@ -194,17 +194,17 @@ static void cbsp_server_fsm_allstate(struct osmo_fsm_inst *fi, uint32_t event, v
 
 static void cbsp_server_fsm_cleanup(struct osmo_fsm_inst *fi, enum osmo_fsm_term_cause cause)
 {
-	struct osmo_cbsp_cbc_client *client = (struct osmo_cbsp_cbc_client *) fi->priv;
+	struct cbc_cbsp_link *link = (struct cbc_cbsp_link *) fi->priv;
 
-	if (client->conn)
-		osmo_stream_srv_destroy(client->conn);
-	llist_del(&client->list);
-	client->fi = NULL;
+	if (link->conn)
+		osmo_stream_srv_destroy(link->conn);
+	llist_del(&link->list);
+	link->fi = NULL;
 
 	/* reparent the fsm_inst to the cbc as we're about to free() it's talloc
-	 * parent 'client' */
+	 * parent 'link' */
 	talloc_steal(g_cbc, fi);
-	talloc_free(client);
+	talloc_free(link);
 }
 
 static const struct osmo_fsm_state cbsp_server_fsm_states[] = {
@@ -273,7 +273,7 @@ static int get_msg_id(const struct osmo_cbsp_decoded *dec)
 }
 
 /* message was received from remote CBSP peer (BSC) */
-int cbsp_cbc_client_rx_cb(struct osmo_cbsp_cbc_client *client, struct osmo_cbsp_decoded *dec)
+int cbc_cbsp_link_rx_cb(struct cbc_cbsp_link *link, struct osmo_cbsp_decoded *dec)
 {
 	struct cbc_message *smscb;
 	struct cbc_message_peer *mp;
@@ -282,32 +282,32 @@ int cbsp_cbc_client_rx_cb(struct osmo_cbsp_cbc_client *client, struct osmo_cbsp_
 	/* messages without reference to a specific SMSCB message */
 	switch (dec->msg_type) {
 	case CBSP_MSGT_RESTART:
-		osmo_fsm_inst_dispatch(client->fi, CBSP_SRV_E_RX_RESTART, dec);
+		osmo_fsm_inst_dispatch(link->fi, CBSP_SRV_E_RX_RESTART, dec);
 		return 0;
 	case CBSP_MSGT_KEEP_ALIVE_COMPL:
-		osmo_fsm_inst_dispatch(client->fi, CBSP_SRV_E_RX_KA_COMPL, dec);
+		osmo_fsm_inst_dispatch(link->fi, CBSP_SRV_E_RX_KA_COMPL, dec);
 		return 0;
 	case CBSP_MSGT_FAILURE:
-		LOGPCC(client, LOGL_ERROR, "CBSP FAILURE (bcast_msg_type=%u)\n",
+		LOGPCC(link, LOGL_ERROR, "CBSP FAILURE (bcast_msg_type=%u)\n",
 			dec->u.failure.bcast_msg_type);
 		/* TODO: failure list */
 		return 0;
 	case CBSP_MSGT_ERROR_IND:
-		LOGPCC(client, LOGL_ERROR, "CBSP ERROR_IND (cause=%u, msg_id=0x%04x)\n",
+		LOGPCC(link, LOGL_ERROR, "CBSP ERROR_IND (cause=%u, msg_id=0x%04x)\n",
 			dec->u.error_ind.cause,
 			dec->u.error_ind.msg_id ? *dec->u.error_ind.msg_id : 0xffff);
 		/* TODO: old/new serial number, channel_ind */
 		return 0;
 	case CBSP_MSGT_RESET_COMPL:
-		return osmo_fsm_inst_dispatch(client->fi, CBSP_SRV_E_RX_RST_COMPL, dec);
+		return osmo_fsm_inst_dispatch(link->fi, CBSP_SRV_E_RX_RST_COMPL, dec);
 	case CBSP_MSGT_RESET_FAIL:
-		return osmo_fsm_inst_dispatch(client->fi, CBSP_SRV_E_RX_RST_FAIL, dec);
+		return osmo_fsm_inst_dispatch(link->fi, CBSP_SRV_E_RX_RST_FAIL, dec);
 	case CBSP_MSGT_KEEP_ALIVE:
 	case CBSP_MSGT_LOAD_QUERY_COMPL:
 	case CBSP_MSGT_LOAD_QUERY_FAIL:
 	case CBSP_MSGT_SET_DRX_COMPL:
 	case CBSP_MSGT_SET_DRX_FAIL:
-		LOGPCC(client, LOGL_ERROR, "unimplemented message %s\n",
+		LOGPCC(link, LOGL_ERROR, "unimplemented message %s\n",
 			get_value_string(cbsp_msg_type_names, dec->msg_type));
 		return 0;
 	default:
@@ -321,17 +321,17 @@ int cbsp_cbc_client_rx_cb(struct osmo_cbsp_cbc_client *client, struct osmo_cbsp_
 	/* look-up smscb_message */
 	smscb = cbc_message_by_id(msg_id);
 	if (!smscb) {
-		LOGPCC(client, LOGL_ERROR, "%s for unknown message-id 0x%04x\n",
+		LOGPCC(link, LOGL_ERROR, "%s for unknown message-id 0x%04x\n",
 			get_value_string(cbsp_msg_type_names, dec->msg_type), msg_id);
 		/* TODO: inform peer? */
 		return 0;
 	}
 
 	/* look-up smscb_message_peer */
-	mp = cbc_message_peer_get(smscb, client->peer);
+	mp = cbc_message_peer_get(smscb, link->peer);
 	if (!mp) {
-		LOGPCC(client, LOGL_ERROR, "%s for message-id 0x%04x without peer %s\n",
-			get_value_string(cbsp_msg_type_names, dec->msg_type), msg_id, client->peer->name);
+		LOGPCC(link, LOGL_ERROR, "%s for message-id 0x%04x without peer %s\n",
+			get_value_string(cbsp_msg_type_names, dec->msg_type), msg_id, link->peer->name);
 		/* TODO: inform peer? */
 		return 0;
 	}
@@ -357,7 +357,7 @@ int cbsp_cbc_client_rx_cb(struct osmo_cbsp_cbc_client *client, struct osmo_cbsp_
 	case CBSP_MSGT_MSG_STATUS_QUERY_FAIL:
 		return osmo_fsm_inst_dispatch(mp->fi, SMSCB_E_CBSP_STATUS_NACK, dec);
 	default:
-		LOGPCC(client, LOGL_ERROR, "unknown message %s\n",
+		LOGPCC(link, LOGL_ERROR, "unknown message %s\n",
 			get_value_string(cbsp_msg_type_names, dec->msg_type));
 		break;
 	}
