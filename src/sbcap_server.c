@@ -89,7 +89,11 @@ static int sbcap_cbc_read_cb(struct osmo_stream_srv *conn)
 		case SCTP_ASSOC_CHANGE:
 			LOGPSBCAPC(client, LOGL_DEBUG, "Rx sctp notif SCTP_ASSOC_CHANGE: %s\n",
 				   osmo_sctp_assoc_chg_str(notif->sn_assoc_change.sac_state));
+			break;
 		default:
+			LOGPSBCAPC(client, LOGL_DEBUG, "Rx sctp notif %s (%u)\n",
+				   osmo_sctp_sn_type_str(notif->sn_header.sn_type),
+				   notif->sn_header.sn_type);
 			break;
 		}
 		rc = 0;
