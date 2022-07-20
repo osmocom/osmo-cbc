@@ -30,6 +30,7 @@
 
 #include <osmocom/cbc/cbc_peer.h>
 #include <osmocom/cbc/cbsp_server.h>
+#include <osmocom/cbc/sbcap_server.h>
 
 const struct value_string cbc_peer_proto_name[] = {
 	{ CBC_PEER_PROTO_CBSP, "CBSP" },
@@ -67,6 +68,11 @@ void cbc_peer_remove(struct cbc_peer *peer)
 		if (peer->client.cbsp)
 			cbsp_cbc_client_close(peer->client.cbsp);
 		break;
+	case CBC_PEER_PROTO_SBcAP:
+		if (peer->client.sbcap)
+			sbcap_cbc_client_close(peer->client.sbcap);
+		break;
+	case CBC_PEER_PROTO_SABP:
 	default:
 		OSMO_ASSERT(0);
 	}
