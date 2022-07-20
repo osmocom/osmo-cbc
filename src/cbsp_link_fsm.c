@@ -24,8 +24,8 @@
 
 #include <osmocom/cbc/cbc_message.h>
 #include <osmocom/cbc/cbc_peer.h>
-#include <osmocom/cbc/cbsp_server.h>
-#include <osmocom/cbc/cbsp_server_fsm.h>
+#include <osmocom/cbc/cbsp_link.h>
+#include <osmocom/cbc/cbsp_link_fsm.h>
 #include <osmocom/cbc/debug.h>
 #include <osmocom/cbc/smscb_message_fsm.h>
 
@@ -40,44 +40,44 @@
 #define T_WAIT_RESET_RESP		3
 #define T_WAIT_RESET_RESP_SECS		5
 
-enum cbsp_server_state {
+enum cbsp_link_state {
 	/* initial state after link TCP connection established */
-	CBSP_SRV_S_INIT,
+	CBSP_LINK_S_INIT,
 	/* RESET has been sent to BSC, waiting for response */
-	CBSP_SRV_S_RESET_PENDING,
+	CBSP_LINK_S_RESET_PENDING,
 	/* Keep-Alive has been sent, waiting for response */
-	CBSP_SRV_S_KEEPALIVE_PENDING,
+	CBSP_LINK_S_KEEPALIVE_PENDING,
 	/* normal operation (idle) */
-	CBSP_SRV_S_IDLE,
+	CBSP_LINK_S_IDLE,
 };
 
-static const struct value_string cbsp_server_event_names[] = {
-	{ CBSP_SRV_E_RX_RST_COMPL, "Rx Reset Complete" },
-	{ CBSP_SRV_E_RX_RST_FAIL, "Rx Reset Failure" },
-	{ CBSP_SRV_E_RX_KA_COMPL, "Rx Keep-Alive Complete" },
-	{ CBSP_SRV_E_RX_RESTART, "Rx Restart" },
-	{ CBSP_SRV_E_CMD_RESET, "RESET.cmd" },
-	{ CBSP_SRV_E_CMD_CLOSE, "CLOSE.cmd" },
+static const struct value_string cbsp_link_event_names[] = {
+	{ CBSP_LINK_E_RX_RST_COMPL, "Rx Reset Complete" },
+	{ CBSP_LINK_E_RX_RST_FAIL, "Rx Reset Failure" },
+	{ CBSP_LINK_E_RX_KA_COMPL, "Rx Keep-Alive Complete" },
+	{ CBSP_LINK_E_RX_RESTART, "Rx Restart" },
+	{ CBSP_LINK_E_CMD_RESET, "RESET.cmd" },
+	{ CBSP_LINK_E_CMD_CLOSE, "CLOSE.cmd" },
 	{ 0, NULL }
 };
 
-static void cbsp_server_s_init(struct osmo_fsm_inst *fi, uint32_t event, void *data)
+static void cbsp_link_s_init(struct osmo_fsm_inst *fi, uint32_t event, void *data)
 {
 	switch (event) {
-	case CBSP_SRV_E_CMD_RESET:
-		osmo_fsm_inst_state_chg(fi, CBSP_SRV_S_RESET_PENDING, 0, 0);
+	case CBSP_LINK_E_CMD_RESET:
+		osmo_fsm_inst_state_chg(fi, CBSP_LINK_S_RESET_PENDING, 0, 0);
 		break;
 	default:
 		OSMO_ASSERT(0);
 	}
 }
 
-static void cbsp_server_s_reset_pending_onenter(struct osmo_fsm_inst *fi, uint32_t prev_state)
+static void cbsp_link_s_reset_pending_onenter(struct osmo_fsm_inst *fi, uint32_t prev_state)
 {
 	struct cbc_cbsp_link *link = (struct cbc_cbsp_link *) fi->priv;
 	struct osmo_cbsp_decoded *cbspd;
 
-	if (prev_state == CBSP_SRV_S_RESET_PENDING)
+	if (prev_state == CBSP_LINK_S_RESET_PENDING)
 		return;
 
 	cbspd = talloc_zero(fi, struct osmo_cbsp_decoded);
@@ -88,29 +88,29 @@ static void cbsp_server_s_reset_pending_onenter(struct osmo_fsm_inst *fi, uint32
 
 	cbc_cbsp_link_tx(link, cbspd);
 	/* wait for response */
-	osmo_fsm_inst_state_chg(fi, CBSP_SRV_S_RESET_PENDING, T_WAIT_RESET_RESP_SECS,
+	osmo_fsm_inst_state_chg(fi, CBSP_LINK_S_RESET_PENDING, T_WAIT_RESET_RESP_SECS,
 				T_WAIT_RESET_RESP);
 }
 
-static void cbsp_server_s_reset_pending(struct osmo_fsm_inst *fi, uint32_t event, void *data)
+static void cbsp_link_s_reset_pending(struct osmo_fsm_inst *fi, uint32_t event, void *data)
 {
 	switch (event) {
-	case CBSP_SRV_E_RX_RST_COMPL:
-		osmo_fsm_inst_state_chg(fi, CBSP_SRV_S_IDLE, 0, 0);
+	case CBSP_LINK_E_RX_RST_COMPL:
+		osmo_fsm_inst_state_chg(fi, CBSP_LINK_S_IDLE, 0, 0);
 		break;
-	case CBSP_SRV_E_RX_RST_FAIL:
-		osmo_fsm_inst_state_chg(fi, CBSP_SRV_S_IDLE, 0, 0);
+	case CBSP_LINK_E_RX_RST_FAIL:
+		osmo_fsm_inst_state_chg(fi, CBSP_LINK_S_IDLE, 0, 0);
 		break;
 	default:
 		OSMO_ASSERT(0);
 	}
 }
 
-static void cbsp_server_s_keepalive_pending(struct osmo_fsm_inst *fi, uint32_t event, void *data)
+static void cbsp_link_s_keepalive_pending(struct osmo_fsm_inst *fi, uint32_t event, void *data)
 {
 	switch (event) {
-	case CBSP_SRV_E_RX_KA_COMPL:
-		osmo_fsm_inst_state_chg(fi, CBSP_SRV_S_IDLE, 0, 0);
+	case CBSP_LINK_E_RX_KA_COMPL:
+		osmo_fsm_inst_state_chg(fi, CBSP_LINK_S_IDLE, 0, 0);
 		break;
 	default:
 		OSMO_ASSERT(0);
@@ -120,13 +120,13 @@ static void cbsp_server_s_keepalive_pending(struct osmo_fsm_inst *fi, uint32_t e
 /* a bit of a hack to ensure the keep-aliver timer is started every time we enter
  * the IDLE state, without putting the burden on the caller of
  * osmo_fsm_inst_state_chg() to specify T_KEEPALIVE + T_KEEPALIVE_SECS */
-static void cbsp_server_s_idle_onenter(struct osmo_fsm_inst *fi, uint32_t old_state)
+static void cbsp_link_s_idle_onenter(struct osmo_fsm_inst *fi, uint32_t old_state)
 {
 	fi->T = T_KEEPALIVE;
 	osmo_timer_schedule(&fi->timer, T_KEEPALIVE_SECS, 0);
 }
 
-static void cbsp_server_s_idle(struct osmo_fsm_inst *fi, uint32_t event, void *data)
+static void cbsp_link_s_idle(struct osmo_fsm_inst *fi, uint32_t event, void *data)
 {
 	switch (event) {
 	default:
@@ -134,7 +134,7 @@ static void cbsp_server_s_idle(struct osmo_fsm_inst *fi, uint32_t event, void *d
 	}
 }
 
-static int cbsp_server_fsm_timer_cb(struct osmo_fsm_inst *fi)
+static int cbsp_link_fsm_timer_cb(struct osmo_fsm_inst *fi)
 {
 	struct cbc_cbsp_link *link = (struct cbc_cbsp_link *) fi->priv;
 	struct osmo_cbsp_decoded *cbspd;
@@ -148,7 +148,7 @@ static int cbsp_server_fsm_timer_cb(struct osmo_fsm_inst *fi)
 		cbspd->u.keep_alive.repetition_period = T_KEEPALIVE_SECS;
 		cbc_cbsp_link_tx(link, cbspd);
 		/* wait for response */
-		osmo_fsm_inst_state_chg(fi, CBSP_SRV_S_KEEPALIVE_PENDING, T_WAIT_KEEPALIVE_RESP_SECS,
+		osmo_fsm_inst_state_chg(fi, CBSP_LINK_S_KEEPALIVE_PENDING, T_WAIT_KEEPALIVE_RESP_SECS,
 					T_WAIT_KEEPALIVE_RESP);
 		return 0;
 	case T_WAIT_KEEPALIVE_RESP:
@@ -160,16 +160,16 @@ static int cbsp_server_fsm_timer_cb(struct osmo_fsm_inst *fi)
 	}
 }
 
-static void cbsp_server_fsm_allstate(struct osmo_fsm_inst *fi, uint32_t event, void *data)
+static void cbsp_link_fsm_allstate(struct osmo_fsm_inst *fi, uint32_t event, void *data)
 {
 	struct cbc_cbsp_link *link = (struct cbc_cbsp_link *) fi->priv;
 	struct osmo_cbsp_decoded *dec;
 
 	switch (event) {
-	case CBSP_SRV_E_CMD_CLOSE:
+	case CBSP_LINK_E_CMD_CLOSE:
 		osmo_fsm_inst_term(fi, OSMO_FSM_TERM_REQUEST, NULL);
 		break;
-	case CBSP_SRV_E_RX_RESTART:
+	case CBSP_LINK_E_RX_RESTART:
 		dec = data;
 		/* if BSC has _not_ lost messages, skip */
 		if (dec->u.restart.recovery_ind == 0)
@@ -192,7 +192,7 @@ static void cbsp_server_fsm_allstate(struct osmo_fsm_inst *fi, uint32_t event, v
 	}
 }
 
-static void cbsp_server_fsm_cleanup(struct osmo_fsm_inst *fi, enum osmo_fsm_term_cause cause)
+static void cbsp_link_fsm_cleanup(struct osmo_fsm_inst *fi, enum osmo_fsm_term_cause cause)
 {
 	struct cbc_cbsp_link *link = (struct cbc_cbsp_link *) fi->priv;
 
@@ -207,49 +207,49 @@ static void cbsp_server_fsm_cleanup(struct osmo_fsm_inst *fi, enum osmo_fsm_term
 	talloc_free(link);
 }
 
-static const struct osmo_fsm_state cbsp_server_fsm_states[] = {
-	[CBSP_SRV_S_INIT] = {
+static const struct osmo_fsm_state cbsp_link_fsm_states[] = {
+	[CBSP_LINK_S_INIT] = {
 		.name = "INIT",
-		.in_event_mask = S(CBSP_SRV_E_CMD_RESET),
-		.out_state_mask = S(CBSP_SRV_S_RESET_PENDING),
-		.action = cbsp_server_s_init,
+		.in_event_mask = S(CBSP_LINK_E_CMD_RESET),
+		.out_state_mask = S(CBSP_LINK_S_RESET_PENDING),
+		.action = cbsp_link_s_init,
 	},
-	[CBSP_SRV_S_RESET_PENDING] = {
+	[CBSP_LINK_S_RESET_PENDING] = {
 		.name = "RESET_PENDING",
-		.in_event_mask = S(CBSP_SRV_E_RX_RST_COMPL) |
-				 S(CBSP_SRV_E_RX_RST_FAIL),
-		.out_state_mask = S(CBSP_SRV_S_IDLE) |
-				  S(CBSP_SRV_S_RESET_PENDING),
-		.action = cbsp_server_s_reset_pending,
-		.onenter = cbsp_server_s_reset_pending_onenter,
+		.in_event_mask = S(CBSP_LINK_E_RX_RST_COMPL) |
+				 S(CBSP_LINK_E_RX_RST_FAIL),
+		.out_state_mask = S(CBSP_LINK_S_IDLE) |
+				  S(CBSP_LINK_S_RESET_PENDING),
+		.action = cbsp_link_s_reset_pending,
+		.onenter = cbsp_link_s_reset_pending_onenter,
 	},
-	[CBSP_SRV_S_KEEPALIVE_PENDING] = {
+	[CBSP_LINK_S_KEEPALIVE_PENDING] = {
 		.name = "KEEPALIVE_PENDING",
-		.in_event_mask = S(CBSP_SRV_E_RX_KA_COMPL),
-		.out_state_mask = S(CBSP_SRV_S_IDLE) |
-				  S(CBSP_SRV_S_KEEPALIVE_PENDING),
-		.action = cbsp_server_s_keepalive_pending,
+		.in_event_mask = S(CBSP_LINK_E_RX_KA_COMPL),
+		.out_state_mask = S(CBSP_LINK_S_IDLE) |
+				  S(CBSP_LINK_S_KEEPALIVE_PENDING),
+		.action = cbsp_link_s_keepalive_pending,
 	},
-	[CBSP_SRV_S_IDLE] = {
+	[CBSP_LINK_S_IDLE] = {
 		.name = "IDLE",
 		.in_event_mask = 0,
-		.out_state_mask = S(CBSP_SRV_S_KEEPALIVE_PENDING),
-		.action = cbsp_server_s_idle,
-		.onenter = cbsp_server_s_idle_onenter,
+		.out_state_mask = S(CBSP_LINK_S_KEEPALIVE_PENDING),
+		.action = cbsp_link_s_idle,
+		.onenter = cbsp_link_s_idle_onenter,
 	},
 };
 
-struct osmo_fsm cbsp_server_fsm = {
-	.name = "CBSP-SERVER",
-	.states = cbsp_server_fsm_states,
-	.num_states = ARRAY_SIZE(cbsp_server_fsm_states),
-	.allstate_event_mask = S(CBSP_SRV_E_CMD_CLOSE) |
-			       S(CBSP_SRV_E_RX_RESTART),
-	.allstate_action = cbsp_server_fsm_allstate,
-	.timer_cb = cbsp_server_fsm_timer_cb,
+struct osmo_fsm cbsp_link_fsm = {
+	.name = "CBSP-Link",
+	.states = cbsp_link_fsm_states,
+	.num_states = ARRAY_SIZE(cbsp_link_fsm_states),
+	.allstate_event_mask = S(CBSP_LINK_E_CMD_CLOSE) |
+			       S(CBSP_LINK_E_RX_RESTART),
+	.allstate_action = cbsp_link_fsm_allstate,
+	.timer_cb = cbsp_link_fsm_timer_cb,
 	.log_subsys = DCBSP,
-	.event_names = cbsp_server_event_names,
-	.cleanup = cbsp_server_fsm_cleanup,
+	.event_names = cbsp_link_event_names,
+	.cleanup = cbsp_link_fsm_cleanup,
 };
 
 static int get_msg_id(const struct osmo_cbsp_decoded *dec)
@@ -282,10 +282,10 @@ int cbc_cbsp_link_rx_cb(struct cbc_cbsp_link *link, struct osmo_cbsp_decoded *de
 	/* messages without reference to a specific SMSCB message */
 	switch (dec->msg_type) {
 	case CBSP_MSGT_RESTART:
-		osmo_fsm_inst_dispatch(link->fi, CBSP_SRV_E_RX_RESTART, dec);
+		osmo_fsm_inst_dispatch(link->fi, CBSP_LINK_E_RX_RESTART, dec);
 		return 0;
 	case CBSP_MSGT_KEEP_ALIVE_COMPL:
-		osmo_fsm_inst_dispatch(link->fi, CBSP_SRV_E_RX_KA_COMPL, dec);
+		osmo_fsm_inst_dispatch(link->fi, CBSP_LINK_E_RX_KA_COMPL, dec);
 		return 0;
 	case CBSP_MSGT_FAILURE:
 		LOGPCC(link, LOGL_ERROR, "CBSP FAILURE (bcast_msg_type=%u)\n",
@@ -299,9 +299,9 @@ int cbc_cbsp_link_rx_cb(struct cbc_cbsp_link *link, struct osmo_cbsp_decoded *de
 		/* TODO: old/new serial number, channel_ind */
 		return 0;
 	case CBSP_MSGT_RESET_COMPL:
-		return osmo_fsm_inst_dispatch(link->fi, CBSP_SRV_E_RX_RST_COMPL, dec);
+		return osmo_fsm_inst_dispatch(link->fi, CBSP_LINK_E_RX_RST_COMPL, dec);
 	case CBSP_MSGT_RESET_FAIL:
-		return osmo_fsm_inst_dispatch(link->fi, CBSP_SRV_E_RX_RST_FAIL, dec);
+		return osmo_fsm_inst_dispatch(link->fi, CBSP_LINK_E_RX_RST_FAIL, dec);
 	case CBSP_MSGT_KEEP_ALIVE:
 	case CBSP_MSGT_LOAD_QUERY_COMPL:
 	case CBSP_MSGT_LOAD_QUERY_FAIL:
@@ -366,5 +366,5 @@ int cbc_cbsp_link_rx_cb(struct cbc_cbsp_link *link, struct osmo_cbsp_decoded *de
 
 static __attribute__((constructor)) void on_dso_load_cbsp_srv_fsm(void)
 {
-	OSMO_ASSERT(osmo_fsm_register(&cbsp_server_fsm) == 0);
+	OSMO_ASSERT(osmo_fsm_register(&cbsp_link_fsm) == 0);
 }

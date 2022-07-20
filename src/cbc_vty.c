@@ -34,8 +34,8 @@
 #include <osmocom/cbc/cbc_message.h>
 #include <osmocom/cbc/cbc_peer.h>
 #include <osmocom/cbc/cbc_vty.h>
-#include <osmocom/cbc/cbsp_server.h>
-#include <osmocom/cbc/sbcap_server.h>
+#include <osmocom/cbc/cbsp_link.h>
+#include <osmocom/cbc/sbcap_link.h>
 
 static void dump_one_cbc_peer(struct vty *vty, const struct cbc_peer *peer)
 {

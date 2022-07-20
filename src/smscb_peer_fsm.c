@@ -36,8 +36,8 @@
 
 #include <osmocom/cbc/cbc_message.h>
 #include <osmocom/cbc/cbc_peer.h>
-#include <osmocom/cbc/cbsp_server.h>
-#include <osmocom/cbc/sbcap_server.h>
+#include <osmocom/cbc/cbsp_link.h>
+#include <osmocom/cbc/sbcap_link.h>
 #include <osmocom/cbc/sbcap_msg.h>
 #include <osmocom/cbc/debug.h>
 #include <osmocom/cbc/smscb_message_fsm.h>

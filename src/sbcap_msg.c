@@ -32,7 +32,7 @@
 #include <osmocom/sbcap/sbcap_common.h>
 
 #include <osmocom/cbc/cbc_message.h>
-#include <osmocom/cbc/sbcap_server.h>
+#include <osmocom/cbc/sbcap_link.h>
 #include <osmocom/cbc/debug.h>
 
 /* 3GPP TS 36.413 9.2.1.53 */

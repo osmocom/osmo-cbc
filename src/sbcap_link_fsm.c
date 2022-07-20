@@ -26,43 +26,43 @@
 #include <osmocom/sbcap/sbcap_common.h>
 
 #include <osmocom/cbc/cbc_message.h>
-#include <osmocom/cbc/sbcap_server.h>
-#include <osmocom/cbc/sbcap_server_fsm.h>
+#include <osmocom/cbc/sbcap_link.h>
+#include <osmocom/cbc/sbcap_link_fsm.h>
 #include <osmocom/cbc/debug.h>
 #include <osmocom/cbc/cbc_peer.h>
 #include <osmocom/cbc/smscb_message_fsm.h>
 
 #define S(x)	(1 << (x))
 
-enum sbcap_server_state {
+enum sbcap_link_state {
 	/* initial state after link SCTP connection established */
-	SBcAP_SRV_S_INIT,
+	SBcAP_LINK_S_INIT,
 	/* normal operation (idle) */
-	SBcAP_SRV_S_IDLE,
+	SBcAP_LINK_S_IDLE,
 };
 
-static const struct value_string sbcap_server_event_names[] = {
-	{ SBcAP_SRV_E_RX_RST_COMPL, "Rx Reset Complete" },
-	{ SBcAP_SRV_E_RX_RST_FAIL, "Rx Reset Failure" },
-	{ SBcAP_SRV_E_RX_KA_COMPL, "Rx Keep-Alive Complete" },
-	{ SBcAP_SRV_E_RX_RESTART, "Rx Restart" },
-	{ SBcAP_SRV_E_CMD_RESET, "RESET.cmd" },
-	{ SBcAP_SRV_E_CMD_CLOSE, "CLOSE.cmd" },
+static const struct value_string sbcap_link_event_names[] = {
+	{ SBcAP_LINK_E_RX_RST_COMPL, "Rx Reset Complete" },
+	{ SBcAP_LINK_E_RX_RST_FAIL, "Rx Reset Failure" },
+	{ SBcAP_LINK_E_RX_KA_COMPL, "Rx Keep-Alive Complete" },
+	{ SBcAP_LINK_E_RX_RESTART, "Rx Restart" },
+	{ SBcAP_LINK_E_CMD_RESET, "RESET.cmd" },
+	{ SBcAP_LINK_E_CMD_CLOSE, "CLOSE.cmd" },
 	{ 0, NULL }
 };
 
-static void sbcap_server_s_init(struct osmo_fsm_inst *fi, uint32_t event, void *data)
+static void sbcap_link_s_init(struct osmo_fsm_inst *fi, uint32_t event, void *data)
 {
 	switch (event) {
-	case SBcAP_SRV_E_CMD_RESET:
-		osmo_fsm_inst_state_chg(fi, SBcAP_SRV_S_IDLE, 0, 0);
+	case SBcAP_LINK_E_CMD_RESET:
+		osmo_fsm_inst_state_chg(fi, SBcAP_LINK_S_IDLE, 0, 0);
 		break;
 	default:
 		OSMO_ASSERT(0);
 	}
 }
 
-static void sbcap_server_s_idle(struct osmo_fsm_inst *fi, uint32_t event, void *data)
+static void sbcap_link_s_idle(struct osmo_fsm_inst *fi, uint32_t event, void *data)
 {
 	switch (event) {
 	default:
@@ -70,16 +70,16 @@ static void sbcap_server_s_idle(struct osmo_fsm_inst *fi, uint32_t event, void *
 	}
 }
 
-static void sbcap_server_fsm_allstate(struct osmo_fsm_inst *fi, uint32_t event, void *data)
+static void sbcap_link_fsm_allstate(struct osmo_fsm_inst *fi, uint32_t event, void *data)
 {
 	struct cbc_sbcap_link *link = (struct cbc_sbcap_link *) fi->priv;
 	//SBcAP_SBC_AP_PDU_t *pdu;
 
 	switch (event) {
-	case SBcAP_SRV_E_CMD_CLOSE:
+	case SBcAP_LINK_E_CMD_CLOSE:
 		osmo_fsm_inst_term(fi, OSMO_FSM_TERM_REQUEST, NULL);
 		break;
-	case SBcAP_SRV_E_RX_RESTART:
+	case SBcAP_LINK_E_RX_RESTART:
 		//pdu = data;
 		/* TODO: delete any CBS state we have for this peer */
 		/* TODO: re-send messages we have matching the scope of the peer */
@@ -90,7 +90,7 @@ static void sbcap_server_fsm_allstate(struct osmo_fsm_inst *fi, uint32_t event, 
 	}
 }
 
-static void sbcap_server_fsm_cleanup(struct osmo_fsm_inst *fi, enum osmo_fsm_term_cause cause)
+static void sbcap_link_fsm_cleanup(struct osmo_fsm_inst *fi, enum osmo_fsm_term_cause cause)
 {
 	struct cbc_sbcap_link *link = (struct cbc_sbcap_link *) fi->priv;
 
@@ -105,31 +105,31 @@ static void sbcap_server_fsm_cleanup(struct osmo_fsm_inst *fi, enum osmo_fsm_ter
 	talloc_free(link);
 }
 
-static const struct osmo_fsm_state sbcap_server_fsm_states[] = {
-	[SBcAP_SRV_S_INIT] = {
+static const struct osmo_fsm_state sbcap_link_fsm_states[] = {
+	[SBcAP_LINK_S_INIT] = {
 		.name = "INIT",
-		.in_event_mask = S(SBcAP_SRV_E_CMD_RESET),
-		.out_state_mask = S(SBcAP_SRV_S_IDLE),
-		.action = sbcap_server_s_init,
+		.in_event_mask = S(SBcAP_LINK_E_CMD_RESET),
+		.out_state_mask = S(SBcAP_LINK_S_IDLE),
+		.action = sbcap_link_s_init,
 	},
-	[SBcAP_SRV_S_IDLE] = {
+	[SBcAP_LINK_S_IDLE] = {
 		.name = "IDLE",
 		.in_event_mask = 0,
 		.out_state_mask = 0,
-		.action = sbcap_server_s_idle,
+		.action = sbcap_link_s_idle,
 	},
 };
 
-struct osmo_fsm sbcap_server_fsm = {
-	.name = "SBcAP-SERVER",
-	.states = sbcap_server_fsm_states,
-	.num_states = ARRAY_SIZE(sbcap_server_fsm_states),
-	.allstate_event_mask = S(SBcAP_SRV_E_CMD_CLOSE) |
-			       S(SBcAP_SRV_E_RX_RESTART),
-	.allstate_action = sbcap_server_fsm_allstate,
+struct osmo_fsm sbcap_link_fsm = {
+	.name = "SBcAP-Link",
+	.states = sbcap_link_fsm_states,
+	.num_states = ARRAY_SIZE(sbcap_link_fsm_states),
+	.allstate_event_mask = S(SBcAP_LINK_E_CMD_CLOSE) |
+			       S(SBcAP_LINK_E_RX_RESTART),
+	.allstate_action = sbcap_link_fsm_allstate,
 	.log_subsys = DSBcAP,
-	.event_names = sbcap_server_event_names,
-	.cleanup = sbcap_server_fsm_cleanup,
+	.event_names = sbcap_link_event_names,
+	.cleanup = sbcap_link_fsm_cleanup,
 };
 
 static void *sbcap_as_find_ie(void *void_list, SBcAP_ProtocolIE_ID_t ie_id)
@@ -234,7 +234,7 @@ int cbc_sbcap_link_rx_cb(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu)
 				   pdu->choice.initiatingMessage.procedureCode);
 			return -EINVAL;
 		case SBcAP_ProcedureId_PWS_Restart_Indication:
-			return osmo_fsm_inst_dispatch(link->fi, SBcAP_SRV_E_RX_RESTART, pdu);
+			return osmo_fsm_inst_dispatch(link->fi, SBcAP_LINK_E_RX_RESTART, pdu);
 		case SBcAP_ProcedureId_Stop_Warning_Indication:
 		case SBcAP_ProcedureId_Write_Replace_Warning_Indication:
 			break; /* Handle msg id below */
@@ -330,5 +330,5 @@ int cbc_sbcap_link_rx_cb(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu)
 
 static __attribute__((constructor)) void on_dso_load_sbcap_srv_fsm(void)
 {
-	OSMO_ASSERT(osmo_fsm_register(&sbcap_server_fsm) == 0);
+	OSMO_ASSERT(osmo_fsm_register(&sbcap_link_fsm) == 0);
 }

@@ -30,8 +30,8 @@
 
 #include <osmocom/cbc/cbc_message.h>
 #include <osmocom/cbc/cbc_peer.h>
-#include <osmocom/cbc/cbsp_server.h>
-#include <osmocom/cbc/sbcap_server.h>
+#include <osmocom/cbc/cbsp_link.h>
+#include <osmocom/cbc/sbcap_link.h>
 
 const struct value_string cbc_peer_proto_name[] = {
 	{ CBC_PEER_PROTO_CBSP, "CBSP" },

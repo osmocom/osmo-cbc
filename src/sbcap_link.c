@@ -36,8 +36,8 @@
 #include <osmocom/sbcap/sbcap_common.h>
 
 #include <osmocom/cbc/cbc_data.h>
-#include <osmocom/cbc/sbcap_server.h>
-#include <osmocom/cbc/sbcap_server_fsm.h>
+#include <osmocom/cbc/sbcap_link.h>
+#include <osmocom/cbc/sbcap_link_fsm.h>
 #include <osmocom/cbc/cbc_peer.h>
 #include <osmocom/cbc/debug.h>
 
@@ -131,7 +131,7 @@ static int sbcap_cbc_closed_cb(struct osmo_stream_srv *conn)
 		link->peer->link.sbcap = NULL;
 	link->conn = NULL;
 	if (link->fi)
-		osmo_fsm_inst_dispatch(link->fi, SBcAP_SRV_E_CMD_CLOSE, NULL);
+		osmo_fsm_inst_dispatch(link->fi, SBcAP_LINK_E_CMD_CLOSE, NULL);
 
 	return 0;
 }
@@ -159,7 +159,7 @@ static int sbcap_cbc_accept_cb(struct osmo_stream_srv_link *srv_link, int fd)
 		talloc_free(link);
 		return -1;
 	}
-	link->fi = osmo_fsm_inst_alloc(&sbcap_server_fsm, link, link, LOGL_DEBUG, NULL);
+	link->fi = osmo_fsm_inst_alloc(&sbcap_link_fsm, link, link, LOGL_DEBUG, NULL);
 	if (!link->fi) {
 		LOGPSBCAPC(link, LOGL_ERROR, "Unable to allocate FSM\n");
 		osmo_stream_srv_destroy(link->conn);
@@ -192,7 +192,7 @@ static int sbcap_cbc_accept_cb(struct osmo_stream_srv_link *srv_link, int fd)
 		link->peer->link.sbcap = link;
 	}
 
-	osmo_fsm_inst_dispatch(link->fi, SBcAP_SRV_E_CMD_RESET, NULL);
+	osmo_fsm_inst_dispatch(link->fi, SBcAP_LINK_E_CMD_RESET, NULL);
 	return 0;
 }
 

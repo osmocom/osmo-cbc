@@ -33,8 +33,8 @@
 #include <osmocom/netif/stream.h>
 
 #include <osmocom/cbc/debug.h>
-#include <osmocom/cbc/cbsp_server.h>
-#include <osmocom/cbc/cbsp_server_fsm.h>
+#include <osmocom/cbc/cbsp_link.h>
+#include <osmocom/cbc/cbsp_link_fsm.h>
 #include <osmocom/cbc/cbc_peer.h>
 
 const char *cbc_cbsp_link_name(const struct cbc_cbsp_link *link)
@@ -103,7 +103,7 @@ static int cbsp_cbc_closed_cb(struct osmo_stream_srv *conn)
 		link->peer->link.cbsp = NULL;
 	link->conn = NULL;
 	if (link->fi)
-		osmo_fsm_inst_dispatch(link->fi, CBSP_SRV_E_CMD_CLOSE, NULL);
+		osmo_fsm_inst_dispatch(link->fi, CBSP_LINK_E_CMD_CLOSE, NULL);
 
 	return 0;
 }
@@ -131,7 +131,7 @@ static int cbsp_cbc_accept_cb(struct osmo_stream_srv_link *srv_link, int fd)
 		talloc_free(link);
 		return -1;
 	}
-	link->fi = osmo_fsm_inst_alloc(&cbsp_server_fsm, link, link, LOGL_DEBUG, NULL);
+	link->fi = osmo_fsm_inst_alloc(&cbsp_link_fsm, link, link, LOGL_DEBUG, NULL);
 	if (!link->fi) {
 		LOGPCC(link, LOGL_ERROR, "Unable to allocate FSM\n");
 		osmo_stream_srv_destroy(link->conn);
@@ -164,7 +164,7 @@ static int cbsp_cbc_accept_cb(struct osmo_stream_srv_link *srv_link, int fd)
 		link->peer->link.cbsp = link;
 	}
 
-	osmo_fsm_inst_dispatch(link->fi, CBSP_SRV_E_CMD_RESET, NULL);
+	osmo_fsm_inst_dispatch(link->fi, CBSP_LINK_E_CMD_RESET, NULL);
 	return 0;
 }
 

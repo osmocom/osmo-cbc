@@ -28,8 +28,8 @@
 #include <osmocom/gsm/cbsp.h>
 
 #include <osmocom/cbc/cbc_data.h>
-#include <osmocom/cbc/cbsp_server.h>
-#include <osmocom/cbc/sbcap_server.h>
+#include <osmocom/cbc/cbsp_link.h>
+#include <osmocom/cbc/sbcap_link.h>
 #include <osmocom/cbc/sbcap_msg.h>
 #include <osmocom/cbc/rest_it_op.h>
 #include <osmocom/cbc/debug.h>

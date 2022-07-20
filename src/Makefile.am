@@ -14,15 +14,15 @@ osmo_cbc_SOURCES = \
 	cbc_message.c \
 	cbc_peer.c \
 	cbc_vty.c \
-	cbsp_server.c \
-	cbsp_server_fsm.c \
+	cbsp_link.c \
+	cbsp_link_fsm.c \
 	rest_api.c \
 	charset.c \
 	message_handling.c \
 	rest_it_op.c \
 	sbcap_msg.c \
-	sbcap_server.c \
-	sbcap_server_fsm.c \
+	sbcap_link.c \
+	sbcap_link_fsm.c \
 	smscb_peer_fsm.c \
 	smscb_message_fsm.c \
 	$(NULL)
