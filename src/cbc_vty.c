@@ -671,38 +671,38 @@ static int config_write_peer(struct vty *vty)
 
 void cbc_vty_init(void)
 {
-	install_lib_element_ve(&show_peers_cmd);
-	install_lib_element_ve(&show_message_cbs_cmd);
-	install_lib_element_ve(&show_messages_cbs_cmd);
-	install_lib_element_ve(&show_messages_etws_cmd);
+	install_element_ve(&show_peers_cmd);
+	install_element_ve(&show_message_cbs_cmd);
+	install_element_ve(&show_messages_cbs_cmd);
+	install_element_ve(&show_messages_etws_cmd);
 
-	install_lib_element(CONFIG_NODE, &cfg_cbc_cmd);
+	install_element(CONFIG_NODE, &cfg_cbc_cmd);
 	install_node(&cbc_node, config_write_cbc);
-	install_lib_element(CBC_NODE, &cfg_permit_unknown_peers_cmd);
+	install_element(CBC_NODE, &cfg_permit_unknown_peers_cmd);
 
-	install_lib_element(CBC_NODE, &cfg_cbsp_cmd);
+	install_element(CBC_NODE, &cfg_cbsp_cmd);
 	install_node(&cbsp_node, NULL);
-	install_lib_element(CBSP_NODE, &cfg_cbsp_local_ip_cmd);
-	install_lib_element(CBSP_NODE, &cfg_cbsp_local_port_cmd);
+	install_element(CBSP_NODE, &cfg_cbsp_local_ip_cmd);
+	install_element(CBSP_NODE, &cfg_cbsp_local_port_cmd);
 
-	install_lib_element(CBC_NODE, &cfg_ecbe_cmd);
+	install_element(CBC_NODE, &cfg_ecbe_cmd);
 	install_node(&ecbe_node, NULL);
-	install_lib_element(ECBE_NODE, &cfg_ecbe_local_ip_cmd);
-	install_lib_element(ECBE_NODE, &cfg_ecbe_local_port_cmd);
+	install_element(ECBE_NODE, &cfg_ecbe_local_ip_cmd);
+	install_element(ECBE_NODE, &cfg_ecbe_local_port_cmd);
 
-	install_lib_element(CBC_NODE, &cfg_sbcap_cmd);
+	install_element(CBC_NODE, &cfg_sbcap_cmd);
 	install_node(&sbcap_node, NULL);
-	install_lib_element(SBcAP_NODE, &cfg_sbcap_local_ip_cmd);
-	install_lib_element(SBcAP_NODE, &cfg_sbcap_no_local_ip_cmd);
-	install_lib_element(SBcAP_NODE, &cfg_sbcap_local_port_cmd);
+	install_element(SBcAP_NODE, &cfg_sbcap_local_ip_cmd);
+	install_element(SBcAP_NODE, &cfg_sbcap_no_local_ip_cmd);
+	install_element(SBcAP_NODE, &cfg_sbcap_local_port_cmd);
 
-	install_lib_element(CBC_NODE, &cfg_cbc_peer_cmd);
-	install_lib_element(CBC_NODE, &cfg_cbc_no_peer_cmd);
+	install_element(CBC_NODE, &cfg_cbc_peer_cmd);
+	install_element(CBC_NODE, &cfg_cbc_no_peer_cmd);
 	install_node(&peer_node, NULL);
-	install_lib_element(PEER_NODE, &cfg_peer_proto_cmd);
-	install_lib_element(PEER_NODE, &cfg_peer_remote_port_cmd);
-	install_lib_element(PEER_NODE, &cfg_peer_no_remote_port_cmd);
-	install_lib_element(PEER_NODE, &cfg_peer_remote_ip_cmd);
-	install_lib_element(PEER_NODE, &cfg_peer_no_remote_ip_cmd);
+	install_element(PEER_NODE, &cfg_peer_proto_cmd);
+	install_element(PEER_NODE, &cfg_peer_remote_port_cmd);
+	install_element(PEER_NODE, &cfg_peer_no_remote_port_cmd);
+	install_element(PEER_NODE, &cfg_peer_remote_ip_cmd);
+	install_element(PEER_NODE, &cfg_peer_no_remote_ip_cmd);
 
 }
