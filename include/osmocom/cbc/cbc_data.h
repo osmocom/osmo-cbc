@@ -42,6 +42,8 @@ struct cbc_cell_id {
 /*********************************************************************************
  * CBC itself
  *********************************************************************************/
+struct cbc_cbsp_mgr;
+struct cbc_sbcap_mgr;
 
 struct cbc {
 	struct {
@@ -60,6 +62,13 @@ struct cbc {
 			int local_port;
 		} ecbe;
 	} config;
+
+	struct {
+		struct cbc_cbsp_mgr *mgr;
+	} cbsp;
+	struct {
+		struct cbc_sbcap_mgr *mgr;
+	} sbcap;
 
 	struct llist_head messages;	/* cbc_message.list */
 	struct llist_head expired_messages;	/* cbc_message.list */

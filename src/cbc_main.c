@@ -277,12 +277,12 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	if (cbc_cbsp_mgr_create(tall_cbc_ctx) == NULL) {
+	if (!(g_cbc->cbsp.mgr = cbc_cbsp_mgr_create(tall_cbc_ctx))) {
 		perror("Error binding CBSP port");
 		exit(1);
 	}
 
-	if (cbc_sbcap_mgr_create(tall_cbc_ctx) == NULL) {
+	if (!(g_cbc->sbcap.mgr = cbc_sbcap_mgr_create(tall_cbc_ctx))) {
 		perror("Error binding SBc-AP port\n");
 		exit(1);
 	}
