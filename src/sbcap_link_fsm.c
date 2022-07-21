@@ -95,13 +95,13 @@ static void sbcap_link_fsm_cleanup(struct osmo_fsm_inst *fi, enum osmo_fsm_term_
 	struct cbc_sbcap_link *link = (struct cbc_sbcap_link *) fi->priv;
 
 	cbc_sbcap_link_close(link);
-	llist_del(&link->list);
-	link->fi = NULL;
 
 	/* reparent the fsm_inst to the cbc as we're about to free() it's talloc
 	 * parent 'link' */
+	link->fi = NULL;
 	talloc_steal(g_cbc, fi);
-	talloc_free(link);
+
+	cbc_sbcap_link_free(link);
 }
 
 static const struct osmo_fsm_state sbcap_link_fsm_states[] = {

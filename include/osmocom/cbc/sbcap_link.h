@@ -38,6 +38,8 @@ struct cbc_sbcap_link {
 	struct cbc_peer *peer;
 };
 
+struct cbc_sbcap_link *cbc_sbcap_link_alloc(struct cbc_sbcap_mgr *cbc, struct cbc_peer *peer);
+void cbc_sbcap_link_free(struct cbc_sbcap_link *link);
 const char *cbc_sbcap_link_name(const struct cbc_sbcap_link *link);
 void cbc_sbcap_link_tx(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu);
 void cbc_sbcap_link_close(struct cbc_sbcap_link *link);

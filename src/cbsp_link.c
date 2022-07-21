@@ -19,6 +19,7 @@
  */
 
 #include <errno.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 
@@ -36,6 +37,36 @@
 #include <osmocom/cbc/cbsp_link.h>
 #include <osmocom/cbc/cbsp_link_fsm.h>
 #include <osmocom/cbc/cbc_peer.h>
+
+struct cbc_cbsp_link *cbc_cbsp_link_alloc(struct cbc_cbsp_mgr *cbc, struct cbc_peer *peer)
+{
+	struct cbc_cbsp_link *link;
+
+	link = talloc_zero(cbc, struct cbc_cbsp_link);
+	OSMO_ASSERT(link);
+
+	link->peer = peer;
+
+	link->fi = osmo_fsm_inst_alloc(&cbsp_link_fsm, link, link, LOGL_DEBUG, NULL);
+	if (!link->fi) {
+		LOGPCC(link, LOGL_ERROR, "Unable to allocate FSM\n");
+		talloc_free(link);
+		return NULL;
+	}
+
+	llist_add_tail(&link->list, &cbc->links);
+	return link;
+}
+
+void cbc_cbsp_link_free(struct cbc_cbsp_link *link)
+{
+	if (!link)
+		return;
+	llist_del(&link->list);
+	if (link->fi)
+		osmo_fsm_inst_free(link->fi);
+	talloc_free(link);
+}
 
 const char *cbc_cbsp_link_name(const struct cbc_cbsp_link *link)
 {
@@ -112,10 +143,10 @@ static int cbsp_cbc_closed_cb(struct osmo_stream_srv *conn)
 static int cbsp_cbc_accept_cb(struct osmo_stream_srv_link *srv_link, int fd)
 {
 	struct cbc_cbsp_mgr *cbc = osmo_stream_srv_link_get_data(srv_link);
-	struct cbc_cbsp_link *link = talloc_zero(cbc, struct cbc_cbsp_link);
+	struct cbc_peer *peer;
+	struct cbc_cbsp_link *link;
 	char remote_ip[INET6_ADDRSTRLEN], portbuf[6];
 	int remote_port;
-	OSMO_ASSERT(link);
 
 	remote_ip[0] = '\0';
 	portbuf[0] = '\0';
@@ -124,45 +155,41 @@ static int cbsp_cbc_accept_cb(struct osmo_stream_srv_link *srv_link, int fd)
 
 	LOGP(DCBSP, LOGL_NOTICE, "New CBSP link connection from %s:%u\n", remote_ip, remote_port);
 
-	link->conn = osmo_stream_srv_create(srv_link, srv_link, fd, cbsp_cbc_read_cb, cbsp_cbc_closed_cb, link);
-	if (!link->conn) {
-		LOGP(DCBSP, LOGL_ERROR, "Unable to create stream server for %s:%d\n",
-			remote_ip, remote_port);
-		talloc_free(link);
-		return -1;
-	}
-	link->fi = osmo_fsm_inst_alloc(&cbsp_link_fsm, link, link, LOGL_DEBUG, NULL);
-	if (!link->fi) {
-		LOGPCC(link, LOGL_ERROR, "Unable to allocate FSM\n");
-		cbc_cbsp_link_close(link);
-		talloc_free(link);
-		return -1;
-	}
-	llist_add_tail(&link->list, &cbc->links);
-
 	/* Match link to peer */
-	link->peer = cbc_peer_by_addr_proto(remote_ip, remote_port, CBC_PEER_PROTO_CBSP);
-	if (!link->peer) {
-		if (g_cbc->config.permit_unknown_peers) {
-			LOGPCC(link, LOGL_NOTICE, "Accepting unknown CBSP peer %s:%d\n",
-				remote_ip, remote_port);
-			link->peer = cbc_peer_create(NULL, CBC_PEER_PROTO_CBSP);
-			OSMO_ASSERT(link->peer);
-			link->peer->unknown_dynamic_peer = true;
-		} else {
-			LOGPCC(link, LOGL_NOTICE, "Rejecting unknown CBSP peer %s:%d (not permitted)\n",
-				remote_ip, remote_port);
-			cbc_cbsp_link_close(link);
+	peer = cbc_peer_by_addr_proto(remote_ip, remote_port, CBC_PEER_PROTO_CBSP);
+	if (!peer) {
+		if (!g_cbc->config.permit_unknown_peers) {
+			LOGP(DCBSP, LOGL_NOTICE,
+			     "Rejecting unknown CBSP peer %s:%d (not permitted)\n",
+			     remote_ip, remote_port);
+			close(fd);
 			return -1;
 		}
-	} else {
-		if (link->peer->link.cbsp) {
-			LOGPCC(link, LOGL_ERROR, "We already have a connection for peer %s\n",
-				link->peer->name);
-			/* FIXME */
-		}
-		link->peer->link.cbsp = link;
+		LOGP(DCBSP, LOGL_NOTICE, "Accepting unknown CBSP peer %s:%d\n",
+		     remote_ip, remote_port);
+		peer = cbc_peer_create(NULL, CBC_PEER_PROTO_CBSP);
+		OSMO_ASSERT(peer);
+		peer->unknown_dynamic_peer = true;
 	}
+	if (peer->link.cbsp) {
+		LOGPCC(peer->link.cbsp, LOGL_ERROR,
+		       "We already have a connection for peer %s, closing it\n",
+		       peer->name);
+		cbc_cbsp_link_close(peer->link.cbsp);
+	}
+	link = cbc_cbsp_link_alloc(cbc, peer);
+	OSMO_ASSERT(link);
+	link->conn = osmo_stream_srv_create(srv_link, srv_link, fd,
+					    cbsp_cbc_read_cb, cbsp_cbc_closed_cb,
+					    link);
+	if (!link->conn) {
+		LOGPCC(link, LOGL_ERROR,
+		       "Unable to create stream server for %s:%u\n",
+		       remote_ip, remote_port);
+		cbc_cbsp_link_free(link);
+		return -1;
+	}
+	peer->link.cbsp = link;
 
 	osmo_fsm_inst_dispatch(link->fi, CBSP_LINK_E_CMD_RESET, NULL);
 	return 0;

@@ -19,6 +19,7 @@
  */
 
 #include <errno.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -40,6 +41,36 @@
 #include <osmocom/cbc/sbcap_link_fsm.h>
 #include <osmocom/cbc/cbc_peer.h>
 #include <osmocom/cbc/debug.h>
+
+struct cbc_sbcap_link *cbc_sbcap_link_alloc(struct cbc_sbcap_mgr *cbc, struct cbc_peer *peer)
+{
+	struct cbc_sbcap_link *link;
+
+	link = talloc_zero(cbc, struct cbc_sbcap_link);
+	OSMO_ASSERT(link);
+
+	link->peer = peer;
+
+	link->fi = osmo_fsm_inst_alloc(&sbcap_link_fsm, link, link, LOGL_DEBUG, NULL);
+	if (!link->fi) {
+		LOGPSBCAPC(link, LOGL_ERROR, "Unable to allocate FSM\n");
+		talloc_free(link);
+		return NULL;
+	}
+
+	llist_add_tail(&link->list, &cbc->links);
+	return link;
+}
+
+void cbc_sbcap_link_free(struct cbc_sbcap_link *link)
+{
+	if (!link)
+		return;
+	llist_del(&link->list);
+	if (link->fi)
+		osmo_fsm_inst_free(link->fi);
+	talloc_free(link);
+}
 
 const char *cbc_sbcap_link_name(const struct cbc_sbcap_link *link)
 {
@@ -140,10 +171,10 @@ static int sbcap_cbc_closed_cb(struct osmo_stream_srv *conn)
 static int sbcap_cbc_accept_cb(struct osmo_stream_srv_link *srv_link, int fd)
 {
 	struct cbc_sbcap_mgr *cbc = osmo_stream_srv_link_get_data(srv_link);
-	struct cbc_sbcap_link *link = talloc_zero(cbc, struct cbc_sbcap_link);
+	struct cbc_peer *peer;
+	struct cbc_sbcap_link *link;
 	char remote_ip[INET6_ADDRSTRLEN], portbuf[6];
 	int remote_port;
-	OSMO_ASSERT(link);
 
 	remote_ip[0] = '\0';
 	portbuf[0] = '\0';
@@ -152,45 +183,42 @@ static int sbcap_cbc_accept_cb(struct osmo_stream_srv_link *srv_link, int fd)
 
 	LOGP(DSBcAP, LOGL_NOTICE, "New SBc-AP link connection from %s:%u\n", remote_ip, remote_port);
 
-	link->conn = osmo_stream_srv_create(srv_link, srv_link, fd, sbcap_cbc_read_cb, sbcap_cbc_closed_cb, link);
-	if (!link->conn) {
-		LOGP(DSBcAP, LOGL_ERROR, "Unable to create stream server for %s:%d\n",
-			remote_ip, remote_port);
-		talloc_free(link);
-		return -1;
-	}
-	link->fi = osmo_fsm_inst_alloc(&sbcap_link_fsm, link, link, LOGL_DEBUG, NULL);
-	if (!link->fi) {
-		LOGPSBCAPC(link, LOGL_ERROR, "Unable to allocate FSM\n");
-		cbc_sbcap_link_close(link);
-		talloc_free(link);
-		return -1;
-	}
-	llist_add_tail(&link->list, &cbc->links);
-
 	/* Match link to peer */
-	link->peer = cbc_peer_by_addr_proto(remote_ip, remote_port, CBC_PEER_PROTO_SBcAP);
-	if (!link->peer) {
-		if (g_cbc->config.permit_unknown_peers) {
-			LOGPSBCAPC(link, LOGL_NOTICE, "Accepting unknown SBc-AP peer %s:%d\n",
-				remote_ip, remote_port);
-			link->peer = cbc_peer_create(NULL, CBC_PEER_PROTO_SBcAP);
-			OSMO_ASSERT(link->peer);
-			link->peer->unknown_dynamic_peer = true;
-		} else {
-			LOGPSBCAPC(link, LOGL_NOTICE, "Rejecting unknown SBc-AP peer %s:%d (not permitted)\n",
-				remote_ip, remote_port);
-			cbc_sbcap_link_close(link);
+	peer = cbc_peer_by_addr_proto(remote_ip, remote_port, CBC_PEER_PROTO_SBcAP);
+	if (!peer) {
+		if (!g_cbc->config.permit_unknown_peers) {
+			LOGP(DSBcAP, LOGL_NOTICE,
+			     "Rejecting unknown SBc-AP peer %s:%d (not permitted)\n",
+			     remote_ip, remote_port);
+			close(fd);
 			return -1;
 		}
-	} else {
-		if (link->peer->link.sbcap) {
-			LOGPSBCAPC(link, LOGL_ERROR, "We already have a connection for peer %s\n",
-				link->peer->name);
-			/* FIXME */
-		}
-		link->peer->link.sbcap = link;
+		LOGP(DSBcAP, LOGL_NOTICE, "Accepting unknown SBc-AP peer %s:%d\n",
+		     remote_ip, remote_port);
+		peer = cbc_peer_create(NULL, CBC_PEER_PROTO_SBcAP);
+		OSMO_ASSERT(peer);
+		peer->unknown_dynamic_peer = true;
 	}
+	if (peer->link.sbcap) {
+		LOGPSBCAPC(peer->link.sbcap, LOGL_ERROR,
+			   "We already have a connection for peer %s, closing it\n",
+			   peer->name);
+		cbc_sbcap_link_close(peer->link.sbcap);
+	}
+	link = cbc_sbcap_link_alloc(cbc, peer);
+	OSMO_ASSERT(link);
+
+	link->conn = osmo_stream_srv_create(srv_link, srv_link, fd,
+					    sbcap_cbc_read_cb, sbcap_cbc_closed_cb,
+					    link);
+	if (!link->conn) {
+		LOGPSBCAPC(link, LOGL_ERROR,
+			   "Unable to create stream server for %s:%u\n",
+			   remote_ip, remote_port);
+		cbc_sbcap_link_free(link);
+		return -1;
+	}
+	peer->link.sbcap = link;
 
 	osmo_fsm_inst_dispatch(link->fi, SBcAP_LINK_E_CMD_RESET, NULL);
 	return 0;

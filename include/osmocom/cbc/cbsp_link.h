@@ -40,6 +40,8 @@ struct cbc_cbsp_link {
 	struct cbc_peer *peer;
 };
 
+struct cbc_cbsp_link *cbc_cbsp_link_alloc(struct cbc_cbsp_mgr *cbc, struct cbc_peer *peer);
+void cbc_cbsp_link_free(struct cbc_cbsp_link *link);
 const char *cbc_cbsp_link_name(const struct cbc_cbsp_link *link);
 void cbc_cbsp_link_tx(struct cbc_cbsp_link *link, struct osmo_cbsp_decoded *cbsp);
 void cbc_cbsp_link_close(struct cbc_cbsp_link *link);
