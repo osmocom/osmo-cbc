@@ -321,11 +321,20 @@ DEFUN(cfg_permit_unknown_peers, cfg_permit_unknown_peers_cmd,
 	return CMD_SUCCESS;
 }
 
+static int config_write_ecbe(struct vty *vty);
+static int config_write_cbsp(struct vty *vty);
+static int config_write_sbcap(struct vty *vty);
+static int config_write_peer(struct vty *vty);
+
 static int config_write_cbc(struct vty *vty)
 {
 	vty_out(vty, "cbc%s", VTY_NEWLINE);
 	vty_out(vty, " unknown-peers %s%s",
 		g_cbc->config.permit_unknown_peers ? "accept" : "reject", VTY_NEWLINE);
+	config_write_ecbe(vty);
+	config_write_cbsp(vty);
+	config_write_sbcap(vty);
+	config_write_peer(vty);
 	return CMD_SUCCESS;
 }
 
@@ -672,24 +681,24 @@ void cbc_vty_init(void)
 	install_lib_element(CBC_NODE, &cfg_permit_unknown_peers_cmd);
 
 	install_lib_element(CBC_NODE, &cfg_cbsp_cmd);
-	install_node(&cbsp_node, config_write_cbsp);
+	install_node(&cbsp_node, NULL);
 	install_lib_element(CBSP_NODE, &cfg_cbsp_local_ip_cmd);
 	install_lib_element(CBSP_NODE, &cfg_cbsp_local_port_cmd);
 
 	install_lib_element(CBC_NODE, &cfg_ecbe_cmd);
-	install_node(&ecbe_node, config_write_ecbe);
+	install_node(&ecbe_node, NULL);
 	install_lib_element(ECBE_NODE, &cfg_ecbe_local_ip_cmd);
 	install_lib_element(ECBE_NODE, &cfg_ecbe_local_port_cmd);
 
 	install_lib_element(CBC_NODE, &cfg_sbcap_cmd);
-	install_node(&sbcap_node, config_write_sbcap);
+	install_node(&sbcap_node, NULL);
 	install_lib_element(SBcAP_NODE, &cfg_sbcap_local_ip_cmd);
 	install_lib_element(SBcAP_NODE, &cfg_sbcap_no_local_ip_cmd);
 	install_lib_element(SBcAP_NODE, &cfg_sbcap_local_port_cmd);
 
 	install_lib_element(CBC_NODE, &cfg_cbc_peer_cmd);
 	install_lib_element(CBC_NODE, &cfg_cbc_no_peer_cmd);
-	install_node(&peer_node, config_write_peer);
+	install_node(&peer_node, NULL);
 	install_lib_element(PEER_NODE, &cfg_peer_proto_cmd);
 	install_lib_element(PEER_NODE, &cfg_peer_remote_port_cmd);
 	install_lib_element(PEER_NODE, &cfg_peer_no_remote_port_cmd);
