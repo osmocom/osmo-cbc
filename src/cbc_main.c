@@ -47,6 +47,7 @@
 #include <osmocom/cbc/debug.h>
 #include <osmocom/cbc/cbc_data.h>
 #include <osmocom/cbc/cbc_vty.h>
+#include <osmocom/cbc/cbc_peer.h>
 
 static void *tall_cbc_ctx;
 struct cbc *g_cbc;
@@ -96,6 +97,11 @@ static int cbc_vty_go_parent(struct vty *vty)
 			g_cbc->config.sbcap.local_host[0] = talloc_strdup(g_cbc, "127.0.0.1");
 				g_cbc->config.sbcap.num_local_host = 1;
 		}
+		vty->node = CONFIG_NODE;
+		vty->index = NULL;
+		break;
+	case PEER_NODE:
+		cbc_peer_apply_cfg_chg((struct cbc_peer *)vty->index);
 		vty->node = CONFIG_NODE;
 		vty->index = NULL;
 		break;

@@ -50,6 +50,7 @@ struct cbc_sbcap_link *cbc_sbcap_link_alloc(struct cbc_sbcap_mgr *cbc, struct cb
 	OSMO_ASSERT(link);
 
 	link->peer = peer;
+	link->is_client = (peer->link_mode == CBC_PEER_LINK_MODE_CLIENT);
 
 	link->fi = osmo_fsm_inst_alloc(&sbcap_link_fsm, link, link, LOGL_DEBUG, NULL);
 	if (!link->fi) {
@@ -77,16 +78,145 @@ const char *cbc_sbcap_link_name(const struct cbc_sbcap_link *link)
 	struct osmo_fd *ofd;
 	OSMO_ASSERT(link);
 
-	if (link->peer && link->peer->name) {
+	if (link->peer && link->peer->name)
 		return link->peer->name;
-	}
 
-	ofd = osmo_stream_srv_get_ofd(link->conn);
+	if (link->is_client)
+		ofd = osmo_stream_cli_get_ofd(link->cli_conn);
+	else
+		ofd = osmo_stream_srv_get_ofd(link->srv_conn);
 	return osmo_sock_get_name2(ofd->fd);
 }
 
+/*
+ * SCTP client
+ */
+static int cbc_sbcap_link_cli_connect_cb(struct osmo_stream_cli *conn)
+{
+	struct cbc_sbcap_link *link = osmo_stream_cli_get_data(conn);
+	LOGPSBCAPC(link, LOGL_NOTICE, "Connected\n");
+	osmo_fsm_inst_dispatch(link->fi, SBcAP_LINK_E_CMD_RESET, NULL);
+	return 0;
+}
+
+static int cbc_sbcap_link_cli_disconnect_cb(struct osmo_stream_cli *conn)
+{
+	struct cbc_sbcap_link *link = osmo_stream_cli_get_data(conn);
+	LOGPSBCAPC(link, LOGL_NOTICE, "Disconnected.\n");
+	LOGPSBCAPC(link, LOGL_NOTICE, "Reconnecting...\n");
+	osmo_stream_cli_reconnect(conn);
+	return 0;
+}
+
+static int cbc_sbcap_link_cli_read_cb(struct osmo_stream_cli *conn)
+{
+	struct cbc_sbcap_link *link = osmo_stream_cli_get_data(conn);
+	struct osmo_fd *ofd = osmo_stream_cli_get_ofd(conn);
+	SBcAP_SBC_AP_PDU_t *pdu;
+	struct msgb *msg = msgb_alloc_c(g_cbc, 1500, "SBcAP-rx");
+	struct sctp_sndrcvinfo sinfo;
+	int flags = 0;
+	int rc;
+
+	/* read SBc-AP message from socket and process it */
+	rc = sctp_recvmsg(ofd->fd, msgb_data(msg), msgb_tailroom(msg),
+			  NULL, NULL, &sinfo, &flags);
+	LOGPSBCAPC(link, LOGL_DEBUG, "%s(): sctp_recvmsg() returned %d (flags=0x%x)\n",
+		   __func__, rc, flags);
+	if (rc < 0) {
+		osmo_stream_cli_reconnect(conn);
+		goto out;
+	} else if (rc == 0) {
+		osmo_stream_cli_reconnect(conn);
+	} else {
+		msgb_put(msg, rc);
+	}
+
+	if (flags & MSG_NOTIFICATION) {
+		union sctp_notification *notif = (union sctp_notification *) msgb_data(msg);
+		LOGPSBCAPC(link, LOGL_DEBUG, "Rx sctp notif %s\n",
+			osmo_sctp_sn_type_str(notif->sn_header.sn_type));
+		switch (notif->sn_header.sn_type) {
+		case SCTP_SHUTDOWN_EVENT:
+			osmo_stream_cli_reconnect(conn);
+			break;
+		case SCTP_ASSOC_CHANGE:
+			LOGPSBCAPC(link, LOGL_DEBUG, "Rx sctp notif SCTP_ASSOC_CHANGE: %s\n",
+				   osmo_sctp_assoc_chg_str(notif->sn_assoc_change.sac_state));
+			break;
+		default:
+			LOGPSBCAPC(link, LOGL_DEBUG, "Rx sctp notif %s (%u)\n",
+				   osmo_sctp_sn_type_str(notif->sn_header.sn_type),
+				   notif->sn_header.sn_type);
+			break;
+		}
+		rc = 0;
+	}
+
+	if (rc == 0)
+		goto out;
+
+	LOGPSBCAPC(link, LOGL_DEBUG, "Received SBc-AP %s\n", msgb_hexdump(msg));
+
+	/* decode + dispatch message */
+	pdu = sbcap_decode(msg);
+	if (pdu) {
+		LOGPSBCAPC(link, LOGL_INFO, "Received SBc-AP %d\n",
+			   pdu->present);
+		g_cbc->sbcap.mgr->rx_cb(link, pdu);
+	} else {
+		LOGPSBCAPC(link, LOGL_ERROR, "Unable to decode %s\n", msgb_hexdump(msg));
+	}
+out:
+	msgb_free(msg);
+	return rc;
+}
+
+int cbc_sbcap_link_open_cli(struct cbc_sbcap_link *link)
+{
+	struct osmo_stream_cli *conn;
+	struct cbc_peer *peer = link->peer;
+	int rc;
+
+	OSMO_ASSERT(link->is_client);
+	OSMO_ASSERT(peer->link_mode == CBC_PEER_LINK_MODE_CLIENT);
+
+	conn = osmo_stream_cli_create(link);
+	osmo_stream_cli_set_data(conn, link);
+	osmo_stream_cli_set_nodelay(conn, true);
+	osmo_stream_cli_set_reconnect_timeout(conn, 5);
+	osmo_stream_cli_set_proto(conn, IPPROTO_SCTP);
+	osmo_stream_cli_set_connect_cb(conn, cbc_sbcap_link_cli_connect_cb);
+	osmo_stream_cli_set_disconnect_cb(conn, cbc_sbcap_link_cli_disconnect_cb);
+	osmo_stream_cli_set_read_cb(conn, cbc_sbcap_link_cli_read_cb);
+	OSMO_ASSERT(g_cbc->config.sbcap.num_local_host > 0);
+	rc = osmo_stream_cli_set_local_addrs(conn, (const char **)&g_cbc->config.sbcap.local_host,
+					     g_cbc->config.sbcap.num_local_host);
+	if (rc < 0)
+		goto free_ret;
+	/* We assign free local port for client links:
+	 * osmo_stream_cli_set_local_port(conn, g_cbc->sbcap.local_port);
+	 */
+	OSMO_ASSERT(peer->num_remote_host > 0);
+	rc = osmo_stream_cli_set_addrs(conn, (const char **)peer->remote_host, peer->num_remote_host);
+	if (rc < 0)
+		goto free_ret;
+	osmo_stream_cli_set_port(conn, peer->remote_port);
+	rc = osmo_stream_cli_open(conn);
+	if (rc < 0)
+		goto free_ret;
+	link->cli_conn = conn;
+	return 0;
+free_ret:
+	osmo_stream_cli_destroy(conn);
+	return rc;
+}
+
+/*
+ * SCTP server
+ */
 /* data from MME has arrived at CBC */
-static int sbcap_cbc_read_cb(struct osmo_stream_srv *conn)
+static int sbcap_cbc_srv_read_cb(struct osmo_stream_srv *conn)
 {
 	struct osmo_stream_srv_link *srv_link = osmo_stream_srv_get_master(conn);
 	struct cbc_sbcap_link *link = osmo_stream_srv_get_data(conn);
@@ -153,7 +283,7 @@ out:
 }
 
 /* connection from MME to CBC has been closed */
-static int sbcap_cbc_closed_cb(struct osmo_stream_srv *conn)
+static int sbcap_cbc_srv_closed_cb(struct osmo_stream_srv *conn)
 {
 	struct cbc_sbcap_link *link = osmo_stream_srv_get_data(conn);
 	LOGPSBCAPC(link, LOGL_NOTICE, "connection closed\n");
@@ -198,6 +328,23 @@ static int sbcap_cbc_accept_cb(struct osmo_stream_srv_link *srv_link, int fd)
 		peer = cbc_peer_create(NULL, CBC_PEER_PROTO_SBcAP);
 		OSMO_ASSERT(peer);
 		peer->unknown_dynamic_peer = true;
+	} else { /* peer is known */
+		switch (peer->link_mode) {
+		case CBC_PEER_LINK_MODE_DISABLED:
+			LOGP(DSBcAP, LOGL_NOTICE,
+			     "Rejecting conn for disabled SBc-AP peer %s:%d\n",
+			     remote_ip, remote_port);
+			close(fd);
+			return -1;
+		case CBC_PEER_LINK_MODE_CLIENT:
+			LOGP(DSBcAP, LOGL_NOTICE,
+			     "Rejecting conn for SBc-AP peer %s:%d configured as 'client'\n",
+			     remote_ip, remote_port);
+			close(fd);
+			return -1;
+		default: /* MODE_SERVER */
+			break;
+		}
 	}
 	if (peer->link.sbcap) {
 		LOGPSBCAPC(peer->link.sbcap, LOGL_ERROR,
@@ -208,10 +355,10 @@ static int sbcap_cbc_accept_cb(struct osmo_stream_srv_link *srv_link, int fd)
 	link = cbc_sbcap_link_alloc(cbc, peer);
 	OSMO_ASSERT(link);
 
-	link->conn = osmo_stream_srv_create(srv_link, srv_link, fd,
-					    sbcap_cbc_read_cb, sbcap_cbc_closed_cb,
-					    link);
-	if (!link->conn) {
+	link->srv_conn = osmo_stream_srv_create(srv_link, srv_link, fd,
+						sbcap_cbc_srv_read_cb, sbcap_cbc_srv_closed_cb,
+						link);
+	if (!link->srv_conn) {
 		LOGPSBCAPC(link, LOGL_ERROR,
 			   "Unable to create stream server for %s:%u\n",
 			   remote_ip, remote_port);
@@ -244,15 +391,23 @@ void cbc_sbcap_link_tx(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu)
 	if (!msg)
 		goto ret_free;
 	LOGPSBCAPC(link, LOGL_DEBUG, "Encoded message: %s\n", msgb_hexdump(msg));
-	osmo_stream_srv_send(link->conn, msg);
+	if (link->is_client)
+		osmo_stream_cli_send(link->cli_conn, msg);
+	else
+		osmo_stream_srv_send(link->srv_conn, msg);
 ret_free:
 	sbcap_pdu_free(pdu);
 }
 
 void cbc_sbcap_link_close(struct cbc_sbcap_link *link)
 {
-	if (link->conn)
-		osmo_stream_srv_destroy(link->conn);
+	if (!link->conn)
+		return;
+
+	if (link->is_client)
+		osmo_stream_cli_destroy(link->cli_conn);
+	else
+		osmo_stream_srv_destroy(link->srv_conn);
 }
 
 /*

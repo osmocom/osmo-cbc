@@ -19,6 +19,16 @@ enum cbc_peer_protocol {
 	CBC_PEER_PROTO_SBcAP
 };
 
+enum cbc_peer_link_mode {
+	CBC_PEER_LINK_MODE_DISABLED = 0,
+	CBC_PEER_LINK_MODE_SERVER,
+	CBC_PEER_LINK_MODE_CLIENT,
+};
+
+extern const struct value_string cbc_peer_link_mode_names[];
+static inline const char *cbc_peer_link_mode_name(enum cbc_peer_link_mode val)
+{ return get_value_string(cbc_peer_link_mode_names, val); }
+
 struct cbc_peer {
 	struct llist_head list;		/* linked to cbc.peers */
 	const char *name;
@@ -34,6 +44,7 @@ struct cbc_peer {
 		struct cbc_sabp_link *sabp;
 		struct cbc_sbcap_link *sbcap;
 	} link;
+	enum cbc_peer_link_mode link_mode;
 };
 
 extern const struct value_string cbc_peer_proto_name[];
@@ -44,3 +55,4 @@ void cbc_peer_remove(struct cbc_peer *peer);
 struct cbc_peer *cbc_peer_by_name(const char *name);
 struct cbc_peer *cbc_peer_by_addr_proto(const char *remote_host, uint16_t remote_port,
 					enum cbc_peer_protocol proto);
+int cbc_peer_apply_cfg_chg(struct cbc_peer *peer);

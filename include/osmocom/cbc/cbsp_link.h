@@ -31,19 +31,22 @@ int cbc_cbsp_mgr_open_srv(struct cbc_cbsp_mgr *mgr);
 struct cbc_cbsp_link {
 	/* entry in osmo_cbsp_cbc.links */
 	struct llist_head list;
-	/* stream server connection for this link */
-	struct osmo_stream_srv *conn;
 	/* partially received CBSP message (rx completion pending) */
 	struct msgb *rx_msg;
-
 	struct osmo_fsm_inst *fi;
-
 	struct cbc_peer *peer;
+	bool is_client;
+	union {
+		struct osmo_stream_srv *srv_conn;
+		struct osmo_stream_cli *cli_conn;
+		void *conn; /* used when we just care about the pointer */
+	};
 };
 
 struct cbc_cbsp_link *cbc_cbsp_link_alloc(struct cbc_cbsp_mgr *cbc, struct cbc_peer *peer);
 void cbc_cbsp_link_free(struct cbc_cbsp_link *link);
 const char *cbc_cbsp_link_name(const struct cbc_cbsp_link *link);
+int cbc_cbsp_link_open_cli(struct cbc_cbsp_link *link);
 void cbc_cbsp_link_tx(struct cbc_cbsp_link *link, struct osmo_cbsp_decoded *cbsp);
 void cbc_cbsp_link_close(struct cbc_cbsp_link *link);
 int cbc_cbsp_link_rx_cb(struct cbc_cbsp_link *link, struct osmo_cbsp_decoded *dec);

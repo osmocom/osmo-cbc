@@ -32,12 +32,21 @@
 #include <osmocom/cbc/cbc_peer.h>
 #include <osmocom/cbc/cbsp_link.h>
 #include <osmocom/cbc/sbcap_link.h>
+#include <osmocom/cbc/debug.h>
 
 const struct value_string cbc_peer_proto_name[] = {
 	{ CBC_PEER_PROTO_CBSP, "CBSP" },
 	{ CBC_PEER_PROTO_SABP, "SABP" },
 	{ CBC_PEER_PROTO_SBcAP, "SBc-AP" },
 	{ 0, NULL }
+};
+
+
+const struct value_string cbc_peer_link_mode_names[] = {
+	{ CBC_PEER_LINK_MODE_DISABLED, "disabled" },
+	{ CBC_PEER_LINK_MODE_SERVER, "server" },
+	{ CBC_PEER_LINK_MODE_CLIENT, "client" },
+	{}
 };
 
 /* create a new cbc_peer */
@@ -119,4 +128,111 @@ struct cbc_peer *cbc_peer_by_addr_proto(const char *remote_host, uint16_t remote
 		}
 	}
 	return NULL;
+}
+
+static int cbc_peer_apply_cfg_chg_cbsp(struct cbc_peer *peer)
+{
+	struct cbc_cbsp_link *link = peer->link.cbsp;
+	int rc = 0;
+
+	switch (peer->link_mode) {
+	case CBC_PEER_LINK_MODE_DISABLED:
+		if (link) {
+			LOGPCC(link, LOGL_NOTICE,
+			       "link mode changed to 'disabled', closing active link\n");
+			cbc_cbsp_link_close(link);
+		}
+		/* Nothing to be done, cbc_cbsp_mgr->srv_link will refuse
+		 * accepting() disabled peers. */
+		OSMO_ASSERT(!peer->link.cbsp);
+		break;
+	case CBC_PEER_LINK_MODE_SERVER:
+		if (link && link->is_client) {
+			LOGPCC(link, LOGL_NOTICE,
+			       "link mode changed 'client' -> 'server', closing active link\n");
+			cbc_cbsp_link_close(link);
+		}
+		/* Nothing to be done, cbc_cbsp_mgr->srv_link will accept() and
+		 * recreate the link */
+		OSMO_ASSERT(!peer->link.cbsp);
+		break;
+	case CBC_PEER_LINK_MODE_CLIENT:
+		if (link) {
+			if (link->is_client) {
+				/* nothing to be done, cli link already created */
+				break;
+			}
+			LOGPCC(link, LOGL_NOTICE,
+			       "link mode changed 'server' -> 'client', closing active link\n");
+			cbc_cbsp_link_close(link);
+		}
+		OSMO_ASSERT(!peer->link.cbsp);
+		link = cbc_cbsp_link_alloc(g_cbc->cbsp.mgr, peer);
+		peer->link.cbsp = link;
+		rc = cbc_cbsp_link_open_cli(link);
+		break;
+	}
+	return rc;
+}
+
+static int cbc_peer_apply_cfg_chg_sbcap(struct cbc_peer *peer)
+{
+	struct cbc_sbcap_link *link = peer->link.sbcap;
+	int rc = 0;
+
+	switch (peer->link_mode) {
+	case CBC_PEER_LINK_MODE_DISABLED:
+		if (link) {
+			LOGPSBCAPC(link, LOGL_NOTICE,
+				   "link mode changed to 'disabled', closing active link\n");
+			cbc_sbcap_link_close(link);
+		}
+		/* Nothing to be done, cbc_sbcap_mgr->srv_link will refuse
+		 * accepting() disabled peers. */
+		OSMO_ASSERT(!peer->link.sbcap);
+		break;
+	case CBC_PEER_LINK_MODE_SERVER:
+		if (link && link->is_client) {
+			LOGPSBCAPC(link, LOGL_NOTICE,
+				   "link mode changed 'client' -> 'server', closing active link\n");
+			cbc_sbcap_link_close(link);
+		}
+		/* Nothing to be done, cbc_sbcap_mgr->srv_link will accept() and
+		 * recreate the link */
+		OSMO_ASSERT(!peer->link.sbcap);
+		break;
+	case CBC_PEER_LINK_MODE_CLIENT:
+		if (link) {
+			if (link->is_client) {
+				/* nothing to be done, cli link already created */
+				break;
+			}
+			LOGPSBCAPC(link, LOGL_NOTICE,
+				   "link mode changed 'server' -> 'client', closing active link\n");
+			cbc_sbcap_link_close(link);
+		}
+		OSMO_ASSERT(!peer->link.sbcap);
+		link = cbc_sbcap_link_alloc(g_cbc->sbcap.mgr, peer);
+		peer->link.sbcap = link;
+		rc = cbc_sbcap_link_open_cli(link);
+		break;
+	}
+	return rc;
+}
+
+int cbc_peer_apply_cfg_chg(struct cbc_peer *peer)
+{
+	int rc = -ENOTSUP;
+
+	switch (peer->proto) {
+	case CBC_PEER_PROTO_CBSP:
+		rc = cbc_peer_apply_cfg_chg_cbsp(peer);
+		break;
+	case CBC_PEER_PROTO_SBcAP:
+		rc = cbc_peer_apply_cfg_chg_sbcap(peer);
+		break;
+	case CBC_PEER_PROTO_SABP:
+		break;
+	}
+	return rc;
 }

@@ -33,15 +33,20 @@ int cbc_sbcap_mgr_open_srv(struct cbc_sbcap_mgr *mgr);
 struct cbc_sbcap_link {
 	/* entry in osmo_sbcap_cbc.links */
 	struct llist_head list;
-	/* stream server connection for this link */
-	struct osmo_stream_srv *conn;
 	struct osmo_fsm_inst *fi;
 	struct cbc_peer *peer;
+	bool is_client;
+	union {
+		struct osmo_stream_srv *srv_conn;
+		struct osmo_stream_cli *cli_conn;
+		void *conn; /* used when we just care about the pointer */
+	};
 };
 
 struct cbc_sbcap_link *cbc_sbcap_link_alloc(struct cbc_sbcap_mgr *cbc, struct cbc_peer *peer);
 void cbc_sbcap_link_free(struct cbc_sbcap_link *link);
 const char *cbc_sbcap_link_name(const struct cbc_sbcap_link *link);
+int cbc_sbcap_link_open_cli(struct cbc_sbcap_link *link);
 void cbc_sbcap_link_tx(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu);
 void cbc_sbcap_link_close(struct cbc_sbcap_link *link);
 int cbc_sbcap_link_rx_cb(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu);

@@ -593,6 +593,19 @@ DEFUN_DEPRECATED(cfg_peer_proto, cfg_peer_proto_cmd,
 	return CMD_SUCCESS;
 }
 
+DEFUN_ATTR(cfg_peer_mode, cfg_peer_mode_cmd,
+	"mode (server|client|disabled)",
+	"Connect to peer as TCP(CBSP)/SCTP(SBc-AP) server or client\n"
+	"server: listen for inbound TCP (CBSP) / SCTP (SBc-AP) connections from a remote peer\n"
+	"client: establish outbound TCP (CBSP) / SCTP (SBc-AP) connection to a remote peer\n"
+	"Disable CBSP link\n",
+	CMD_ATTR_NODE_EXIT)
+{
+	struct cbc_peer *peer = (struct cbc_peer *) vty->index;
+	peer->link_mode = get_string_value(cbc_peer_link_mode_names, argv[0]);
+	return CMD_SUCCESS;
+}
+
 DEFUN(cfg_peer_remote_port, cfg_peer_remote_port_cmd,
 	"remote-port <0-65535>",
 	"Configure remote (TCP) port of peer\n"
@@ -677,6 +690,7 @@ static void write_one_peer(struct vty *vty, struct cbc_peer *peer)
 	unsigned int i;
 	vty_out(vty, " peer %s %s%s", get_value_string(cbc_peer_proto_name_vty, peer->proto),
 		peer->name, VTY_NEWLINE);
+	vty_out(vty, "  mode %s%s", cbc_peer_link_mode_name(peer->link_mode), VTY_NEWLINE);
 	if (peer->remote_port == -1)
 		vty_out(vty, "  no remote-port%s", VTY_NEWLINE);
 	else
@@ -729,6 +743,7 @@ void cbc_vty_init(void)
 	install_element(CBC_NODE, &cfg_cbc_no_peer_cmd);
 	install_node(&peer_node, NULL);
 	install_element(PEER_NODE, &cfg_peer_proto_cmd);
+	install_element(PEER_NODE, &cfg_peer_mode_cmd);
 	install_element(PEER_NODE, &cfg_peer_remote_port_cmd);
 	install_element(PEER_NODE, &cfg_peer_no_remote_port_cmd);
 	install_element(PEER_NODE, &cfg_peer_remote_ip_cmd);
