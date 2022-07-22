@@ -686,6 +686,8 @@ int rest_api_init(void *ctx, const char *bind_addr, uint16_t port)
 	struct osmo_sockaddr_str sastr;
 	int i;
 
+	LOGP(DREST, LOGL_INFO, "Main thread tid: %lu\n", pthread_self());
+
 #ifdef ULFIUS_MALLOC_NOT_BROKEN
 	/* See https://github.com/babelouest/ulfius/issues/63 */
 	g_tall_rest = ctx;

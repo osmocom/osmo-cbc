@@ -10,6 +10,7 @@ AM_LDFLAGS=$(COVERAGE_LDFLAGS)
 bin_PROGRAMS = osmo-cbc
 
 osmo_cbc_SOURCES = \
+	cbc_data.c \
 	cbc_main.c \
 	cbc_message.c \
 	cbc_peer.c \

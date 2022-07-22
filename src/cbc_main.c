@@ -45,9 +45,6 @@
 #include <osmocom/vty/misc.h>
 
 #include <osmocom/cbc/debug.h>
-#include <osmocom/cbc/rest_it_op.h>
-#include <osmocom/cbc/cbsp_link.h>
-#include <osmocom/cbc/sbcap_link.h>
 #include <osmocom/cbc/cbc_data.h>
 #include <osmocom/cbc/cbc_vty.h>
 
@@ -55,6 +52,13 @@ static void *tall_cbc_ctx;
 struct cbc *g_cbc;
 
 static const struct log_info_cat log_info_cat[] = {
+	[DMAIN] = {
+		.name = "DMAIN",
+		.description = "Main logging category",
+		.color = "\033[1;30m",
+		.enabled = 1,
+		.loglevel = LOGL_NOTICE,
+	},
 	[DCBSP] = {
 		.name = "DCBSP",
 		.description = "Cell Broadcast Service Protocol (CBC-BSC)",
@@ -234,27 +238,16 @@ static void signal_handler(int signal)
 
 int main(int argc, char **argv)
 {
-	void *tall_rest_ctx;
 	int rc;
 
 	tall_cbc_ctx = talloc_named_const(NULL, 1, "osmo-cbc");
-	tall_rest_ctx = talloc_named_const(tall_cbc_ctx, 0, "REST");
 	msgb_talloc_ctx_init(tall_cbc_ctx, 0);
 	osmo_init_logging2(tall_cbc_ctx, &log_info);
 	log_enable_multithread();
 	osmo_stats_init(tall_cbc_ctx);
 	vty_init(&vty_info);
 
-	g_cbc = talloc_zero(tall_cbc_ctx, struct cbc);
-	INIT_LLIST_HEAD(&g_cbc->peers);
-	INIT_LLIST_HEAD(&g_cbc->messages);
-	INIT_LLIST_HEAD(&g_cbc->expired_messages);
-	g_cbc->config.cbsp.local_host = talloc_strdup(g_cbc, "127.0.0.1");
-	g_cbc->config.cbsp.local_port = CBSP_TCP_PORT;
-	/* g_cbc->config.sbcap local_host set up during VTY (and vty_go_parent) */
-	g_cbc->config.sbcap.local_port = SBcAP_SCTP_PORT;
-	g_cbc->config.ecbe.local_host = talloc_strdup(g_cbc, "127.0.0.1");
-	g_cbc->config.ecbe.local_port = 12345;
+	g_cbc = cbc_alloc(tall_cbc_ctx);
 
 	cbc_vty_init();
 
@@ -276,26 +269,9 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	if (!(g_cbc->cbsp.mgr = cbc_cbsp_mgr_create(tall_cbc_ctx))) {
-		perror("Error binding CBSP port");
+	rc = cbc_start(g_cbc);
+	if (rc < 0)
 		exit(1);
-	}
-
-	if (!(g_cbc->sbcap.mgr = cbc_sbcap_mgr_create(tall_cbc_ctx))) {
-		perror("Error binding SBc-AP port\n");
-		exit(1);
-	}
-
-	rc = rest_api_init(tall_rest_ctx, g_cbc->config.ecbe.local_host, g_cbc->config.ecbe.local_port);
-	if (rc < 0) {
-		perror("Error binding ECBE port");
-		exit(1);
-	}
-
-	LOGP(DREST, LOGL_INFO, "Main thread tid: %lu\n", pthread_self());
-	g_cbc->it_q.rest2main = osmo_it_q_alloc(g_cbc, "rest2main", 10, rest2main_read_cb, NULL);
-	OSMO_ASSERT(g_cbc->it_q.rest2main);
-	osmo_fd_register(&g_cbc->it_q.rest2main->event_ofd);
 
 	signal(SIGUSR1, &signal_handler);
 	signal(SIGUSR2, &signal_handler);

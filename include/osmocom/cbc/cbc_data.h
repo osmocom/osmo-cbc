@@ -79,6 +79,8 @@ struct cbc {
 };
 
 extern struct cbc *g_cbc;
+struct cbc *cbc_alloc(void *ctx);
+int cbc_start(struct cbc *cbc);
 
 /* rest_api.c */
 int rest_api_init(void *ctx, const char *bind_addr, uint16_t port);
