@@ -24,7 +24,8 @@ struct cbc_cbsp_mgr {
 	int (*rx_cb)(struct cbc_cbsp_link *link, struct osmo_cbsp_decoded *dec);
 };
 
-struct cbc_cbsp_mgr *cbc_cbsp_mgr_create(void *ctx);
+struct cbc_cbsp_mgr *cbc_cbsp_mgr_alloc(void *ctx);
+int cbc_cbsp_mgr_open_srv(struct cbc_cbsp_mgr *mgr);
 
 /* a CBSP link with a single (remote) peer connected to us */
 struct cbc_cbsp_link {

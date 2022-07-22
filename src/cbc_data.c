@@ -54,6 +54,12 @@ struct cbc *cbc_alloc(void *ctx)
 	OSMO_ASSERT(cbc->it_q.rest2main);
 	osmo_fd_register(&cbc->it_q.rest2main->event_ofd);
 
+	cbc->cbsp.mgr = cbc_cbsp_mgr_alloc(cbc);
+	OSMO_ASSERT(cbc->cbsp.mgr);
+
+	cbc->sbcap.mgr = cbc_sbcap_mgr_alloc(cbc);
+	OSMO_ASSERT(cbc->sbcap.mgr);
+
 	return cbc;
 }
 
@@ -64,14 +70,14 @@ int cbc_start(struct cbc *cbc)
 
 	tall_rest_ctx = talloc_named_const(cbc, 0, "REST");
 
-	if (!(cbc->cbsp.mgr = cbc_cbsp_mgr_create(cbc))) {
+	if ((rc = cbc_cbsp_mgr_open_srv(cbc->cbsp.mgr)) < 0) {
 		LOGP(DMAIN, LOGL_ERROR, "Error binding CBSP port\n");
-		return -EIO;
+		return rc;
 	}
 
-	if (!(cbc->sbcap.mgr = cbc_sbcap_mgr_create(cbc))) {
+	if ((rc = cbc_sbcap_mgr_open_srv(cbc->sbcap.mgr)) < 0) {
 		LOGP(DMAIN, LOGL_ERROR, "Error binding SBc-AP port\n");
-		return -EIO;
+		return rc;
 	}
 
 	rc = rest_api_init(tall_rest_ctx, cbc->config.ecbe.local_host, cbc->config.ecbe.local_port);

@@ -255,31 +255,46 @@ void cbc_sbcap_link_close(struct cbc_sbcap_link *link)
 		osmo_stream_srv_destroy(link->conn);
 }
 
-/* initialize the CBC-side SBc-AP server */
-struct cbc_sbcap_mgr *cbc_sbcap_mgr_create(void *ctx)
+/*
+ * CBSP Manager
+ */
+struct cbc_sbcap_mgr *cbc_sbcap_mgr_alloc(void *ctx)
 {
-	struct cbc_sbcap_mgr *cbc = talloc_zero(ctx, struct cbc_sbcap_mgr);
-	int rc;
+	struct cbc_sbcap_mgr *mgr;
+
+	mgr = talloc_zero(ctx, struct cbc_sbcap_mgr);
+	OSMO_ASSERT(mgr);
+	mgr->rx_cb = cbc_sbcap_link_rx_cb;
+	INIT_LLIST_HEAD(&mgr->links);
+
+	return mgr;
+}
+
+/* initialize the CBC-side SBc-AP server */
+int cbc_sbcap_mgr_open_srv(struct cbc_sbcap_mgr *mgr)
+{
 	int bind_port = g_cbc->config.sbcap.local_port;
+	struct osmo_stream_srv_link *srv_link;
+	int rc;
 
-	if (bind_port == -1)
-		bind_port = SBcAP_SCTP_PORT;
-
-	OSMO_ASSERT(cbc);
-	cbc->rx_cb = cbc_sbcap_link_rx_cb;
-	INIT_LLIST_HEAD(&cbc->links);
-	cbc->srv_link = osmo_stream_srv_link_create(cbc);
-	osmo_stream_srv_link_set_proto(cbc->srv_link, IPPROTO_SCTP);
-	osmo_stream_srv_link_set_data(cbc->srv_link, cbc);
-	osmo_stream_srv_link_set_nodelay(cbc->srv_link, true);
-	osmo_stream_srv_link_set_port(cbc->srv_link, bind_port);
-	osmo_stream_srv_link_set_addrs(cbc->srv_link, (const char **)g_cbc->config.sbcap.local_host,
+	srv_link = osmo_stream_srv_link_create(mgr);
+	osmo_stream_srv_link_set_proto(srv_link, IPPROTO_SCTP);
+	osmo_stream_srv_link_set_data(srv_link, mgr);
+	osmo_stream_srv_link_set_nodelay(srv_link, true);
+	osmo_stream_srv_link_set_port(srv_link, bind_port);
+	osmo_stream_srv_link_set_addrs(srv_link,
+				       (const char **)g_cbc->config.sbcap.local_host,
 				       g_cbc->config.sbcap.num_local_host);
-	osmo_stream_srv_link_set_accept_cb(cbc->srv_link, sbcap_cbc_accept_cb);
-	rc = osmo_stream_srv_link_open(cbc->srv_link);
-	OSMO_ASSERT(rc == 0);
+	osmo_stream_srv_link_set_accept_cb(srv_link, sbcap_cbc_accept_cb);
+	rc = osmo_stream_srv_link_open(srv_link);
+	if (rc < 0) {
+		osmo_stream_srv_link_destroy(srv_link);
+		talloc_free(mgr);
+		return -EIO;
+	}
+	mgr->srv_link = srv_link;
 	LOGP(DSBcAP, LOGL_NOTICE, "Listening for SBc-AP at %s\n",
-		osmo_stream_srv_link_get_sockname(cbc->srv_link));
+		osmo_stream_srv_link_get_sockname(mgr->srv_link));
 
-	return cbc;
+	return 0;
 }

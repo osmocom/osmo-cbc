@@ -26,7 +26,8 @@ struct cbc_sbcap_mgr {
 	/* receive call-back; called for every received message */
 	int (*rx_cb)(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu);
 };
-struct cbc_sbcap_mgr *cbc_sbcap_mgr_create(void *ctx);
+struct cbc_sbcap_mgr *cbc_sbcap_mgr_alloc(void *ctx);
+int cbc_sbcap_mgr_open_srv(struct cbc_sbcap_mgr *mgr);
 
 /* an SBc-AP link with a single (remote) peer connected to us */
 struct cbc_sbcap_link {

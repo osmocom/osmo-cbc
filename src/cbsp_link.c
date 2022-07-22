@@ -225,35 +225,44 @@ void cbc_cbsp_link_close(struct cbc_cbsp_link *link)
 		osmo_stream_srv_destroy(link->conn);
 }
 
-/* initialize the CBC-side CBSP server */
-struct cbc_cbsp_mgr *cbc_cbsp_mgr_create(void *ctx)
+/*
+ * CBSP Manager
+ */
+struct cbc_cbsp_mgr *cbc_cbsp_mgr_alloc(void *ctx)
 {
-	struct cbc_cbsp_mgr *cbc = talloc_zero(ctx, struct cbc_cbsp_mgr);
-	int rc;
+	struct cbc_cbsp_mgr *mgr;
+
+	mgr = talloc_zero(ctx, struct cbc_cbsp_mgr);
+	OSMO_ASSERT(mgr);
+	mgr->rx_cb = cbc_cbsp_link_rx_cb;
+	INIT_LLIST_HEAD(&mgr->links);
+
+	return mgr;
+}
+
+/* initialize the CBC-side CBSP server */
+int cbc_cbsp_mgr_open_srv(struct cbc_cbsp_mgr *mgr)
+{
 	char *bind_ip = g_cbc->config.cbsp.local_host;
 	int bind_port = g_cbc->config.cbsp.local_port;
+	struct osmo_stream_srv_link *srv_link;
+	int rc;
 
-	if (bind_port == -1)
-		bind_port = CBSP_TCP_PORT;
-
-	OSMO_ASSERT(cbc);
-	cbc->rx_cb = cbc_cbsp_link_rx_cb;
-	INIT_LLIST_HEAD(&cbc->links);
-	cbc->srv_link = osmo_stream_srv_link_create(cbc);
-	osmo_stream_srv_link_set_data(cbc->srv_link, cbc);
-	osmo_stream_srv_link_set_nodelay(cbc->srv_link, true);
-	osmo_stream_srv_link_set_port(cbc->srv_link, bind_port);
+	srv_link = osmo_stream_srv_link_create(mgr);
+	osmo_stream_srv_link_set_data(srv_link, mgr);
+	osmo_stream_srv_link_set_nodelay(srv_link, true);
+	osmo_stream_srv_link_set_port(srv_link, bind_port);
 	if (bind_ip)
-		osmo_stream_srv_link_set_addr(cbc->srv_link, bind_ip);
-	osmo_stream_srv_link_set_accept_cb(cbc->srv_link, cbsp_cbc_accept_cb);
-	rc = osmo_stream_srv_link_open(cbc->srv_link);
+		osmo_stream_srv_link_set_addr(srv_link, bind_ip);
+	osmo_stream_srv_link_set_accept_cb(srv_link, cbsp_cbc_accept_cb);
+	rc = osmo_stream_srv_link_open(srv_link);
 	if (rc < 0) {
-		osmo_stream_srv_link_destroy(cbc->srv_link);
-		talloc_free(cbc);
-		return NULL;
+		osmo_stream_srv_link_destroy(srv_link);
+		talloc_free(mgr);
+		return -EIO;
 	}
+	mgr->srv_link = srv_link;
 	LOGP(DCBSP, LOGL_NOTICE, "Listening for CBSP at %s\n",
-		osmo_stream_srv_link_get_sockname(cbc->srv_link));
-
-	return cbc;
+		osmo_stream_srv_link_get_sockname(mgr->srv_link));
+	return 0;
 }
