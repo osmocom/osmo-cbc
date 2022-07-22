@@ -114,7 +114,7 @@ def main(argv):
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-H", "--host", help="Host to connect to", default="localhost")
-    parser.add_argument("-p", "--port", help="TCP port to connect to", default=12345)
+    parser.add_argument("-p", "--port", help="TCP port to connect to", type=int, default=12345)
     parser.add_argument("-v", "--verbose", help="increase output verbosity", action='count', default=0)
 
     subparsers = parser.add_subparsers()
