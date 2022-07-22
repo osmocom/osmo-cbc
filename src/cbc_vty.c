@@ -44,6 +44,10 @@ static const struct value_string cbc_peer_proto_name_vty[] = {
 	{ 0, NULL }
 };
 
+#define CBC_PEER_PROTO_NAME_VTY_CMD "(cbsp|sbcap)"
+#define CBC_PEER_PROTO_NAME_VTY_STR "Cell Broadcast Service Protocol (GSM)\n" \
+				     "SBc Application Part (LTE)\n"
+
 static void dump_one_cbc_peer(struct vty *vty, const struct cbc_peer *peer)
 {
 	const char *state = "<disconnected>";
@@ -519,16 +523,41 @@ DEFUN(cfg_sbcap_local_port, cfg_sbcap_local_port_cmd,
 
 /* PEER */
 
-DEFUN(cfg_cbc_peer, cfg_cbc_peer_cmd,
+DEFUN_DEPRECATED(cfg_cbc_peer_old, cfg_cbc_peer_old_cmd,
 	"peer NAME",
 	"Remote Peer\n"
 	"Name identifying the peer\n")
 {
 	struct cbc_peer *peer;
 
+	vty_out(vty, "%% This function is deprecated, use "
+		"'peer " CBC_PEER_PROTO_NAME_VTY_CMD " NAME' instead. "
+		"Assuming 'cbsp' for peers being created%s", VTY_NEWLINE);
+
 	peer = cbc_peer_by_name(argv[0]);
 	if (!peer)
 		peer = cbc_peer_create(argv[0], CBC_PEER_PROTO_CBSP);
+	if (!peer)
+		return CMD_WARNING;
+
+	vty->node = PEER_NODE;
+	vty->index = peer;
+	return CMD_SUCCESS;
+}
+
+DEFUN(cfg_cbc_peer, cfg_cbc_peer_cmd,
+	"peer " CBC_PEER_PROTO_NAME_VTY_CMD " NAME",
+	"Remote Peer\n"
+	CBC_PEER_PROTO_NAME_VTY_STR
+	"Name identifying the peer\n")
+{
+	struct cbc_peer *peer;
+	enum cbc_peer_protocol proto;
+
+	proto = get_string_value(cbc_peer_proto_name_vty, argv[0]);
+	peer = cbc_peer_by_name(argv[1]);
+	if (!peer)
+		peer = cbc_peer_create(argv[1], proto);
 	if (!peer)
 		return CMD_WARNING;
 
@@ -554,13 +583,13 @@ DEFUN(cfg_cbc_no_peer, cfg_cbc_no_peer_cmd,
 }
 
 
-DEFUN(cfg_peer_proto, cfg_peer_proto_cmd,
-	"protocol (cbsp|sbcap)",
+DEFUN_DEPRECATED(cfg_peer_proto, cfg_peer_proto_cmd,
+	"protocol " CBC_PEER_PROTO_NAME_VTY_CMD,
 	"Configure Protocol of Peer\n"
-	"Cell Broadcast Service Protocol (GSM)\n")
+	CBC_PEER_PROTO_NAME_VTY_STR)
 {
-	struct cbc_peer *peer = (struct cbc_peer *) vty->index;
-	peer->proto = get_string_value(cbc_peer_proto_name_vty, argv[0]);
+	vty_out(vty, "%% This function is deprecated and does nothing, use "
+		"'peer " CBC_PEER_PROTO_NAME_VTY_CMD " NAME' instead%s", VTY_NEWLINE);
 	return CMD_SUCCESS;
 }
 
@@ -646,9 +675,8 @@ DEFUN(cfg_peer_no_remote_ip, cfg_peer_no_remote_ip_cmd,
 static void write_one_peer(struct vty *vty, struct cbc_peer *peer)
 {
 	unsigned int i;
-	vty_out(vty, " peer %s%s", peer->name, VTY_NEWLINE);
-	vty_out(vty, "  protocol %s%s",
-		get_value_string(cbc_peer_proto_name_vty, peer->proto), VTY_NEWLINE);
+	vty_out(vty, " peer %s %s%s", get_value_string(cbc_peer_proto_name_vty, peer->proto),
+		peer->name, VTY_NEWLINE);
 	if (peer->remote_port == -1)
 		vty_out(vty, "  no remote-port%s", VTY_NEWLINE);
 	else
@@ -696,6 +724,7 @@ void cbc_vty_init(void)
 	install_element(SBcAP_NODE, &cfg_sbcap_no_local_ip_cmd);
 	install_element(SBcAP_NODE, &cfg_sbcap_local_port_cmd);
 
+	install_element(CBC_NODE, &cfg_cbc_peer_old_cmd);
 	install_element(CBC_NODE, &cfg_cbc_peer_cmd);
 	install_element(CBC_NODE, &cfg_cbc_no_peer_cmd);
 	install_node(&peer_node, NULL);
