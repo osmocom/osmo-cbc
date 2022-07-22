@@ -14,7 +14,7 @@ void test_asn1c_enc(void)
 	struct msgb *msg;
 	SBcAP_SBC_AP_PDU_t *pdu;
 	SBcAP_Write_Replace_Warning_Request_IEs_t *ie;
-	uint16_t ie_warning_type = 0x01;
+	uint8_t ie_warning_type[2] = {(0x01 << 1) | 0x01, 0x80};
 	uint8_t ie_dcs = 2;
 	uint8_t ie_warning_sec_info[50] = {0x30, 0x40, 0x12, 0x23, 0x45};
 	uint8_t ie_warning_msg_content[SBCAP_WARN_MSG_CONTENTS_IE_MAX_LEN] = {0x30, 0x40, 0x12, 0x23, 0x45};
@@ -68,8 +68,6 @@ void test_asn1c_enc(void)
 		SBcAP_Write_Replace_Warning_Request_IEs__value_PR_Warning_Type);
 	ie->value.choice.Warning_Type.buf = MALLOC(sizeof(ie_warning_type));
 	ie->value.choice.Warning_Type.size = sizeof(ie_warning_type);
-	ie_warning_type |= 0x0100;
-	ie_warning_type |= 0x0080;
 	memcpy(ie->value.choice.Warning_Type.buf, &ie_warning_type, sizeof(ie_warning_type));
 	ASN_SEQUENCE_ADD(as_pdu, ie);
 

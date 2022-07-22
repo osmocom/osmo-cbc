@@ -84,7 +84,6 @@ SBcAP_SBC_AP_PDU_t *cbcmsg_to_sbcap(void *ctx, const struct cbc_message *cbcmsg)
 	const struct smscb_message *smscb = &cbcmsg->msg;
 	SBcAP_SBC_AP_PDU_t *pdu;
 	SBcAP_Write_Replace_Warning_Request_IEs_t *ie;
-	uint16_t ie_warning_type;
 	unsigned int i;
 	uint8_t *ptr;
 #if 0
@@ -150,17 +149,15 @@ SBcAP_SBC_AP_PDU_t *cbcmsg_to_sbcap(void *ctx, const struct cbc_message *cbcmsg)
 
 	if (smscb->is_etws) {
 		/* Warning Type, 3GPP TS 36.413 sec 9.2.1.50: */
-		ie_warning_type = smscb->etws.warning_type;
-		if (smscb->etws.user_alert)
-			ie_warning_type |= 0x0100;
-		if (smscb->etws.popup_on_display)
-			ie_warning_type |= 0x0080;
 		/* static const long asn_VAL_8_SBcAP_id_Warning_Type = 18; */
 		ie = sbcap_alloc_Write_Replace_Warning_Request_IE(18, SBcAP_Criticality_ignore,
 			SBcAP_Write_Replace_Warning_Request_IEs__value_PR_Warning_Type);
-		ie->value.choice.Warning_Type.buf = MALLOC(sizeof(ie_warning_type));
-		ie->value.choice.Warning_Type.size = sizeof(ie_warning_type);
-		memcpy(ie->value.choice.Warning_Type.buf, &ie_warning_type, sizeof(ie_warning_type));
+		ie->value.choice.Warning_Type.buf = MALLOC(2);
+		ie->value.choice.Warning_Type.size = 2;
+		ie->value.choice.Warning_Type.buf[0] = ((smscb->etws.warning_type & 0x7f) << 1);
+		if (smscb->etws.user_alert)
+			ie->value.choice.Warning_Type.buf[0] |= 0x01;
+		ie->value.choice.Warning_Type.buf[1] = (smscb->etws.popup_on_display) ? 0x80 : 0x0;
 		ASN_SEQUENCE_ADD(as_pdu, ie);
 
 		/* Warning Security Information, 3GPP TS 36.413 sec 9.2.1.51: */
