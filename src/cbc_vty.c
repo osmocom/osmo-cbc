@@ -254,7 +254,7 @@ static void dump_one_etws_msg(struct vty *vty, const struct cbc_message *cbc_msg
 
 	OSMO_ASSERT(smscb->is_etws);
 
-	vty_out(vty, "| %04X| %04X|%-20s|%-13s|  %-4u|%c|      %04d|%s",
+	vty_out(vty, "| %04X| %04X|%-20s|%-13s|  %-4u|%c|         %04d|%s",
 		smscb->message_id, smscb->serial_nr, cbc_msg->cbe_name,
 		get_value_string(cbsp_category_names, cbc_msg->priority), cbc_msg->rep_period,
 		cbc_msg->extended_cbch ? 'E' : 'N', smscb->etws.warning_type,
