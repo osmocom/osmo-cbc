@@ -138,6 +138,27 @@ DEFUN(show_messages_cbs, show_messages_cbs_cmd,
 	return CMD_SUCCESS;
 }
 
+DEFUN(delete_message_expired, delete_message_expired_cmd,
+	"delete message expired id <0-65535>",
+	"Delete message from the local expired list\n"
+	"Delete message from the local expired list\n"
+	"Delete message from the local expired list\n"
+	"Message ID\n" "Message ID\n")
+{
+	struct cbc_message *cbc_msg;
+	uint16_t msgid = atoi(argv[0]);
+	cbc_msg = cbc_message_expired_by_id(msgid);
+	if (!cbc_msg) {
+		if (cbc_message_by_id(msgid))
+			vty_out(vty, "Message ID %s has not yet expired!%s", argv[0], VTY_NEWLINE);
+		else
+			vty_out(vty, "Unknown expired Message ID %s%s", argv[0], VTY_NEWLINE);
+		return CMD_WARNING;
+	}
+	cbc_message_free(cbc_msg);
+	return CMD_SUCCESS;
+}
+
 static const char *cbc_cell_id2str(const struct cbc_cell_id *cid)
 {
 	static char buf[256];
@@ -720,6 +741,7 @@ void cbc_vty_init(void)
 	install_element_ve(&show_message_cbs_cmd);
 	install_element_ve(&show_messages_cbs_cmd);
 	install_element_ve(&show_messages_etws_cmd);
+	install_element_ve(&delete_message_expired_cmd);
 
 	install_element(CONFIG_NODE, &cfg_cbc_cmd);
 	install_node(&cbc_node, config_write_cbc);

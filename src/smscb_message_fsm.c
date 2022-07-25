@@ -384,6 +384,11 @@ struct cbc_message *cbc_message_alloc(void *ctx, const struct cbc_message *orig_
 	return smscb;
 }
 
+void cbc_message_free(struct cbc_message *cbcmsg)
+{
+	osmo_fsm_inst_term(cbcmsg->fi, OSMO_FSM_TERM_REGULAR, NULL);
+}
+
 __attribute__((constructor)) void smscb_fsm_constructor(void)
 {
 	OSMO_ASSERT(osmo_fsm_register(&smscb_fsm) == 0);

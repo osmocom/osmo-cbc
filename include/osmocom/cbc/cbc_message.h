@@ -99,6 +99,7 @@ struct cbc_message {
 };
 
 struct cbc_message *cbc_message_alloc(void *ctx, const struct cbc_message *cbcmsg);
+void cbc_message_free(struct cbc_message *cbcmsg);
 int cbc_message_new(const struct cbc_message *cbcmsg, struct rest_it_op *op);
 void cbc_message_delete(struct cbc_message *cbcmsg, struct rest_it_op *op);
 struct cbc_message *cbc_message_by_id(uint16_t message_id);
