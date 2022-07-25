@@ -35,10 +35,13 @@
 #include <osmocom/cbc/sbcap_link.h>
 #include <osmocom/cbc/debug.h>
 
-/* 3GPP TS 36.413 9.2.1.53 */
+/* 3GPP TS 36.413 9.2.1.53, 3GPP TS 23.041 9.3.35 */
 #define SBCAP_WARN_MSG_CONTENTS_IE_MAX_LEN 9600
 
 #if 0
+/* Warning Area List
+ * 3GPP TS 36.413 9.2.1.46, 3GPP TS 23.041 9.3.30
+ */
 static void msgb_put_sbcap_cell_list(const struct cbc_message *cbcmsg, void *void_li)
 {
 	static uint8_t ie_plm_id0[] = {0x05, 0xf5, 0x32};
@@ -78,7 +81,9 @@ static void msgb_put_sbcap_cell_list(const struct cbc_message *cbcmsg, void *voi
 }
 #endif
 
-/* generate a SBc-AP WRITE-REPLACE WARNING REQUEST from our internal representation */
+/* generate a SBc-AP WRITE-REPLACE WARNING REQUEST from our internal representation.
+ * 3GPP TS 36.413 9.1.13.1
+ */
 SBcAP_SBC_AP_PDU_t *cbcmsg_to_sbcap(void *ctx, const struct cbc_message *cbcmsg)
 {
 	const struct smscb_message *smscb = &cbcmsg->msg;
@@ -100,7 +105,9 @@ SBcAP_SBC_AP_PDU_t *cbcmsg_to_sbcap(void *ctx, const struct cbc_message *cbcmsg)
 
 	A_SEQUENCE_OF(void) *as_pdu = (void *)&pdu->choice.initiatingMessage.value.choice.Write_Replace_Warning_Request.protocolIEs.list;
 
-	/* static const long asn_VAL_1_SBcAP_id_Message_Identifier = 5; */
+	/* Message Identifier:
+	 * 3GPP TS 36.413 9.2.1.44, 3GPP TS 23.041 9.4.1.3.6
+	 * static const long asn_VAL_1_SBcAP_id_Message_Identifier = 5; */
 	ie = sbcap_alloc_Write_Replace_Warning_Request_IE(5, SBcAP_Criticality_reject,
 		SBcAP_Write_Replace_Warning_Request_IEs__value_PR_Message_Identifier);
 	ie->value.choice.Message_Identifier.buf = MALLOC(sizeof(uint16_t));
@@ -109,7 +116,9 @@ SBcAP_SBC_AP_PDU_t *cbcmsg_to_sbcap(void *ctx, const struct cbc_message *cbcmsg)
 	osmo_store16be(smscb->message_id, ie->value.choice.Message_Identifier.buf);
 	ASN_SEQUENCE_ADD(as_pdu, ie);
 
-	/* static const long asn_VAL_2_SBcAP_id_Serial_Number = 11; */
+	/* Serial Number
+	 * 3GPP TS 36.413 9.2.1.45, 3GPP TS 23.041 9.4.1.2.1
+	 * static const long asn_VAL_2_SBcAP_id_Serial_Number = 11; */
 	ie = sbcap_alloc_Write_Replace_Warning_Request_IE(11, SBcAP_Criticality_reject,
 		SBcAP_Write_Replace_Warning_Request_IEs__value_PR_Serial_Number);
 	ie->value.choice.Serial_Number.buf = MALLOC(sizeof(uint16_t));
@@ -123,7 +132,9 @@ SBcAP_SBC_AP_PDU_t *cbcmsg_to_sbcap(void *ctx, const struct cbc_message *cbcmsg)
 		break; /* Nothing to be done :*/
 #if 0
 	case CBC_MSG_SCOPE_EUTRAN_CGI:
-		/* static const long asn_VAL_25_SBcAP_id_Warning_Area_List = 15; */
+		/* Warning Area List
+		 * 3GPP TS 36.413 9.2.1.46, 3GPP TS 23.041 9.3.30
+		 * static const long asn_VAL_25_SBcAP_id_Warning_Area_List = 15; */
 		ie = sbcap_alloc_Write_Replace_Warning_Request_IE(15, SBcAP_Criticality_ignore,
 			SBcAP_Write_Replace_Warning_Request_IEs__value_PR_Warning_Area_List);
 		ASN_SEQUENCE_ADD(as_pdu, ie);
@@ -135,21 +146,26 @@ SBcAP_SBC_AP_PDU_t *cbcmsg_to_sbcap(void *ctx, const struct cbc_message *cbcmsg)
 		OSMO_ASSERT(0);
 	}
 
-	/* static const long asn_VAL_5_SBcAP_id_Repetition_Period = 10; */
+	/* Repetition Period
+	 * 3GPP TS 36.413 9.2.1.48, 3GPP TS 23.041 9.3.8
+	 * static const long asn_VAL_5_SBcAP_id_Repetition_Period = 10; */
 	ie = sbcap_alloc_Write_Replace_Warning_Request_IE(10, SBcAP_Criticality_reject,
 		SBcAP_Write_Replace_Warning_Request_IEs__value_PR_Repetition_Period);
 	ie->value.choice.Repetition_Period = cbcmsg->rep_period; /*seconds */
 	ASN_SEQUENCE_ADD(as_pdu, ie);
 
-	/* static const long asn_VAL_7_SBcAP_id_Number_of_Broadcasts_Requested = 7; */
+	/* Number of Broadcasts Requested
+	 * 3GPP TS 36.413 9.2.1.49, 3GPP TS 23.041 9.3.9
+	 * static const long asn_VAL_7_SBcAP_id_Number_of_Broadcasts_Requested = 7; */
 	ie = sbcap_alloc_Write_Replace_Warning_Request_IE(7, SBcAP_Criticality_reject,
 		SBcAP_Write_Replace_Warning_Request_IEs__value_PR_Number_of_Broadcasts_Requested);
 	ie->value.choice.Number_of_Broadcasts_Requested = cbcmsg->num_bcast;
 	ASN_SEQUENCE_ADD(as_pdu, ie);
 
 	if (smscb->is_etws) {
-		/* Warning Type, 3GPP TS 36.413 sec 9.2.1.50: */
-		/* static const long asn_VAL_8_SBcAP_id_Warning_Type = 18; */
+		/* Warning Type
+		 * 3GPP TS 36.413 sec 9.2.1.50, 3GPP TS 23.041 9.3.24
+		 * static const long asn_VAL_8_SBcAP_id_Warning_Type = 18; */
 		ie = sbcap_alloc_Write_Replace_Warning_Request_IE(18, SBcAP_Criticality_ignore,
 			SBcAP_Write_Replace_Warning_Request_IEs__value_PR_Warning_Type);
 		ie->value.choice.Warning_Type.buf = MALLOC(2);
@@ -160,8 +176,9 @@ SBcAP_SBC_AP_PDU_t *cbcmsg_to_sbcap(void *ctx, const struct cbc_message *cbcmsg)
 		ie->value.choice.Warning_Type.buf[1] = (smscb->etws.popup_on_display) ? 0x80 : 0x0;
 		ASN_SEQUENCE_ADD(as_pdu, ie);
 
-		/* Warning Security Information, 3GPP TS 36.413 sec 9.2.1.51: */
-		/*static const long asn_VAL_9_SBcAP_id_Warning_Security_Information = 17 */
+		/* Warning Security Information
+		 * 3GPP TS 36.413 sec 9.2.1.51, 3GPP TS 23.041 9.3.25
+		 * static const long asn_VAL_9_SBcAP_id_Warning_Security_Information = 17 */
 		ie = sbcap_alloc_Write_Replace_Warning_Request_IE(17, SBcAP_Criticality_ignore,
 			SBcAP_Write_Replace_Warning_Request_IEs__value_PR_Warning_Security_Information);
 		ie->value.choice.Warning_Security_Information.buf = MALLOC(sizeof(smscb->etws.warning_sec_info));
@@ -171,7 +188,9 @@ SBcAP_SBC_AP_PDU_t *cbcmsg_to_sbcap(void *ctx, const struct cbc_message *cbcmsg)
 		ASN_SEQUENCE_ADD(as_pdu, ie);
 
 	} else {
-		/* static const long asn_VAL_10_SBcAP_id_Data_Coding_Scheme = 3; */
+		/* Data Coding Scheme
+		 * 3GPP TS 36.413 9.2.1.52, 3GPP TS 23.041 9.4.1.2.3
+		 * static const long asn_VAL_10_SBcAP_id_Data_Coding_Scheme = 3; */
 		ie = sbcap_alloc_Write_Replace_Warning_Request_IE(3, SBcAP_Criticality_ignore,
 			SBcAP_Write_Replace_Warning_Request_IEs__value_PR_Data_Coding_Scheme);
 		ie->value.choice.Data_Coding_Scheme.buf = MALLOC(1);
@@ -180,8 +199,9 @@ SBcAP_SBC_AP_PDU_t *cbcmsg_to_sbcap(void *ctx, const struct cbc_message *cbcmsg)
 		*ie->value.choice.Data_Coding_Scheme.buf = smscb->cbs.dcs;
 		ASN_SEQUENCE_ADD(as_pdu, ie);
 
-		/* 3GPP TS 36.413 9.2.1.53 Warning Message Contents. Encoded as in S1AP. */
-		/* static const long asn_VAL_11_SBcAP_id_Warning_Message_Content = 16; */
+		/* Warning Message Contents
+		 * 3GPP TS 36.413 9.2.1.53, 3GPP TS 23.041 9.3.35
+		 * static const long asn_VAL_11_SBcAP_id_Warning_Message_Content = 16; */
 		ie = sbcap_alloc_Write_Replace_Warning_Request_IE(16, SBcAP_Criticality_ignore,
 			SBcAP_Write_Replace_Warning_Request_IEs__value_PR_Warning_Message_Content);
 		ie->value.choice.Warning_Message_Content.buf = MALLOC(1 + smscb->cbs.num_pages * (SMSCB_RAW_PAGE_LEN+1));
@@ -228,7 +248,9 @@ SBcAP_SBC_AP_PDU_t *sbcap_gen_stop_warning_req(void *ctx, const struct cbc_messa
 
 	A_SEQUENCE_OF(void) *as_pdu = (void *)&pdu->choice.initiatingMessage.value.choice.Stop_Warning_Request.protocolIEs.list;
 
-	/* static const long asn_VAL_1_SBcAP_id_Message_Identifier = 5; */
+	/* Message Identifier:
+	 * 3GPP TS 36.413 9.2.1.44, 3GPP TS 23.041 9.4.1.3.6
+	 * static const long asn_VAL_1_SBcAP_id_Message_Identifier = 5; */
 	ie = sbcap_alloc_Stop_Warning_Request_IE(5, SBcAP_Criticality_reject,
 		SBcAP_Write_Replace_Warning_Request_IEs__value_PR_Message_Identifier);
 	ie->value.choice.Message_Identifier.buf = MALLOC(sizeof(uint16_t));
@@ -237,7 +259,9 @@ SBcAP_SBC_AP_PDU_t *sbcap_gen_stop_warning_req(void *ctx, const struct cbc_messa
 	osmo_store16be(smscb->message_id, ie->value.choice.Message_Identifier.buf);
 	ASN_SEQUENCE_ADD(as_pdu, ie);
 
-	/* static const long asn_VAL_2_SBcAP_id_Serial_Number = 11; */
+	/* Serial Number
+	 * 3GPP TS 36.413 9.2.1.45, 3GPP TS 23.041 9.4.1.2.1
+	 * static const long asn_VAL_2_SBcAP_id_Serial_Number = 11; */
 	ie = sbcap_alloc_Stop_Warning_Request_IE(11, SBcAP_Criticality_reject,
 		SBcAP_Write_Replace_Warning_Request_IEs__value_PR_Serial_Number);
 	ie->value.choice.Serial_Number.buf = MALLOC(sizeof(uint16_t));
@@ -251,7 +275,9 @@ SBcAP_SBC_AP_PDU_t *sbcap_gen_stop_warning_req(void *ctx, const struct cbc_messa
 		break; /* Nothing to be done :*/
 #if 0
 	case CBC_MSG_SCOPE_EUTRAN_CGI:
-		/* static const long asn_VAL_25_SBcAP_id_Warning_Area_List = 15; */
+		/* Warning Area List
+		 * 3GPP TS 36.413 9.2.1.46, 3GPP TS 23.041 9.3.30
+		 * static const long asn_VAL_25_SBcAP_id_Warning_Area_List = 15; */
 		ie = sbcap_alloc_Stop_Warning_Request_IE(15, SBcAP_Criticality_ignore,
 			SBcAP_Write_Replace_Warning_Request_IEs__value_PR_Warning_Area_List);
 		ASN_SEQUENCE_ADD(as_pdu, ie);
