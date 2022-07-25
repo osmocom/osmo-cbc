@@ -287,19 +287,19 @@ static int smscb_fsm_timer_cb(struct osmo_fsm_inst *fi)
 {
 	switch (fi->T) {
 	case T_WAIT_WRITE_ACK:
-		/* onexit will take care of notifying the user */
+		/* onleave will take care of notifying the user */
 		osmo_fsm_inst_state_chg(fi, SMSCB_S_ACTIVE, 0, 0);
 		break;
 	case T_WAIT_REPLACE_ACK:
-		/* onexit will take care of notifying the user */
+		/* onleave will take care of notifying the user */
 		osmo_fsm_inst_state_chg(fi, SMSCB_S_ACTIVE, 0, 0);
 		break;
 	case T_WAIT_STATUS_ACK:
-		/* onexit will take care of notifying the user */
+		/* onleave will take care of notifying the user */
 		osmo_fsm_inst_state_chg(fi, SMSCB_S_ACTIVE, 0, 0);
 		break;
 	case T_WAIT_DELETE_ACK:
-		/* onexit will take care of notifying the user */
+		/* onleave will take care of notifying the user */
 		osmo_fsm_inst_state_chg(fi, SMSCB_S_DELETED, 0, 0);
 		break;
 	default:
