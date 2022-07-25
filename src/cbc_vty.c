@@ -102,13 +102,26 @@ DEFUN(show_peers, show_peers_cmd,
 static void dump_one_cbc_msg(struct vty *vty, const struct cbc_message *cbc_msg)
 {
 	const struct smscb_message *smscb = &cbc_msg->msg;
+	char str_created[32], str_expired[32];
+	struct tm tm_created = {0};
+	struct tm tm_expired = {0};
 
 	OSMO_ASSERT(!smscb->is_etws);
 
-	vty_out(vty, "| %04X| %04X|%-20s|%-13s|  %-4u|%c| %02x|%s",
+	localtime_r(&cbc_msg->time.created, &tm_created);
+	strftime(str_created, sizeof(str_created), "%Y-%m-%dT%H:%M:%SZ", &tm_created);
+	if (cbc_msg->time.expired > 0) {
+		localtime_r(&cbc_msg->time.expired, &tm_expired);
+		strftime(str_expired, sizeof(str_expired), "%Y-%m-%dT%H:%M:%SZ", &tm_expired);
+	} else {
+		OSMO_STRLCPY_ARRAY(str_expired, "active");
+	}
+
+	vty_out(vty, "| %04X| %04X|%-20s|%-13s|  %-4u|%c| %02x|%-20s|%-20s|%s",
 		smscb->message_id, smscb->serial_nr, cbc_msg->cbe_name,
 		get_value_string(cbsp_category_names, cbc_msg->priority), cbc_msg->rep_period,
 		cbc_msg->extended_cbch ? 'E' : 'N', smscb->cbs.dcs,
+		str_created, str_expired,
 		VTY_NEWLINE);
 }
 
@@ -119,9 +132,11 @@ DEFUN(show_messages_cbs, show_messages_cbs_cmd,
 	struct cbc_message *cbc_msg;
 
 	vty_out(vty,
-"|MsgId|SerNo|      CBE Name      |  Category   |Period|E|DCS|%s", VTY_NEWLINE);
+"|MsgId|SerNo|      CBE Name      |  Category   |Period|E|DCS|       Created      |       Expired      |%s",
+	VTY_NEWLINE);
 	vty_out(vty,
-"|-----|-----|--------------------|-------------|------|-|---|%s", VTY_NEWLINE);
+"|-----|-----|--------------------|-------------|------|-|---|--------------------|--------------------|%s",
+	VTY_NEWLINE);
 
 	llist_for_each_entry(cbc_msg, &g_cbc->messages, list) {
 		if (cbc_msg->msg.is_etws)
@@ -275,13 +290,26 @@ DEFUN(show_message_cbs, show_message_cbs_cmd,
 static void dump_one_etws_msg(struct vty *vty, const struct cbc_message *cbc_msg)
 {
 	const struct smscb_message *smscb = &cbc_msg->msg;
+	char str_created[32], str_expired[32];
+	struct tm tm_created = {0};
+	struct tm tm_expired = {0};
 
 	OSMO_ASSERT(smscb->is_etws);
 
-	vty_out(vty, "| %04X| %04X|%-20s|%-13s|  %-4u|%c|         %04d|%s",
+	localtime_r(&cbc_msg->time.created, &tm_created);
+	strftime(str_created, sizeof(str_created), "%Y-%m-%dT%H:%M:%SZ", &tm_created);
+	if (cbc_msg->time.expired > 0) {
+		localtime_r(&cbc_msg->time.expired, &tm_expired);
+		strftime(str_expired, sizeof(str_expired), "%Y-%m-%dT%H:%M:%SZ", &tm_expired);
+	} else {
+		OSMO_STRLCPY_ARRAY(str_expired, "active");
+	}
+
+	vty_out(vty, "| %04X| %04X|%-20s|%-13s|  %-4u|%c|        %04d|%-20s|%-20s|%s",
 		smscb->message_id, smscb->serial_nr, cbc_msg->cbe_name,
 		get_value_string(cbsp_category_names, cbc_msg->priority), cbc_msg->rep_period,
 		cbc_msg->extended_cbch ? 'E' : 'N', smscb->etws.warning_type,
+		str_created, str_expired,
 		VTY_NEWLINE);
 }
 
@@ -292,9 +320,11 @@ DEFUN(show_messages_etws, show_messages_etws_cmd,
 	struct cbc_message *cbc_msg;
 
 	vty_out(vty,
-"|MsgId|SerNo|      CBE Name      |  Category   |Period|E|Warning Type|%s", VTY_NEWLINE);
+"|MsgId|SerNo|      CBE Name      |  Category   |Period|E|Warning Type|       Created      |       Expired      |%s",
+	VTY_NEWLINE);
 	vty_out(vty,
-"|-----|-----|--------------------|-------------|------|-|------------|%s", VTY_NEWLINE);
+"|-----|-----|--------------------|-------------|------|-|------------|--------------------|--------------------|%s",
+	VTY_NEWLINE);
 
 	llist_for_each_entry(cbc_msg, &g_cbc->messages, list) {
 		if (!cbc_msg->msg.is_etws)
