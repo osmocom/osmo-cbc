@@ -205,8 +205,11 @@ DEFUN(show_message_cbs, show_message_cbs_cmd,
 	const struct smscb_message *smscb;
 	struct cbc_message_peer *msg_peer;
 	char *timestr;
+	uint16_t msgid = atoi(argv[0]);
 
-	cbc_msg = cbc_message_by_id(atoi(argv[0]));
+	cbc_msg = cbc_message_by_id(msgid);
+	if (!cbc_msg)
+		cbc_msg = cbc_message_expired_by_id(msgid);
 	if (!cbc_msg) {
 		vty_out(vty, "Unknown Messsage ID %s%s", argv[0], VTY_NEWLINE);
 		return CMD_WARNING;

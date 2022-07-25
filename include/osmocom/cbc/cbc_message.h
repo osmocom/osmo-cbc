@@ -102,6 +102,7 @@ struct cbc_message *cbc_message_alloc(void *ctx, const struct cbc_message *cbcms
 int cbc_message_new(const struct cbc_message *cbcmsg, struct rest_it_op *op);
 void cbc_message_delete(struct cbc_message *cbcmsg, struct rest_it_op *op);
 struct cbc_message *cbc_message_by_id(uint16_t message_id);
+struct cbc_message *cbc_message_expired_by_id(uint16_t message_id);
 int peer_new_cbc_message(struct cbc_peer *peer, struct cbc_message *cbcmsg);
 
 int cbc_message_del_peer(struct cbc_message *cbcmsg, struct cbc_peer *peer);

@@ -235,3 +235,13 @@ struct cbc_message *cbc_message_by_id(uint16_t message_id)
 	}
 	return NULL;
 }
+
+struct cbc_message *cbc_message_expired_by_id(uint16_t message_id)
+{
+	struct cbc_message *cbc_msg;
+	llist_for_each_entry(cbc_msg, &g_cbc->expired_messages, list) {
+		if (cbc_msg->msg.message_id == message_id)
+			return cbc_msg;
+	}
+	return NULL;
+}
