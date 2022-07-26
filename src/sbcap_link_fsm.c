@@ -42,9 +42,6 @@ enum sbcap_link_state {
 };
 
 static const struct value_string sbcap_link_event_names[] = {
-	{ SBcAP_LINK_E_RX_RST_COMPL, "Rx Reset Complete" },
-	{ SBcAP_LINK_E_RX_RST_FAIL, "Rx Reset Failure" },
-	{ SBcAP_LINK_E_RX_KA_COMPL, "Rx Keep-Alive Complete" },
 	{ SBcAP_LINK_E_RX_RESTART, "Rx Restart" },
 	{ SBcAP_LINK_E_CMD_RESET, "RESET.cmd" },
 	{ SBcAP_LINK_E_CMD_CLOSE, "CLOSE.cmd" },
