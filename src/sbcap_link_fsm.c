@@ -80,7 +80,7 @@ static void sbcap_link_fsm_allstate(struct osmo_fsm_inst *fi, uint32_t event, vo
 		//pdu = data;
 		/* TODO: delete any CBS state we have for this peer */
 		/* TODO: re-send messages we have matching the scope of the peer */
-		LOGPSBCAPC(link, LOGL_NOTICE, "RESTART  but re-sending not implemented yet\n");
+		LOGPSBCAPC(link, LOGL_NOTICE, "Rx PWS Restart Indication not implemented yet\n");
 		break;
 	default:
 		OSMO_ASSERT(0);
@@ -274,10 +274,12 @@ int cbc_sbcap_link_rx_cb(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu)
 			return osmo_fsm_inst_dispatch(link->fi, SBcAP_LINK_E_RX_RESTART, pdu);
 		case SBcAP_ProcedureId_Error_Indication:
 			return cbc_sbcap_link_rx_error_ind(link, pdu);
+		case SBcAP_ProcedureId_PWS_Failure_Indication:
+			LOGPSBCAPC(link, LOGL_NOTICE, "Rx PWS Failure Indication not implemented yet\n");
+			return 0;
 		case SBcAP_ProcedureId_Stop_Warning_Indication:
 		case SBcAP_ProcedureId_Write_Replace_Warning_Indication:
 			break; /* Handle msg id below */
-		case SBcAP_ProcedureId_PWS_Failure_Indication:
 		default:
 			LOGPSBCAPC(link, LOGL_ERROR, "SBcAP initiatingMessage procedure=%ld not implemented?\n",
 			       pdu->choice.initiatingMessage.procedureCode);
