@@ -5,6 +5,7 @@ noinst_HEADERS = \
 	cbc_vty.h \
 	cbsp_link.h \
 	cbsp_link_fsm.h \
+	cbsp_msg.h \
 	charset.h \
 	debug.h \
 	sbcap_msg.h \

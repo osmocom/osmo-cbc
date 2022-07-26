@@ -17,9 +17,9 @@ osmo_cbc_SOURCES = \
 	cbc_vty.c \
 	cbsp_link.c \
 	cbsp_link_fsm.c \
+	cbsp_msg.c \
 	rest_api.c \
 	charset.c \
-	message_handling.c \
 	rest_it_op.c \
 	sbcap_msg.c \
 	sbcap_link.c \
