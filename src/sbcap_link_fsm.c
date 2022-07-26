@@ -28,6 +28,7 @@
 #include <osmocom/cbc/cbc_message.h>
 #include <osmocom/cbc/sbcap_link.h>
 #include <osmocom/cbc/sbcap_link_fsm.h>
+#include <osmocom/cbc/sbcap_msg.h>
 #include <osmocom/cbc/debug.h>
 #include <osmocom/cbc/cbc_peer.h>
 #include <osmocom/cbc/smscb_message_fsm.h>
@@ -258,6 +259,7 @@ int cbc_sbcap_link_rx_cb(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu)
 {
 	struct cbc_message *smscb;
 	struct cbc_message_peer *mp;
+	SBcAP_SBC_AP_PDU_t *err_ind_pdu;
 	int msg_id;
 
 	/* messages without reference to a specific SMSCB message */
@@ -282,7 +284,13 @@ int cbc_sbcap_link_rx_cb(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu)
 			break; /* Handle msg id below */
 		default:
 			LOGPSBCAPC(link, LOGL_ERROR, "SBcAP initiatingMessage procedure=%ld not implemented?\n",
-			       pdu->choice.initiatingMessage.procedureCode);
+				   pdu->choice.initiatingMessage.procedureCode);
+			err_ind_pdu = sbcap_gen_error_ind(link, SBcAP_Cause_valid_message_not_identified, pdu);
+			if (err_ind_pdu)
+				cbc_sbcap_link_tx(link, err_ind_pdu);
+			else
+				LOGPSBCAPC(link, LOGL_ERROR,
+					   "Tx SBc-AP Error-Indication: msg gen failed\n");
 			return 0;
 		}
 		break;
