@@ -65,7 +65,7 @@ int peer_new_cbc_message(struct cbc_peer *peer, struct cbc_message *cbcmsg)
 			     peer->name);
 			return -ENOTCONN;
 		}
-		if (!(cbsp = cbcmsg_to_cbsp(peer, cbcmsg))) {
+		if (!(cbsp = cbsp_gen_write_replace_req(peer, cbcmsg))) {
 			LOGP(DCBSP, LOGL_ERROR, "[%s] Tx CBSP: msg gen failed\n",
 			     peer->name);
 			return -EINVAL;
@@ -79,7 +79,7 @@ int peer_new_cbc_message(struct cbc_peer *peer, struct cbc_message *cbcmsg)
 			     peer->name);
 			return -ENOTCONN;
 		}
-		if (!(sbcap = cbcmsg_to_sbcap(peer, cbcmsg))) {
+		if (!(sbcap = sbcap_gen_write_replace_warning_req(peer, cbcmsg))) {
 			LOGP(DSBcAP, LOGL_ERROR, "[%s] Tx SBc-AP: msg gen failed\n",
 			     peer->name);
 			return -EINVAL;

@@ -84,7 +84,7 @@ static void msgb_put_sbcap_cell_list(const struct cbc_message *cbcmsg, void *voi
 /* generate a SBc-AP WRITE-REPLACE WARNING REQUEST from our internal representation.
  * 3GPP TS 36.413 9.1.13.1
  */
-SBcAP_SBC_AP_PDU_t *cbcmsg_to_sbcap(void *ctx, const struct cbc_message *cbcmsg)
+SBcAP_SBC_AP_PDU_t *sbcap_gen_write_replace_warning_req(void *ctx, const struct cbc_message *cbcmsg)
 {
 	const struct smscb_message *smscb = &cbcmsg->msg;
 	SBcAP_SBC_AP_PDU_t *pdu;

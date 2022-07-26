@@ -50,7 +50,7 @@ static int cbcmsg_to_cbsp_cell_list(const void *ctx, struct osmo_cbsp_cell_list 
 }
 
 /* generate a CBSP WRITE-REPLACE from our internal representation */
-struct osmo_cbsp_decoded *cbcmsg_to_cbsp(void *ctx, const struct cbc_message *cbcmsg)
+struct osmo_cbsp_decoded *cbsp_gen_write_replace_req(void *ctx, const struct cbc_message *cbcmsg)
 {
 	struct osmo_cbsp_write_replace *wrepl;
 	const struct smscb_message *smscb = &cbcmsg->msg;
