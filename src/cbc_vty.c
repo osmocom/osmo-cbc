@@ -247,7 +247,7 @@ DEFUN(show_message_cbs, show_message_cbs_cmd,
 	if (!cbc_msg)
 		cbc_msg = cbc_message_expired_by_id(msgid);
 	if (!cbc_msg) {
-		vty_out(vty, "Unknown Messsage ID %s%s", argv[0], VTY_NEWLINE);
+		vty_out(vty, "Unknown Message ID %s%s", argv[0], VTY_NEWLINE);
 		return CMD_WARNING;
 	}
 	smscb = &cbc_msg->msg;
