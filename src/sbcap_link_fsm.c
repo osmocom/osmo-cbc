@@ -240,7 +240,7 @@ static int cbc_sbcap_link_rx_error_ind(struct cbc_sbcap_link *link, SBcAP_SBC_AP
 	return 0;
 }
 
-/* message was received from remote SBcAP peer (BSC) */
+/* message was received from remote SBc-AP peer (MME) */
 int cbc_sbcap_link_rx_cb(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu)
 {
 	struct cbc_message *smscb;
