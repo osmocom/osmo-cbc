@@ -212,6 +212,47 @@ static int get_msg_id(struct cbc_sbcap_link *link, const SBcAP_SBC_AP_PDU_t *pdu
 	return osmo_load16be(ie->buf);
 }
 
+/* Rx Error Indication from peer */
+static int cbc_sbcap_link_rx_error_ind(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu)
+{
+	A_SEQUENCE_OF(void) *as_pdu = NULL;
+	SBcAP_ErrorIndicationIEs_t *ie;
+	SBcAP_Criticality_Diagnostics_t *ie_diag = NULL;
+	long cause = -1;
+	long proc_code = -1;
+	long trigger_msg = -1;
+	long criticality = -1;
+	int i;
+
+	as_pdu = (void *)&pdu->choice.initiatingMessage.value.choice.Error_Indication.protocolIEs.list;
+	OSMO_ASSERT(as_pdu);
+
+	for (i = 0; i < as_pdu->count; i++) {
+		ie = (SBcAP_ErrorIndicationIEs_t *)(as_pdu->array[i]);
+		OSMO_ASSERT(ie);
+		switch (ie->id) {
+		case SBcAP_ErrorIndicationIEs__value_PR_Cause:
+			cause = ie->value.choice.Cause;
+			break;
+		case SBcAP_ErrorIndicationIEs__value_PR_Criticality_Diagnostics:
+			ie_diag = &ie->value.choice.Criticality_Diagnostics;
+			if (ie_diag->procedureCode)
+				proc_code = *ie_diag->procedureCode;
+			if (ie_diag->triggeringMessage)
+				trigger_msg = *ie_diag->triggeringMessage;
+			if (ie_diag->procedureCriticality)
+				criticality = *ie_diag->procedureCriticality;
+			break;
+		default:
+			continue;
+		}
+	}
+
+	LOGPSBCAPC(link, LOGL_ERROR, "Rx ERROR_IND (cause=%ld, diagnostics=%d [proc_code=%ld, trigger_msg=%ld criticality=%ld])\n",
+		cause, !!ie_diag, proc_code, trigger_msg, criticality);
+	return 0;
+}
+
 /* message was received from remote SBcAP peer (BSC) */
 int cbc_sbcap_link_rx_cb(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu)
 {
@@ -231,10 +272,11 @@ int cbc_sbcap_link_rx_cb(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu)
 			return -EINVAL;
 		case SBcAP_ProcedureId_PWS_Restart_Indication:
 			return osmo_fsm_inst_dispatch(link->fi, SBcAP_LINK_E_RX_RESTART, pdu);
+		case SBcAP_ProcedureId_Error_Indication:
+			return cbc_sbcap_link_rx_error_ind(link, pdu);
 		case SBcAP_ProcedureId_Stop_Warning_Indication:
 		case SBcAP_ProcedureId_Write_Replace_Warning_Indication:
 			break; /* Handle msg id below */
-		case SBcAP_ProcedureId_Error_Indication:
 		case SBcAP_ProcedureId_PWS_Failure_Indication:
 		default:
 			LOGPSBCAPC(link, LOGL_ERROR, "SBcAP initiatingMessage procedure=%ld not implemented?\n",
