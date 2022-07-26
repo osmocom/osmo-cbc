@@ -14,3 +14,4 @@ SBcAP_SBC_AP_PDU_t *sbcap_gen_error_ind(void *ctx, SBcAP_Cause_t cause, SBcAP_SB
 
 
 void cci_from_sbcap_bcast_cell_id(struct cbc_cell_id *cci, const SBcAP_CellId_Broadcast_List_Item_t *it);
+void cci_from_sbcap_tai(struct cbc_cell_id *cci, const SBcAP_TAI_t *tai);

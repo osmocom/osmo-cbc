@@ -356,3 +356,11 @@ void cci_from_sbcap_bcast_cell_id(struct cbc_cell_id *cci, const SBcAP_CellId_Br
 {
 	cci_from_sbcap_ecgi(cci, &it->eCGI);
 }
+
+/* Fill a cbc_cell_id from a SBcAP_TAI_t */
+void cci_from_sbcap_tai(struct cbc_cell_id *cci, const SBcAP_TAI_t *tai)
+{
+	cci->id_discr = CBC_CELL_ID_TAI;
+	cci->u.tai.tac = osmo_load16be(tai->tAC.buf);
+	osmo_plmn_from_bcd(tai->pLMNidentity.buf, &cci->u.tai.plmn);
+}

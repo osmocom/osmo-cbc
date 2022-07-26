@@ -314,6 +314,31 @@ void msg_peer_append_compl_sbcap_bcast_area_list(struct cbc_message_peer *mp,
 	}
 }
 
+/* append SBcAP cells to msg_peer fail list */
+void msg_peer_append_fail_sbcap_tai_list(struct cbc_message_peer *mp,
+					 const SBcAP_List_of_TAIs_t *tais)
+{
+	A_SEQUENCE_OF(List_of_TAIs__Member) *as_tais = (void *)&tais->list;
+	List_of_TAIs__Member *it;
+	unsigned int i;
+
+	for (i = 0; i < as_tais->count; i++) {
+		it = (List_of_TAIs__Member *)(as_tais->array[i]);
+		OSMO_ASSERT(it);
+		struct cbc_cell_id *cci = NULL; // FIXME: lookup
+		if (!cci) {
+			cci = talloc_zero(mp, struct cbc_cell_id);
+			if (!cci)
+				return;
+			llist_add_tail(&cci->list, &mp->fail_list);
+		}
+		cci_from_sbcap_tai(cci, &it->tai);
+		cci->fail.cause = SBcAP_Cause_tracking_area_not_valid;
+		LOGPFSML(mp->fi, LOGL_DEBUG, "Appending CellId %s (cause: %s) to Failed list\n",
+			 cbc_cell_id2str(cci), sbcap_cause_str(cci->fail.cause));
+	}
+}
+
 /***********************************************************************
  * actual FSM
  ***********************************************************************/
@@ -342,7 +367,9 @@ static void smscb_p_fsm_wait_write_ack(struct osmo_fsm_inst *fi, uint32_t event,
 {
 	struct cbc_message_peer *mp = (struct cbc_message_peer *) fi->priv;
 	struct osmo_cbsp_decoded *dec = NULL;
-	//SBcAP_SBC_AP_PDU_t *pdu = NULL;
+	SBcAP_SBC_AP_PDU_t *sbcap = NULL;
+	A_SEQUENCE_OF(void) *as_pdu;
+	SBcAP_Write_Replace_Warning_Response_IEs_t *ie;
 
 	switch (event) {
 	case SMSCB_E_CBSP_WRITE_ACK:
@@ -363,13 +390,21 @@ static void smscb_p_fsm_wait_write_ack(struct osmo_fsm_inst *fi, uint32_t event,
 		osmo_fsm_inst_dispatch(fi->proc.parent, SMSCB_E_CBSP_WRITE_NACK, mp);
 		break;
 	case SMSCB_E_SBCAP_WRITE_ACK:
-		//pdu = data;
+		sbcap = data;
+		OSMO_ASSERT(sbcap->present == SBcAP_SBC_AP_PDU_PR_successfulOutcome);
+		OSMO_ASSERT(sbcap->choice.successfulOutcome.procedureCode == SBcAP_ProcedureId_Write_Replace_Warning);
+		as_pdu = (void *)&sbcap->choice.successfulOutcome.value.choice.Write_Replace_Warning_Response.protocolIEs.list;
+		/* static const long asn_VAL_21_SBcAP_id_Unknown_Tracking_Area_List = 22; */
+		ie = sbcap_as_find_ie(as_pdu, 22);
+		if (ie) { /* IE is optional */
+			OSMO_ASSERT(ie->value.present == SBcAP_Write_Replace_Warning_Response_IEs__value_PR_List_of_TAIs);
+			msg_peer_append_fail_sbcap_tai_list(mp, &ie->value.choice.List_of_TAIs);
+		}
 		osmo_fsm_inst_state_chg(fi, SMSCB_S_ACTIVE, 0, 0);
 		/* Signal parent fsm about completion */
 		osmo_fsm_inst_dispatch(fi->proc.parent, SMSCB_E_SBCAP_WRITE_ACK, mp);
 		break;
 	case SMSCB_E_SBCAP_WRITE_NACK:
-		//pdu = data;
 		osmo_fsm_inst_state_chg(fi, SMSCB_S_ACTIVE, 0, 0);
 		/* Signal parent fsm about completion */
 		osmo_fsm_inst_dispatch(fi->proc.parent, SMSCB_E_SBCAP_WRITE_NACK, mp);

@@ -65,6 +65,9 @@ const char *cbc_cell_id2str(const struct cbc_cell_id *cid)
 		snprintf(buf, sizeof(buf), "ECGI %s-%05X-%02X", osmo_plmn_name(&cid->u.ecgi.plmn),
 			 cid->u.ecgi.eci >> 8, cid->u.ecgi.eci & 0xff);
 		break;
+	case CBC_CELL_ID_TAI:
+		snprintf(buf, sizeof(buf), "TAI %s-%u", osmo_plmn_name(&cid->u.tai.plmn), cid->u.tai.tac);
+		break;
 	default:
 		snprintf(buf, sizeof(buf), "<invalid>");
 		break;
