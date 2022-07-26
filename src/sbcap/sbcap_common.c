@@ -36,7 +36,7 @@ static const struct value_string sbcap_cause_vals[] = {
 	{ SBcAP_Cause_parameter_value_invalid,			"parameter value invalid" },
 	{ SBcAP_Cause_valid_message_not_identified,		"valid message not identified" },
 	{ SBcAP_Cause_tracking_area_not_valid,			"Tracking Area not valid" },
-	{ SBcAP_Cause_unrecognised_message,			"unrecoznied message" },
+	{ SBcAP_Cause_unrecognised_message,			"unrecognised message" },
 	{ SBcAP_Cause_missing_mandatory_element,		"missing mandatory element" },
 	{ SBcAP_Cause_mME_capacity_exceeded,			"MME capacity exceeded" },
 	{ SBcAP_Cause_mME_memory_exceeded,			"MME memory exceeded" },
