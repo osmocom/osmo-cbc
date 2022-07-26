@@ -241,6 +241,34 @@ static int cbc_sbcap_link_rx_error_ind(struct cbc_sbcap_link *link, SBcAP_SBC_AP
 	return 0;
 }
 
+/* Rx Write Replace Warning Response from peer */
+static int cbc_sbcap_link_rx_write_replace_warn_resp(struct cbc_sbcap_link *link,
+						     struct cbc_message_peer *mp,
+						     SBcAP_SBC_AP_PDU_t *pdu)
+{
+	A_SEQUENCE_OF(void) *as_pdu;
+	SBcAP_Write_Replace_Warning_Response_IEs_t *ie;
+	SBcAP_SBC_AP_PDU_t *err_ind_pdu;
+	int ev = SMSCB_E_SBCAP_WRITE_ACK;
+
+	as_pdu = (void *)&pdu->choice.successfulOutcome.value.choice.Write_Replace_Warning_Response.protocolIEs.list;
+
+	/* static const long asn_VAL_19_SBcAP_id_Cause = 1; */
+	ie = sbcap_as_find_ie(as_pdu, 1);
+	if (ie) {
+		if (ie->value.choice.Cause != SBcAP_Cause_message_accepted)
+			ev = SMSCB_E_SBCAP_WRITE_NACK;
+	} else { /* This shouldn't happen, the IE is Mandatory... */
+		ev = SMSCB_E_SBCAP_WRITE_NACK;
+		err_ind_pdu = sbcap_gen_error_ind(link,
+						  SBcAP_Cause_missing_mandatory_element, pdu);
+		if (err_ind_pdu)
+			cbc_sbcap_link_tx(link, err_ind_pdu);
+	}
+
+	return osmo_fsm_inst_dispatch(mp->fi, ev, pdu);
+}
+
 /* message was received from remote SBc-AP peer (MME) */
 int cbc_sbcap_link_rx_cb(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu)
 {
@@ -345,7 +373,7 @@ int cbc_sbcap_link_rx_cb(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu)
 			//if (dec->u.write_replace_compl.old_serial_nr)
 			//	return osmo_fsm_inst_dispatch(mp->fi, SMSCB_E_SBcAP_REPLACE_ACK, dec);
 			//else
-				return osmo_fsm_inst_dispatch(mp->fi, SMSCB_E_SBCAP_WRITE_ACK, pdu);
+				return cbc_sbcap_link_rx_write_replace_warn_resp(link, mp, pdu);
 		case SBcAP_ProcedureId_Stop_Warning:
 			return osmo_fsm_inst_dispatch(mp->fi, SMSCB_E_SBCAP_DELETE_ACK, pdu);
 		default:
