@@ -62,6 +62,7 @@ const struct value_string smscb_fsm_event_names[] = {
 	{ SMSCB_E_SBCAP_WRITE_NACK,	"SBcAP_WRITE_NACK" },
 	{ SMSCB_E_SBCAP_DELETE_ACK,	"SBcAP_DELETE_ACK" },
 	{ SMSCB_E_SBCAP_DELETE_NACK,	"SBcAP_DELETE_NACK" },
+	{ SMSCB_E_SBCAP_WRITE_IND,	"SBcAP_WRITE_IND" },
 	{ 0, NULL }
 };
 
@@ -280,6 +281,37 @@ static void cbsp_append_cell_list(struct osmo_cbsp_cell_list *out, void *ctx,
 		llist_add_tail(&ent->list, &out->list);
 	}
 	out->id_discr = cell_id_from_ccid_discr(id_discr);
+}
+
+/* append SBcAP cells to msg_peer compl list */
+void msg_peer_append_compl_sbcap_bcast_area_list(struct cbc_message_peer *mp,
+						 const SBcAP_Broadcast_Scheduled_Area_List_t *bcast)
+{
+	SBcAP_CellId_Broadcast_List_t *cell_id_bscat = bcast->cellId_Broadcast_List;
+	A_SEQUENCE_OF(struct SBcAP_CellId_Broadcast_List_Item) *as_cell_id_bcast;
+	SBcAP_CellId_Broadcast_List_Item_t *it;
+	unsigned int i;
+
+	if (!cell_id_bscat)
+		return;
+
+	as_cell_id_bcast = (void *) &cell_id_bscat->list;
+	for (i = 0; i < as_cell_id_bcast->count; i++) {
+		it = (SBcAP_CellId_Broadcast_List_Item_t *)(as_cell_id_bcast->array[i]);
+		OSMO_ASSERT(it);
+		struct cbc_cell_id *cci = NULL; // FIXME: lookup
+		if (!cci) {
+			cci = talloc_zero(mp, struct cbc_cell_id);
+			if (!cci)
+				return;
+			llist_add_tail(&cci->list, &mp->num_compl_list);
+		}
+		cci_from_sbcap_bcast_cell_id(cci, it);
+		LOGPFSML(mp->fi, LOGL_DEBUG, "Appending CellId %s to Broadcast Completed list\n",
+			 cbc_cell_id2str(cci));
+		cci->num_compl.num_compl += 1;
+		cci->num_compl.num_bcast_info += 1;
+	}
 }
 
 /***********************************************************************
@@ -532,6 +564,8 @@ static void smscb_p_fsm_allstate(struct osmo_fsm_inst *fi, uint32_t event, void 
 	struct cbc_message_peer *mp = (struct cbc_message_peer *) fi->priv;
 	struct osmo_cbsp_decoded *cbsp;
 	SBcAP_SBC_AP_PDU_t *sbcap;
+	A_SEQUENCE_OF(void) *as_pdu;
+	SBcAP_Write_Replace_Warning_Indication_IEs_t *ie;
 
 	switch (event) {
 	case SMSCB_E_DELETE: /* send KILL to BSC */
@@ -574,6 +608,18 @@ static void smscb_p_fsm_allstate(struct osmo_fsm_inst *fi, uint32_t event, void 
 			osmo_panic("SMSCB_E_DELETE not implemented for proto %u", mp->peer->proto);
 		}
 		osmo_fsm_inst_state_chg(fi, SMSCB_S_WAIT_DELETE_ACK, 10, T_WAIT_DELETE_ACK);
+		break;
+	case SMSCB_E_SBCAP_WRITE_IND:
+		sbcap = (SBcAP_SBC_AP_PDU_t *)data;
+		OSMO_ASSERT(sbcap->present == SBcAP_SBC_AP_PDU_PR_initiatingMessage);
+		OSMO_ASSERT(sbcap->choice.initiatingMessage.procedureCode == SBcAP_ProcedureId_Write_Replace_Warning_Indication);
+		as_pdu = (void *)&sbcap->choice.initiatingMessage.value.choice.Write_Replace_Warning_Indication.protocolIEs.list;
+		/* static const long asn_VAL_36_SBcAP_id_Broadcast_Scheduled_Area_List = 23; */
+		ie = sbcap_as_find_ie(as_pdu, 23);
+		if (!ie)
+			return; /* IE is optional */
+		OSMO_ASSERT(ie->value.present == SBcAP_Write_Replace_Warning_Indication_IEs__value_PR_Broadcast_Scheduled_Area_List);
+		msg_peer_append_compl_sbcap_bcast_area_list(mp, &ie->value.choice.Broadcast_Scheduled_Area_List);
 		break;
 	default:
 		OSMO_ASSERT(0);
@@ -647,7 +693,8 @@ struct osmo_fsm smscb_p_fsm = {
 	.name = "SMSCB-PEER",
 	.states = smscb_p_fsm_states,
 	.num_states = ARRAY_SIZE(smscb_p_fsm_states),
-	.allstate_event_mask = S(SMSCB_E_DELETE),
+	.allstate_event_mask = S(SMSCB_E_DELETE) |
+			       S(SMSCB_E_SBCAP_WRITE_IND),
 	.allstate_action = smscb_p_fsm_allstate,
 	.timer_cb = smscb_p_fsm_timer_cb,
 	.log_subsys = DCBSP,

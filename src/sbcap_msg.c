@@ -225,6 +225,14 @@ SBcAP_SBC_AP_PDU_t *sbcap_gen_write_replace_warning_req(void *ctx, const struct 
 		ASN_SEQUENCE_ADD(as_pdu, ie);
 	}
 
+	/* Send Write-Replace-Warning-Indication
+	 * 3GPP TS 36.413 4.3.4.3.5, 3GPP TS 23.041 9.3.39
+	 * static const long asn_VAL_14_SBcAP_id_Send_Write_Replace_Warning_Indication = 24; */
+	ie = sbcap_alloc_Write_Replace_Warning_Request_IE(24, SBcAP_Criticality_ignore,
+		SBcAP_Write_Replace_Warning_Request_IEs__value_PR_Send_Write_Replace_Warning_Indication);
+	ie->value.choice.Send_Write_Replace_Warning_Indication = SBcAP_Send_Write_Replace_Warning_Indication_true;
+	ASN_SEQUENCE_ADD(as_pdu, ie);
+
 	return pdu;
 }
 
@@ -335,4 +343,16 @@ SBcAP_SBC_AP_PDU_t *sbcap_gen_error_ind(void *ctx, SBcAP_Cause_t cause, SBcAP_SB
 		ASN_SEQUENCE_ADD(as_pdu, ie);
 	}
 	return pdu;
+}
+static void cci_from_sbcap_ecgi(struct cbc_cell_id *cci, const SBcAP_EUTRAN_CGI_t *eCGI)
+{
+	cci->id_discr = CBC_CELL_ID_ECGI;
+	cci->u.ecgi.eci = (osmo_load32be(&eCGI->cell_ID.buf[0]) >> 4);
+	osmo_plmn_from_bcd(eCGI->pLMNidentity.buf, &cci->u.ecgi.plmn);
+}
+
+/* Fill a cbc_cell_id from a SBcAP_CellId_Broadcast_List_Item */
+void cci_from_sbcap_bcast_cell_id(struct cbc_cell_id *cci, const SBcAP_CellId_Broadcast_List_Item_t *it)
+{
+	cci_from_sbcap_ecgi(cci, &it->eCGI);
 }

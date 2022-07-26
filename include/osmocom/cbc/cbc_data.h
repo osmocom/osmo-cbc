@@ -16,6 +16,7 @@ enum cbc_cell_id_type {
 	CBC_CELL_ID_LAI,
 	CBC_CELL_ID_LAC,
 	CBC_CELL_ID_CI,
+	CBC_CELL_ID_ECGI,
 };
 
 struct cbc_cell_id {
@@ -27,6 +28,7 @@ struct cbc_cell_id {
 		struct osmo_location_area_id lai;
 		uint16_t lac;
 		uint16_t ci;
+		struct osmo_eutran_cell_global_id ecgi;
 	} u;
 	/* only in failure list */
 	struct {

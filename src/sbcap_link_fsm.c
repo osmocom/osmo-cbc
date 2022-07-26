@@ -333,6 +333,8 @@ int cbc_sbcap_link_rx_cb(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu)
 	switch (pdu->present) {
 	case SBcAP_SBC_AP_PDU_PR_initiatingMessage:
 		switch (pdu->choice.initiatingMessage.procedureCode) {
+		case SBcAP_ProcedureId_Write_Replace_Warning_Indication:
+			return osmo_fsm_inst_dispatch(mp->fi, SMSCB_E_SBCAP_WRITE_IND, pdu);
 		default:
 			break;
 		}

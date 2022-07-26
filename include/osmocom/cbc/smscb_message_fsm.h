@@ -31,6 +31,8 @@ enum smscb_fsm_event {
 	/* SBc-AP peer confirms delete */
 	SMSCB_E_SBCAP_DELETE_ACK,
 	SMSCB_E_SBCAP_DELETE_NACK,
+	/* SBc-AP peer sends Write Replace Warning Indication to us */
+	SMSCB_E_SBCAP_WRITE_IND,
 };
 
 enum smscb_fsm_state {
