@@ -129,20 +129,6 @@ struct osmo_fsm sbcap_link_fsm = {
 	.cleanup = sbcap_link_fsm_cleanup,
 };
 
-static void *sbcap_as_find_ie(void *void_list, SBcAP_ProtocolIE_ID_t ie_id)
-{
-	A_SEQUENCE_OF(SBcAP_ProtocolIE_ID_t) *li = (void *)void_list;
-	int i;
-	for (i = 0; i < li->count; i++) {
-		/* "SBcAP_ProtocolIE_ID_t id" is first element in all *_IEs struct */
-		SBcAP_ProtocolIE_ID_t *cur_ie_id = li->array[i];
-		if (*cur_ie_id == ie_id) {
-			return cur_ie_id;
-		}
-	}
-	return NULL;
-}
-
 static SBcAP_Message_Identifier_t *get_msg_id_ie(struct cbc_sbcap_link *link,
 						 const SBcAP_SBC_AP_PDU_t *pdu)
 {

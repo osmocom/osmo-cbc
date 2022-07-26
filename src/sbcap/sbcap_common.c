@@ -141,6 +141,20 @@ SBcAP_Criticality_t sbcap_pdu_get_criticality(const SBcAP_SBC_AP_PDU_t *pdu)
 	}
 }
 
+void *sbcap_as_find_ie(void *void_list, SBcAP_ProtocolIE_ID_t ie_id)
+{
+	A_SEQUENCE_OF(SBcAP_ProtocolIE_ID_t) *li = (void *)void_list;
+	int i;
+	for (i = 0; i < li->count; i++) {
+		/* "SBcAP_ProtocolIE_ID_t id" is first element in all *_IEs struct */
+		SBcAP_ProtocolIE_ID_t *cur_ie_id = li->array[i];
+		if (*cur_ie_id == ie_id) {
+			return cur_ie_id;
+		}
+	}
+	return NULL;
+}
+
 void sbcap_set_log_area(int log_area)
 {
 	_sbcap_DSBCAP = log_area;
