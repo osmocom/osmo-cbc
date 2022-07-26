@@ -141,8 +141,14 @@ const char *sbcap_cause_str(SBcAP_Cause_t cause);
 
 void sbcap_set_log_area(int log_area);
 
+SBcAP_ProcedureCode_t sbcap_pdu_get_procedure_code(const SBcAP_SBC_AP_PDU_t *pdu);
+SBcAP_Criticality_t sbcap_pdu_get_criticality(const SBcAP_SBC_AP_PDU_t *pdu);
+
 SBcAP_Write_Replace_Warning_Request_IEs_t *sbcap_alloc_Write_Replace_Warning_Request_IE(
 	long id, SBcAP_Criticality_t criticality, SBcAP_Write_Replace_Warning_Request_IEs__value_PR present);
 
 SBcAP_Stop_Warning_Request_IEs_t *sbcap_alloc_Stop_Warning_Request_IE(
+	long id, SBcAP_Criticality_t criticality, SBcAP_Stop_Warning_Request_IEs__value_PR present);
+
+SBcAP_ErrorIndicationIEs_t *sbcap_alloc_Error_Indication_IE(
 	long id, SBcAP_Criticality_t criticality, SBcAP_Stop_Warning_Request_IEs__value_PR present);

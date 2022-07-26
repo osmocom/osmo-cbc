@@ -39,6 +39,7 @@
 #include <osmocom/cbc/cbc_data.h>
 #include <osmocom/cbc/sbcap_link.h>
 #include <osmocom/cbc/sbcap_link_fsm.h>
+#include <osmocom/cbc/sbcap_msg.h>
 #include <osmocom/cbc/cbc_peer.h>
 #include <osmocom/cbc/debug.h>
 
@@ -166,6 +167,13 @@ static int cbc_sbcap_link_cli_read_cb(struct osmo_stream_cli *conn)
 		g_cbc->sbcap.mgr->rx_cb(link, pdu);
 	} else {
 		LOGPSBCAPC(link, LOGL_ERROR, "Unable to decode %s\n", msgb_hexdump(msg));
+		pdu = sbcap_gen_error_ind(link, SBcAP_Cause_unrecognised_message, NULL);
+		if (pdu) {
+			cbc_sbcap_link_tx(link, pdu);
+		} else {
+			LOGPSBCAPC(link, LOGL_ERROR,
+				   "Tx SBc-AP Error-Indication: msg gen failed\n");
+		}
 	}
 out:
 	msgb_free(msg);

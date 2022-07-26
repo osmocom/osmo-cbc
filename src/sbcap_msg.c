@@ -291,3 +291,48 @@ SBcAP_SBC_AP_PDU_t *sbcap_gen_stop_warning_req(void *ctx, const struct cbc_messa
 
 	return pdu;
 }
+
+/* generate a SBc-AP ERROR INDICATION, 3GPP TS 29.168 4.3.4.2A.1.
+ * rx_pdu can be NULL.
+ */
+SBcAP_SBC_AP_PDU_t *sbcap_gen_error_ind(void *ctx, SBcAP_Cause_t cause, SBcAP_SBC_AP_PDU_t *rx_pdu)
+{
+	SBcAP_SBC_AP_PDU_t *pdu;
+	SBcAP_ErrorIndicationIEs_t *ie;
+
+	pdu = sbcap_pdu_alloc();
+	if (!pdu)
+		return NULL;
+	pdu->present = SBcAP_SBC_AP_PDU_PR_initiatingMessage;
+	pdu->choice.initiatingMessage.procedureCode = SBcAP_ProcedureId_Error_Indication;
+	pdu->choice.initiatingMessage.criticality = SBcAP_Criticality_ignore;
+	pdu->choice.initiatingMessage.value.present = SBcAP_InitiatingMessage__value_PR_Error_Indication;
+
+	A_SEQUENCE_OF(void) *as_pdu = (void *)&pdu->choice.initiatingMessage.value.choice.Error_Indication.protocolIEs.list;
+
+	/* Cause, Optional:
+	 * 3GPP TS 36.413 4.3.4.3.2
+	 * static const long asn_VAL_19_SBcAP_id_Cause = 1; */
+	ie = sbcap_alloc_Error_Indication_IE(1, SBcAP_Criticality_ignore,
+		SBcAP_ErrorIndicationIEs__value_PR_Cause);
+	ie->value.choice.Cause = cause;
+	ASN_SEQUENCE_ADD(as_pdu, ie);
+
+	if (rx_pdu) {
+		SBcAP_Criticality_Diagnostics_t *diag_ie;
+		/* Criticality Diagnostics, Optional:
+		 * 3GPP TS 36.413 4.3.4.3.3
+		 * static const long asn_VAL_20_SBcAP_id_Criticality_Diagnostics = 2; */
+		ie = sbcap_alloc_Error_Indication_IE(1, SBcAP_Criticality_ignore,
+			SBcAP_ErrorIndicationIEs__value_PR_Criticality_Diagnostics);
+		diag_ie = &ie->value.choice.Criticality_Diagnostics;
+		diag_ie->procedureCode = MALLOC(sizeof(*diag_ie->procedureCode));
+		*diag_ie->procedureCode = sbcap_pdu_get_procedure_code(rx_pdu);
+		diag_ie->triggeringMessage = MALLOC(sizeof(*diag_ie->triggeringMessage));
+		*diag_ie->triggeringMessage = rx_pdu->present;
+		diag_ie->procedureCriticality = MALLOC(sizeof(*diag_ie->procedureCriticality));
+		*diag_ie->procedureCriticality = sbcap_pdu_get_criticality(rx_pdu);
+		ASN_SEQUENCE_ADD(as_pdu, ie);
+	}
+	return pdu;
+}

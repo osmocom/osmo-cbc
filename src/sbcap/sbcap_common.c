@@ -111,6 +111,36 @@ void sbcap_pdu_free(SBcAP_SBC_AP_PDU_t *pdu)
 	ASN_STRUCT_FREE(asn_DEF_SBcAP_SBC_AP_PDU, pdu);
 }
 
+SBcAP_ProcedureCode_t sbcap_pdu_get_procedure_code(const SBcAP_SBC_AP_PDU_t *pdu)
+{
+	switch (pdu->present) {
+	case SBcAP_SBC_AP_PDU_PR_initiatingMessage:
+		return pdu->choice.initiatingMessage.procedureCode;
+	case SBcAP_SBC_AP_PDU_PR_successfulOutcome:
+		return pdu->choice.successfulOutcome.procedureCode;
+	case SBcAP_SBC_AP_PDU_PR_unsuccessfulOutcome:
+		return pdu->choice.unsuccessfulOutcome.procedureCode;
+	case SBcAP_SBC_AP_PDU_PR_NOTHING:
+	default:
+		return -1;
+	}
+}
+
+SBcAP_Criticality_t sbcap_pdu_get_criticality(const SBcAP_SBC_AP_PDU_t *pdu)
+{
+	switch (pdu->present) {
+	case SBcAP_SBC_AP_PDU_PR_initiatingMessage:
+		return pdu->choice.initiatingMessage.criticality;
+	case SBcAP_SBC_AP_PDU_PR_successfulOutcome:
+		return pdu->choice.successfulOutcome.criticality;
+	case SBcAP_SBC_AP_PDU_PR_unsuccessfulOutcome:
+		return pdu->choice.unsuccessfulOutcome.criticality;
+	case SBcAP_SBC_AP_PDU_PR_NOTHING:
+	default:
+		return -1;
+	}
+}
+
 void sbcap_set_log_area(int log_area)
 {
 	_sbcap_DSBCAP = log_area;
@@ -130,6 +160,16 @@ SBcAP_Stop_Warning_Request_IEs_t *sbcap_alloc_Stop_Warning_Request_IE(
 	long id, SBcAP_Criticality_t criticality, SBcAP_Stop_Warning_Request_IEs__value_PR present)
 {
 	SBcAP_Stop_Warning_Request_IEs_t *ie = CALLOC(1, sizeof(*ie));
+	ie->id = id;
+	ie->criticality = criticality;
+	ie->value.present = present;
+	return ie;
+}
+
+SBcAP_ErrorIndicationIEs_t *sbcap_alloc_Error_Indication_IE(
+	long id, SBcAP_Criticality_t criticality, SBcAP_Stop_Warning_Request_IEs__value_PR present)
+{
+	SBcAP_ErrorIndicationIEs_t *ie = CALLOC(1, sizeof(*ie));
 	ie->id = id;
 	ie->criticality = criticality;
 	ie->value.present = present;
