@@ -137,12 +137,14 @@ void sbcap_pdu_free(SBcAP_SBC_AP_PDU_t *pdu);
 struct msgb *sbcap_encode(SBcAP_SBC_AP_PDU_t *pdu);
 SBcAP_SBC_AP_PDU_t *sbcap_decode(const struct msgb *msg);
 
+const char *sbcap_procedure_code_str(SBcAP_ProcedureCode_t pc);
 const char *sbcap_cause_str(SBcAP_Cause_t cause);
 
 void sbcap_set_log_area(int log_area);
 
 SBcAP_ProcedureCode_t sbcap_pdu_get_procedure_code(const SBcAP_SBC_AP_PDU_t *pdu);
 SBcAP_Criticality_t sbcap_pdu_get_criticality(const SBcAP_SBC_AP_PDU_t *pdu);
+const char *sbcap_pdu_get_name(const SBcAP_SBC_AP_PDU_t *pdu);
 
 void *sbcap_as_find_ie(void *void_list, SBcAP_ProtocolIE_ID_t ie_id);
 

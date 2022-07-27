@@ -157,13 +157,13 @@ static int cbc_sbcap_link_cli_read_cb(struct osmo_stream_cli *conn)
 	if (rc == 0)
 		goto out;
 
-	LOGPSBCAPC(link, LOGL_DEBUG, "Received SBc-AP %s\n", msgb_hexdump(msg));
+	LOGPSBCAPC(link, LOGL_DEBUG, "Rx SBc-AP %s\n", msgb_hexdump(msg));
 
 	/* decode + dispatch message */
 	pdu = sbcap_decode(msg);
 	if (pdu) {
-		LOGPSBCAPC(link, LOGL_INFO, "Received SBc-AP %d\n",
-			   pdu->present);
+		LOGPSBCAPC(link, LOGL_INFO, "Rx SBc-AP %s\n",
+			   sbcap_pdu_get_name(pdu));
 		g_cbc->sbcap.mgr->rx_cb(link, pdu);
 	} else {
 		LOGPSBCAPC(link, LOGL_ERROR, "Unable to decode %s\n", msgb_hexdump(msg));
@@ -274,13 +274,13 @@ static int sbcap_cbc_srv_read_cb(struct osmo_stream_srv *conn)
 	if (rc == 0)
 		goto out;
 
-	LOGPSBCAPC(link, LOGL_DEBUG, "Received SBc-AP %s\n", msgb_hexdump(msg));
+	LOGPSBCAPC(link, LOGL_DEBUG, "Rx SBc-AP %s\n", msgb_hexdump(msg));
 
 	/* decode + dispatch message */
 	pdu = sbcap_decode(msg);
 	if (pdu) {
-		LOGPSBCAPC(link, LOGL_INFO, "Received SBc-AP %d\n",
-			   pdu->present);
+		LOGPSBCAPC(link, LOGL_INFO, "Rx SBc-AP %s\n",
+			   sbcap_pdu_get_name(pdu));
 		cbc->rx_cb(link, pdu);
 	} else {
 		LOGPSBCAPC(link, LOGL_ERROR, "Unable to decode %s\n", msgb_hexdump(msg));
@@ -389,16 +389,19 @@ void cbc_sbcap_link_tx(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu)
 	}
 
 	if (!link) {
-		LOGP(DSBcAP, LOGL_NOTICE, "Cannot transmit msg: no connection\n");
+		LOGP(DSBcAP, LOGL_NOTICE, "Cannot transmit msg %s: no connection\n",
+		     sbcap_pdu_get_name(pdu));
 		return;
 	}
 
-	LOGPSBCAPC(link, LOGL_INFO, "Transmitting msg\n");
+	LOGPSBCAPC(link, LOGL_INFO, "Tx msg %s\n",
+		   sbcap_pdu_get_name(pdu));
 	OSMO_ASSERT(link->conn);
 	msg = sbcap_encode(pdu);
 	if (!msg)
 		goto ret_free;
-	LOGPSBCAPC(link, LOGL_DEBUG, "Encoded message: %s\n", msgb_hexdump(msg));
+	LOGPSBCAPC(link, LOGL_DEBUG, "Encoded message %s: %s\n",
+		   sbcap_pdu_get_name(pdu), msgb_hexdump(msg));
 	if (link->is_client)
 		osmo_stream_cli_send(link->cli_conn, msg);
 	else

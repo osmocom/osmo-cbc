@@ -30,6 +30,22 @@ extern int asn1_xer_print;
 int _sbcap_DSBCAP = 0;
 #define DSBCAP _sbcap_DSBCAP
 
+static const struct value_string sbcap_procedure_code_vals[] = {
+	{ SBcAP_ProcedureId_Write_Replace_Warning,		"Write-Replace-Warning" },
+	{ SBcAP_ProcedureId_Stop_Warning,			"Stop-Warning" },
+	{ SBcAP_ProcedureId_Error_Indication,			"Error-Indication" },
+	{ SBcAP_ProcedureId_Write_Replace_Warning_Indication,	"Write-Replace-Warning-Indication" },
+	{ SBcAP_ProcedureId_Stop_Warning_Indication,		"Stop-Warning-Indication" },
+	{ SBcAP_ProcedureId_PWS_Restart_Indication,		"PWS-Restart-Indication" },
+	{ SBcAP_ProcedureId_PWS_Failure_Indication,		"PWS-Failure-Indication" },
+	{ 0, NULL }
+};
+
+const char *sbcap_procedure_code_str(SBcAP_ProcedureCode_t pc)
+{
+	return get_value_string(sbcap_procedure_code_vals, pc);
+}
+
 static const struct value_string sbcap_cause_vals[] = {
 	{ SBcAP_Cause_message_accepted,				"message accepted" },
 	{ SBcAP_Cause_parameter_not_recognised,			"parameter not recognised" },
@@ -139,6 +155,27 @@ SBcAP_Criticality_t sbcap_pdu_get_criticality(const SBcAP_SBC_AP_PDU_t *pdu)
 	default:
 		return -1;
 	}
+}
+
+const char *sbcap_pdu_get_name(const SBcAP_SBC_AP_PDU_t *pdu)
+{
+	static char pdu_name[256] = "<unknown>";
+	struct osmo_strbuf sb = { .buf = pdu_name, .len = sizeof(pdu_name) };
+	SBcAP_ProcedureCode_t pc = sbcap_pdu_get_procedure_code(pdu);
+
+	OSMO_STRBUF_PRINTF(sb, "%s", sbcap_procedure_code_str(pc));
+
+	switch (pc) {
+	case SBcAP_ProcedureId_Write_Replace_Warning:
+	case SBcAP_ProcedureId_Stop_Warning:
+		OSMO_STRBUF_PRINTF(sb, "%s",
+				   pdu->present == SBcAP_SBC_AP_PDU_PR_initiatingMessage
+				   ? "-Request" : "-Response");
+		break;
+	default:
+		break;
+	}
+	return pdu_name;
 }
 
 void *sbcap_as_find_ie(void *void_list, SBcAP_ProtocolIE_ID_t ie_id)

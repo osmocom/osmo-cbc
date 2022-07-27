@@ -193,7 +193,8 @@ static int get_msg_id(struct cbc_sbcap_link *link, const SBcAP_SBC_AP_PDU_t *pdu
 	if (!ie)
 		return -1;
 	if (ie->size != 2) {
-		LOGPSBCAPC(link, LOGL_ERROR, "get_msg_id wrong size %zu\n", ie->size);
+		LOGPSBCAPC(link, LOGL_ERROR, "get_msg_id(%s) wrong size %zu\n",
+			   sbcap_pdu_get_name(pdu), ie->size);
 		return -1;
 	}
 	return osmo_load16be(ie->buf);
@@ -235,8 +236,8 @@ static int cbc_sbcap_link_rx_error_ind(struct cbc_sbcap_link *link, SBcAP_SBC_AP
 		}
 	}
 
-	LOGPSBCAPC(link, LOGL_ERROR, "Rx ERROR_IND (cause=%ld, diagnostics=%d [proc_code=%ld, trigger_msg=%ld criticality=%ld])\n",
-		cause, !!ie_diag, proc_code, trigger_msg, criticality);
+	LOGPSBCAPC(link, LOGL_ERROR, "Rx %s (cause=%ld, diagnostics=%d [proc_code=%ld, trigger_msg=%ld criticality=%ld])\n",
+		  sbcap_pdu_get_name(pdu), cause, !!ie_diag, proc_code, trigger_msg, criticality);
 	return 0;
 }
 
@@ -255,15 +256,16 @@ int cbc_sbcap_link_rx_cb(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu)
 		case SBcAP_ProcedureId_Write_Replace_Warning:
 		case SBcAP_ProcedureId_Stop_Warning:
 			LOGPSBCAPC(link, LOGL_ERROR,
-				   "SBcAP initiatingMessage procedure=%ld MME->CBC not expected\n",
-				   pdu->choice.initiatingMessage.procedureCode);
+				   "SBcAP %s MME->CBC not expected\n",
+				   sbcap_pdu_get_name(pdu));
 			return -EINVAL;
 		case SBcAP_ProcedureId_PWS_Restart_Indication:
 			return osmo_fsm_inst_dispatch(link->fi, SBcAP_LINK_E_RX_RESTART, pdu);
 		case SBcAP_ProcedureId_Error_Indication:
 			return cbc_sbcap_link_rx_error_ind(link, pdu);
 		case SBcAP_ProcedureId_PWS_Failure_Indication:
-			LOGPSBCAPC(link, LOGL_NOTICE, "Rx PWS Failure Indication not implemented yet\n");
+			LOGPSBCAPC(link, LOGL_NOTICE, "Rx %s not implemented yet\n",
+				   sbcap_pdu_get_name(pdu));
 			return 0;
 		case SBcAP_ProcedureId_Stop_Warning_Indication:
 		case SBcAP_ProcedureId_Write_Replace_Warning_Indication:
@@ -276,7 +278,8 @@ int cbc_sbcap_link_rx_cb(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu)
 				cbc_sbcap_link_tx(link, err_ind_pdu);
 			else
 				LOGPSBCAPC(link, LOGL_ERROR,
-					   "Tx SBc-AP Error-Indication: msg gen failed\n");
+					   "Tx SBc-AP %s: msg gen failed\n",
+					   sbcap_pdu_get_name(err_ind_pdu));
 			return 0;
 		}
 		break;
@@ -311,8 +314,8 @@ int cbc_sbcap_link_rx_cb(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu)
 	/* look-up smscb_message */
 	smscb = cbc_message_by_id(msg_id);
 	if (!smscb) {
-		LOGPSBCAPC(link, LOGL_ERROR, "Rx SBc-AP msg for unknown message-id 0x%04x\n",
-			   msg_id);
+		LOGPSBCAPC(link, LOGL_ERROR, "Rx SBc-AP %s for unknown message-id 0x%04x\n",
+			   sbcap_pdu_get_name(pdu), msg_id);
 		/* TODO: inform peer? */
 		return 0;
 	}
@@ -320,8 +323,8 @@ int cbc_sbcap_link_rx_cb(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu)
 	/* look-up smscb_message_peer */
 	mp = cbc_message_peer_get(smscb, link->peer);
 	if (!mp) {
-		LOGPSBCAPC(link, LOGL_ERROR, "Rx SBc-AP msg for message-id 0x%04x without peer %s\n",
-			   msg_id, link->peer->name);
+		LOGPSBCAPC(link, LOGL_ERROR, "Rx SBc-AP %s for message-id 0x%04x without peer %s\n",
+			   sbcap_pdu_get_name(pdu), msg_id, link->peer->name);
 		/* TODO: inform peer? */
 		return 0;
 	}
