@@ -31,7 +31,7 @@
 #include <osmocom/cbc/sbcap_msg.h>
 #include <osmocom/cbc/debug.h>
 #include <osmocom/cbc/cbc_peer.h>
-#include <osmocom/cbc/smscb_message_fsm.h>
+#include <osmocom/cbc/smscb_peer_fsm.h>
 
 #define S(x)	(1 << (x))
 
@@ -249,7 +249,7 @@ static int cbc_sbcap_link_rx_write_replace_warn_resp(struct cbc_sbcap_link *link
 	A_SEQUENCE_OF(void) *as_pdu;
 	SBcAP_Write_Replace_Warning_Response_IEs_t *ie;
 	SBcAP_SBC_AP_PDU_t *err_ind_pdu;
-	int ev = SMSCB_E_SBCAP_WRITE_ACK;
+	int ev = SMSCB_PEER_E_SBCAP_WRITE_ACK;
 
 	as_pdu = (void *)&pdu->choice.successfulOutcome.value.choice.Write_Replace_Warning_Response.protocolIEs.list;
 
@@ -257,9 +257,9 @@ static int cbc_sbcap_link_rx_write_replace_warn_resp(struct cbc_sbcap_link *link
 	ie = sbcap_as_find_ie(as_pdu, 1);
 	if (ie) {
 		if (ie->value.choice.Cause != SBcAP_Cause_message_accepted)
-			ev = SMSCB_E_SBCAP_WRITE_NACK;
+			ev = SMSCB_PEER_E_SBCAP_WRITE_NACK;
 	} else { /* This shouldn't happen, the IE is Mandatory... */
-		ev = SMSCB_E_SBCAP_WRITE_NACK;
+		ev = SMSCB_PEER_E_SBCAP_WRITE_NACK;
 		err_ind_pdu = sbcap_gen_error_ind(link,
 						  SBcAP_Cause_missing_mandatory_element, pdu);
 		if (err_ind_pdu)
@@ -362,7 +362,7 @@ int cbc_sbcap_link_rx_cb(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu)
 	case SBcAP_SBC_AP_PDU_PR_initiatingMessage:
 		switch (pdu->choice.initiatingMessage.procedureCode) {
 		case SBcAP_ProcedureId_Write_Replace_Warning_Indication:
-			return osmo_fsm_inst_dispatch(mp->fi, SMSCB_E_SBCAP_WRITE_IND, pdu);
+			return osmo_fsm_inst_dispatch(mp->fi, SMSCB_PEER_E_SBCAP_WRITE_IND, pdu);
 		default:
 			break;
 		}
@@ -371,11 +371,11 @@ int cbc_sbcap_link_rx_cb(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu)
 		switch (pdu->choice.successfulOutcome.procedureCode) {
 		case SBcAP_ProcedureId_Write_Replace_Warning:
 			//if (dec->u.write_replace_compl.old_serial_nr)
-			//	return osmo_fsm_inst_dispatch(mp->fi, SMSCB_E_SBcAP_REPLACE_ACK, dec);
+			//	return osmo_fsm_inst_dispatch(mp->fi, SMSCB_PEER_E_SBcAP_REPLACE_ACK, dec);
 			//else
 				return cbc_sbcap_link_rx_write_replace_warn_resp(link, mp, pdu);
 		case SBcAP_ProcedureId_Stop_Warning:
-			return osmo_fsm_inst_dispatch(mp->fi, SMSCB_E_SBCAP_DELETE_ACK, pdu);
+			return osmo_fsm_inst_dispatch(mp->fi, SMSCB_PEER_E_SBCAP_DELETE_ACK, pdu);
 		default:
 			break;
 		}
@@ -383,7 +383,7 @@ int cbc_sbcap_link_rx_cb(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu)
 	case SBcAP_SBC_AP_PDU_PR_unsuccessfulOutcome:
 		switch (pdu->choice.unsuccessfulOutcome.procedureCode) {
 		case SBcAP_ProcedureId_Stop_Warning:
-			return osmo_fsm_inst_dispatch(mp->fi, SMSCB_E_SBCAP_DELETE_NACK, pdu);
+			return osmo_fsm_inst_dispatch(mp->fi, SMSCB_PEER_E_SBCAP_DELETE_NACK, pdu);
 		default:
 			break;
 		}

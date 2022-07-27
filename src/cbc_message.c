@@ -130,7 +130,7 @@ int cbc_message_new(const struct cbc_message *orig, struct rest_it_op *op)
 	}
 
 	/* kick off the state machine[s] */
-	if (osmo_fsm_inst_dispatch(cbcmsg->fi, SMSCB_E_CREATE, op) < 0) {
+	if (osmo_fsm_inst_dispatch(cbcmsg->fi, SMSCB_MSG_E_CREATE, op) < 0) {
 		rest_it_op_set_http_result(op, 500, "Illegal FSM event");
 		rest_it_op_complete(op);
 	}
@@ -142,7 +142,7 @@ int cbc_message_new(const struct cbc_message *orig, struct rest_it_op *op)
 
 void cbc_message_delete(struct cbc_message *cbcmsg, struct rest_it_op *op)
 {
-	if (osmo_fsm_inst_dispatch(cbcmsg->fi, SMSCB_E_DELETE, op) < 0) {
+	if (osmo_fsm_inst_dispatch(cbcmsg->fi, SMSCB_MSG_E_DELETE, op) < 0) {
 		rest_it_op_set_http_result(op, 500, "Illegal FSM event");
 		rest_it_op_complete(op);
 	}

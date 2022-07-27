@@ -13,4 +13,5 @@ noinst_HEADERS = \
 	sbcap_link_fsm.h \
 	rest_it_op.h \
 	smscb_message_fsm.h \
+	smscb_peer_fsm.h \
 	$(NULL)

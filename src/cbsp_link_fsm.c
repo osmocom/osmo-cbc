@@ -27,7 +27,7 @@
 #include <osmocom/cbc/cbsp_link.h>
 #include <osmocom/cbc/cbsp_link_fsm.h>
 #include <osmocom/cbc/debug.h>
-#include <osmocom/cbc/smscb_message_fsm.h>
+#include <osmocom/cbc/smscb_peer_fsm.h>
 
 #define S(x)	(1 << (x))
 
@@ -339,22 +339,22 @@ int cbc_cbsp_link_rx_cb(struct cbc_cbsp_link *link, struct osmo_cbsp_decoded *de
 	switch (dec->msg_type) {
 	case CBSP_MSGT_WRITE_REPLACE_COMPL:
 		if (dec->u.write_replace_compl.old_serial_nr)
-			return osmo_fsm_inst_dispatch(mp->fi, SMSCB_E_CBSP_REPLACE_ACK, dec);
+			return osmo_fsm_inst_dispatch(mp->fi, SMSCB_PEER_E_CBSP_REPLACE_ACK, dec);
 		else
-			return osmo_fsm_inst_dispatch(mp->fi, SMSCB_E_CBSP_WRITE_ACK, dec);
+			return osmo_fsm_inst_dispatch(mp->fi, SMSCB_PEER_E_CBSP_WRITE_ACK, dec);
 	case CBSP_MSGT_WRITE_REPLACE_FAIL:
 		if (dec->u.write_replace_fail.old_serial_nr)
-			return osmo_fsm_inst_dispatch(mp->fi, SMSCB_E_CBSP_REPLACE_NACK, dec);
+			return osmo_fsm_inst_dispatch(mp->fi, SMSCB_PEER_E_CBSP_REPLACE_NACK, dec);
 		else
-			return osmo_fsm_inst_dispatch(mp->fi, SMSCB_E_CBSP_WRITE_NACK, dec);
+			return osmo_fsm_inst_dispatch(mp->fi, SMSCB_PEER_E_CBSP_WRITE_NACK, dec);
 	case CBSP_MSGT_KILL_COMPL:
-		return osmo_fsm_inst_dispatch(mp->fi, SMSCB_E_CBSP_DELETE_ACK, dec);
+		return osmo_fsm_inst_dispatch(mp->fi, SMSCB_PEER_E_CBSP_DELETE_ACK, dec);
 	case CBSP_MSGT_KILL_FAIL:
-		return osmo_fsm_inst_dispatch(mp->fi, SMSCB_E_CBSP_DELETE_NACK, dec);
+		return osmo_fsm_inst_dispatch(mp->fi, SMSCB_PEER_E_CBSP_DELETE_NACK, dec);
 	case CBSP_MSGT_MSG_STATUS_QUERY_COMPL:
-		return osmo_fsm_inst_dispatch(mp->fi, SMSCB_E_CBSP_STATUS_ACK, dec);
+		return osmo_fsm_inst_dispatch(mp->fi, SMSCB_PEER_E_CBSP_STATUS_ACK, dec);
 	case CBSP_MSGT_MSG_STATUS_QUERY_FAIL:
-		return osmo_fsm_inst_dispatch(mp->fi, SMSCB_E_CBSP_STATUS_NACK, dec);
+		return osmo_fsm_inst_dispatch(mp->fi, SMSCB_PEER_E_CBSP_STATUS_NACK, dec);
 	default:
 		LOGPCC(link, LOGL_ERROR, "unknown message %s\n",
 			get_value_string(cbsp_msg_type_names, dec->msg_type));
