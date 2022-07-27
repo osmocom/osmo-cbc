@@ -44,6 +44,8 @@
 #include <osmocom/vty/logging.h>
 #include <osmocom/vty/misc.h>
 
+#include <osmocom/sbcap/sbcap_common.h>
+
 #include <osmocom/cbc/debug.h>
 #include <osmocom/cbc/cbc_data.h>
 #include <osmocom/cbc/cbc_vty.h>
@@ -71,6 +73,13 @@ static const struct log_info_cat log_info_cat[] = {
 		.name = "DSBcAP",
 		.description = "SBc Application Part (CBC-MME)",
 		.color = "\033[1;32m",
+		.enabled = 1,
+		.loglevel = LOGL_NOTICE,
+	},
+	[DASN1C] = {
+		.name = "DASN1C",
+		.description = "SBc-AP ASN1C enc/dec",
+		.color = "\033[1;34m",
 		.enabled = 1,
 		.loglevel = LOGL_NOTICE,
 	},
@@ -250,6 +259,7 @@ int main(int argc, char **argv)
 	msgb_talloc_ctx_init(tall_cbc_ctx, 0);
 	osmo_init_logging2(tall_cbc_ctx, &log_info);
 	log_enable_multithread();
+	sbcap_set_log_area(DSBcAP, DASN1C);
 	osmo_stats_init(tall_cbc_ctx);
 	vty_init(&vty_info);
 

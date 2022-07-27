@@ -118,8 +118,8 @@
 
 #include <osmocom/core/logging.h>
 
-extern int _sbcap_DSBCAP;
-#define SBC_AP_DEBUG(x, args ...) DEBUGP(_sbcap_DSBCAP, x, ## args)
+extern int _sbcap_DASN1C;
+#define SBC_AP_DEBUG(x, args ...) DEBUGP(_sbcap_DASN1C, x, ## args)
 
 extern int asn1_xer_print;
 
@@ -140,7 +140,7 @@ SBcAP_SBC_AP_PDU_t *sbcap_decode(const struct msgb *msg);
 const char *sbcap_procedure_code_str(SBcAP_ProcedureCode_t pc);
 const char *sbcap_cause_str(SBcAP_Cause_t cause);
 
-void sbcap_set_log_area(int log_area);
+void sbcap_set_log_area(int log_area_sbcap, int log_area_asn1c);
 
 SBcAP_ProcedureCode_t sbcap_pdu_get_procedure_code(const SBcAP_SBC_AP_PDU_t *pdu);
 SBcAP_Criticality_t sbcap_pdu_get_criticality(const SBcAP_SBC_AP_PDU_t *pdu);

@@ -202,8 +202,8 @@ SBc Application Part
 
 static const struct log_info_cat log_categories[] = {
 	[0] = {
-		.name = "DSBcAP",
-		.description = "SBc Application Part (CBC-MME)",
+		.name = "DMAIN",
+		.description = "main category",
 		.color = "\033[1;32m",
 		.enabled = 1,
 		.loglevel = LOGL_DEBUG,
@@ -220,7 +220,7 @@ int main(int argc, char **argv)
 	void *ctx = talloc_named_const(NULL, 0, "mgcp_test");
 	void *msgb_ctx = msgb_talloc_ctx_init(ctx, 0);
 	osmo_init_logging2(ctx, &log_info);
-	sbcap_set_log_area(0);
+	sbcap_set_log_area(0, 0);
 	log_set_log_level(osmo_stderr_target, LOGL_DEBUG);
 	log_set_print_category_hex(osmo_stderr_target, 0);
 	log_set_print_category(osmo_stderr_target, 0);

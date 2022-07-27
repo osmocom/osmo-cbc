@@ -28,7 +28,9 @@
 extern int asn1_xer_print;
 
 int _sbcap_DSBCAP = 0;
+int _sbcap_DASN1C = 0;
 #define DSBCAP _sbcap_DSBCAP
+#define DASN1C _sbcap_DASN1C
 
 static const struct value_string sbcap_procedure_code_vals[] = {
 	{ SBcAP_ProcedureId_Write_Replace_Warning,		"Write-Replace-Warning" },
@@ -91,7 +93,8 @@ struct msgb *sbcap_encode(SBcAP_SBC_AP_PDU_t *pdu)
 	rval = aper_encode_to_buffer(&asn_DEF_SBcAP_SBC_AP_PDU, NULL, pdu,
 				     msgb_data(msg), msgb_tailroom(msg));
 	if (rval.encoded < 0) {
-		LOGP(DSBCAP, LOGL_ERROR, "Error encoding type: %s\n",
+		LOGP(DSBCAP, LOGL_ERROR, "%s: Error encoding type: %s\n",
+		     sbcap_pdu_get_name(pdu),
 		     rval.failed_type->name);
 		msgb_free(msg);
 		return NULL;
@@ -112,6 +115,7 @@ SBcAP_SBC_AP_PDU_t *sbcap_decode(const struct msgb *msg)
 		LOGP(DSBCAP, LOGL_ERROR, "Error decoding code=%d\n", rval.code);
 		return NULL;
 	}
+	LOGP(DSBCAP, LOGL_DEBUG, "Decoded %s\n", sbcap_pdu_get_name(pdu));
 	return pdu;
 }
 
@@ -192,9 +196,10 @@ void *sbcap_as_find_ie(void *void_list, SBcAP_ProtocolIE_ID_t ie_id)
 	return NULL;
 }
 
-void sbcap_set_log_area(int log_area)
+void sbcap_set_log_area(int log_area_sbcap, int log_area_asn1c)
 {
-	_sbcap_DSBCAP = log_area;
+	_sbcap_DSBCAP = log_area_sbcap;
+	_sbcap_DASN1C = log_area_asn1c;
 }
 
 SBcAP_Write_Replace_Warning_Request_IEs_t *sbcap_alloc_Write_Replace_Warning_Request_IE(
