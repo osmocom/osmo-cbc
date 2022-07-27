@@ -174,39 +174,6 @@ DEFUN(delete_message_expired, delete_message_expired_cmd,
 	return CMD_SUCCESS;
 }
 
-static const char *cbc_cell_id2str(const struct cbc_cell_id *cid)
-{
-	static char buf[256];
-
-	switch (cid->id_discr) {
-	case CBC_CELL_ID_NONE:
-		snprintf(buf, sizeof(buf), "NONE");
-		break;
-	case CBC_CELL_ID_BSS:
-		snprintf(buf, sizeof(buf), "BSS");
-		break;
-	case CBC_CELL_ID_CGI:
-		snprintf(buf, sizeof(buf), "CGI %s", osmo_cgi_name(&cid->u.cgi));
-		break;
-	case CBC_CELL_ID_LAC_CI:
-		snprintf(buf, sizeof(buf), "LAC %u CI %u", cid->u.lac_and_ci.lac, cid->u.lac_and_ci.ci);
-		break;
-	case CBC_CELL_ID_LAI:
-		snprintf(buf, sizeof(buf), "LAI %s", osmo_lai_name(&cid->u.lai));
-		break;
-	case CBC_CELL_ID_LAC:
-		snprintf(buf, sizeof(buf), "LAC %u", cid->u.lac);
-		break;
-	case CBC_CELL_ID_CI:
-		snprintf(buf, sizeof(buf), "CI %u", cid->u.ci);
-		break;
-	default:
-		snprintf(buf, sizeof(buf), "<invalid>");
-		break;
-	}
-	return buf;
-}
-
 static void dump_one_msg_peer(struct vty *vty, const struct cbc_message_peer *msg_peer, const char *pfx)
 {
 	struct cbc_cell_id *cid;
