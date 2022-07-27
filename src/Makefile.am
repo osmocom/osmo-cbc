@@ -18,14 +18,16 @@ osmo_cbc_SOURCES = \
 	cbsp_link.c \
 	cbsp_link_fsm.c \
 	cbsp_msg.c \
+	cbsp_smscb_peer_fsm.c \
 	rest_api.c \
 	charset.c \
 	rest_it_op.c \
 	sbcap_msg.c \
 	sbcap_link.c \
 	sbcap_link_fsm.c \
-	smscb_peer_fsm.c \
+	sbcap_smscb_peer_fsm.c \
 	smscb_message_fsm.c \
+	smscb_peer_fsm.c \
 	$(NULL)
 
 osmo_cbc_LDADD = $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS) $(LIBOSMOVTY_LIBS) \

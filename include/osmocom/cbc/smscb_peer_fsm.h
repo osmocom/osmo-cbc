@@ -35,3 +35,6 @@ enum smscb_peer_fsm_event {
 };
 
 extern const struct value_string smscb_peer_fsm_event_names[];
+
+extern struct osmo_fsm cbsp_smscb_peer_fsm;
+extern struct osmo_fsm sbcap_smscb_peer_fsm;
