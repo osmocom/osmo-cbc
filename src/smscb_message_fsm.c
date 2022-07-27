@@ -335,7 +335,7 @@ static struct osmo_fsm smscb_fsm = {
 	.allstate_event_mask = S(SMSCB_E_CHILD_DIED),
 	.allstate_action = smscb_fsm_allstate,
 	.timer_cb = smscb_fsm_timer_cb,
-	.log_subsys = DCBSP,
+	.log_subsys = DSMSCB,
 	.event_names = smscb_fsm_event_names,
 	.cleanup= smscb_fsm_cleanup,
 };
@@ -349,7 +349,7 @@ struct cbc_message *cbc_message_alloc(void *ctx, const struct cbc_message *orig_
 	char idbuf[32];
 
 	if (cbc_message_by_id(orig_msg->msg.message_id)) {
-		LOGP(DCBSP, LOGL_ERROR, "Cannot create message_id %u (already exists)\n",
+		LOGP(DSMSCB, LOGL_ERROR, "Cannot create message_id %u (already exists)\n",
 			orig_msg->msg.message_id);
 		return NULL;
 	}
@@ -357,13 +357,13 @@ struct cbc_message *cbc_message_alloc(void *ctx, const struct cbc_message *orig_
 	snprintf(idbuf, sizeof(idbuf), "%s-%u", orig_msg->cbe_name, orig_msg->msg.message_id);
 	fi = osmo_fsm_inst_alloc(&smscb_fsm, ctx, NULL, LOGL_INFO, idbuf);
 	if (!fi) {
-		LOGP(DCBSP, LOGL_ERROR, "Cannot allocate cbc_message fsm\n");
+		LOGP(DSMSCB, LOGL_ERROR, "Cannot allocate cbc_message fsm\n");
 		return NULL;
 	}
 
 	smscb = talloc(fi, struct cbc_message);
 	if (!smscb) {
-		LOGP(DCBSP, LOGL_ERROR, "Cannot allocate cbc_message\n");
+		LOGP(DSMSCB, LOGL_ERROR, "Cannot allocate cbc_message\n");
 		osmo_fsm_inst_term(fi, OSMO_FSM_TERM_ERROR, NULL);
 		return NULL;
 	}

@@ -62,6 +62,13 @@ static const struct log_info_cat log_info_cat[] = {
 		.enabled = 1,
 		.loglevel = LOGL_NOTICE,
 	},
+	[DSMSCB] = {
+		.name = "DSMSCB",
+		.description = "SMS Cell Broadcast handling",
+		.color = "\033[1;35m",
+		.enabled = 1,
+		.loglevel = LOGL_NOTICE,
+	},
 	[DCBSP] = {
 		.name = "DCBSP",
 		.description = "Cell Broadcast Service Protocol (CBC-BSC)",
