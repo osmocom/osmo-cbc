@@ -318,14 +318,14 @@ static int cbsp_cbc_accept_cb(struct osmo_stream_srv_link *srv_link, int fd)
 	return 0;
 }
 
-void cbc_cbsp_link_tx(struct cbc_cbsp_link *link, struct osmo_cbsp_decoded *cbsp)
+int cbc_cbsp_link_tx(struct cbc_cbsp_link *link, struct osmo_cbsp_decoded *cbsp)
 {
 	struct msgb *msg;
 
 	if (!link) {
 		LOGP(DCBSP, LOGL_NOTICE, "Cannot transmit %s: no connection\n",
 			get_value_string(cbsp_msg_type_names, cbsp->msg_type));
-		return ;
+		return -ENOLINK;
 	}
 
 	LOGPCC(link, LOGL_INFO, "Transmitting %s\n",
@@ -336,13 +336,14 @@ void cbc_cbsp_link_tx(struct cbc_cbsp_link *link, struct osmo_cbsp_decoded *cbsp
 		LOGPCC(link, LOGL_ERROR, "Failed to encode CBSP %s: %s\n",
 			get_value_string(cbsp_msg_type_names, cbsp->msg_type), osmo_cbsp_errstr);
 		talloc_free(cbsp);
-		return;
+		return -EINVAL;
 	}
 	talloc_free(cbsp);
 	if (link->is_client)
 		osmo_stream_cli_send(link->cli_conn, msg);
 	else
 		osmo_stream_srv_send(link->srv_conn, msg);
+	return 0;
 }
 
 void cbc_cbsp_link_close(struct cbc_cbsp_link *link)

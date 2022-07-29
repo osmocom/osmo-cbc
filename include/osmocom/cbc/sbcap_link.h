@@ -47,6 +47,6 @@ struct cbc_sbcap_link *cbc_sbcap_link_alloc(struct cbc_sbcap_mgr *cbc, struct cb
 void cbc_sbcap_link_free(struct cbc_sbcap_link *link);
 const char *cbc_sbcap_link_name(const struct cbc_sbcap_link *link);
 int cbc_sbcap_link_open_cli(struct cbc_sbcap_link *link);
-void cbc_sbcap_link_tx(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu);
+int cbc_sbcap_link_tx(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu);
 void cbc_sbcap_link_close(struct cbc_sbcap_link *link);
 int cbc_sbcap_link_rx_cb(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu);

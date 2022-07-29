@@ -70,8 +70,8 @@ int peer_new_cbc_message(struct cbc_peer *peer, struct cbc_message *cbcmsg)
 			     peer->name);
 			return -EINVAL;
 		}
-		cbc_cbsp_link_tx(peer->link.cbsp, cbsp);
-		break;
+		return cbc_cbsp_link_tx(peer->link.cbsp, cbsp);
+
 	case CBC_PEER_PROTO_SBcAP:
 		/* skip peers without any current SBc-AP connection */
 		if (!peer->link.sbcap) {
@@ -84,17 +84,16 @@ int peer_new_cbc_message(struct cbc_peer *peer, struct cbc_message *cbcmsg)
 			     peer->name);
 			return -EINVAL;
 		}
-		cbc_sbcap_link_tx(peer->link.sbcap, sbcap);
-		break;
+		return cbc_sbcap_link_tx(peer->link.sbcap, sbcap);
+
 	case CBC_PEER_PROTO_SABP:
 		LOGP(DLGLOBAL, LOGL_ERROR, "Sending message to peer proto %s not implemented!\n",
 		     get_value_string(cbc_peer_proto_name, peer->proto));
 		return -1;
+
 	default:
 		OSMO_ASSERT(0);
 	}
-
-	return 0;
 }
 
 /* receive a new CBC message from the user (REST). Allocates new memory,

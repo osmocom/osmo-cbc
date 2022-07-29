@@ -379,27 +379,30 @@ static int sbcap_cbc_accept_cb(struct osmo_stream_srv_link *srv_link, int fd)
 	return 0;
 }
 
-void cbc_sbcap_link_tx(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu)
+int cbc_sbcap_link_tx(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu)
 {
 	struct msgb *msg;
+	int rc = 0;
 
 	if (!pdu) {
 		LOGP(DSBcAP, LOGL_NOTICE, "Cannot transmit msg: no pdu\n");
-		return;
+		return -ENOMSG;
 	}
 
 	if (!link) {
 		LOGP(DSBcAP, LOGL_NOTICE, "Cannot transmit msg %s: no connection\n",
 		     sbcap_pdu_get_name(pdu));
-		return;
+		return -ENOLINK;
 	}
 
 	LOGPSBCAPC(link, LOGL_INFO, "Tx msg %s\n",
 		   sbcap_pdu_get_name(pdu));
 	OSMO_ASSERT(link->conn);
 	msg = sbcap_encode(pdu);
-	if (!msg)
+	if (!msg) {
+		rc = -EINVAL;
 		goto ret_free;
+	}
 	LOGPSBCAPC(link, LOGL_DEBUG, "Encoded message %s: %s\n",
 		   sbcap_pdu_get_name(pdu), msgb_hexdump(msg));
 	if (link->is_client)
@@ -408,6 +411,7 @@ void cbc_sbcap_link_tx(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu)
 		osmo_stream_srv_send(link->srv_conn, msg);
 ret_free:
 	sbcap_pdu_free(pdu);
+	return rc;
 }
 
 void cbc_sbcap_link_close(struct cbc_sbcap_link *link)
