@@ -266,11 +266,9 @@ static void smscb_p_fsm_init(struct osmo_fsm_inst *fi, uint32_t event, void *dat
 	case SMSCB_PEER_E_CREATE:
 		/* send it to peer */
 		rc = peer_new_cbc_message(mp->peer, mp->cbcmsg);
-		if (rc == 0) {
-			/* wait for peers' response */
-			osmo_fsm_inst_state_chg(fi, SMSCB_S_WAIT_WRITE_ACK, 10,
-						T_WAIT_WRITE_ACK);
-		}
+		osmo_fsm_inst_state_chg(fi, SMSCB_S_WAIT_WRITE_ACK, 10, T_WAIT_WRITE_ACK);
+		if (rc != 0) /* Immediately timeout the message */
+			fi->fsm->timer_cb(fi);
 		break;
 	default:
 		OSMO_ASSERT(0);
@@ -309,6 +307,7 @@ static void smscb_p_fsm_active(struct osmo_fsm_inst *fi, uint32_t event, void *d
 {
 	struct cbc_message_peer *mp = (struct cbc_message_peer *) fi->priv;
 	struct osmo_cbsp_decoded *cbsp;
+	int rc;
 
 	switch (event) {
 	case SMSCB_PEER_E_REPLACE: /* send WRITE-REPLACE to BSC */
@@ -320,8 +319,10 @@ static void smscb_p_fsm_active(struct osmo_fsm_inst *fi, uint32_t event, void *d
 		/* TODO: we assume that the replace will always affect all original cells */
 		cbsp_append_cell_list(&cbsp->u.write_replace.cell_list, cbsp, mp);
 		// TODO: ALL OTHER DATA
-		cbc_cbsp_link_tx(mp->peer->link.cbsp, cbsp);
+		rc = cbc_cbsp_link_tx(mp->peer->link.cbsp, cbsp);
 		osmo_fsm_inst_state_chg(fi, SMSCB_S_WAIT_REPLACE_ACK, 10, T_WAIT_REPLACE_ACK);
+		if (rc != 0) /* Immediately timeout the message */
+			fi->fsm->timer_cb(fi);
 		break;
 	case SMSCB_PEER_E_STATUS: /* send MSG-STATUS-QUERY to BSC */
 		cbsp = osmo_cbsp_decoded_alloc(mp->peer, CBSP_MSGT_MSG_STATUS_QUERY);
@@ -330,8 +331,10 @@ static void smscb_p_fsm_active(struct osmo_fsm_inst *fi, uint32_t event, void *d
 		cbsp->u.msg_status_query.old_serial_nr = mp->cbcmsg->msg.serial_nr;
 		cbsp_append_cell_list(&cbsp->u.msg_status_query.cell_list, cbsp, mp);
 		cbsp->u.msg_status_query.channel_ind = CBSP_CHAN_IND_BASIC;
-		cbc_cbsp_link_tx(mp->peer->link.cbsp, cbsp);
+		rc = cbc_cbsp_link_tx(mp->peer->link.cbsp, cbsp);
 		osmo_fsm_inst_state_chg(fi, SMSCB_S_WAIT_STATUS_ACK, 10, T_WAIT_STATUS_ACK);
+		if (rc != 0) /* Immediately timeout the message */
+			fi->fsm->timer_cb(fi);
 		break;
 	default:
 		OSMO_ASSERT(0);
@@ -423,8 +426,6 @@ static void smscb_p_fsm_wait_delete_ack(struct osmo_fsm_inst *fi, uint32_t event
 	}
 }
 
-
-
 static int smscb_p_fsm_timer_cb(struct osmo_fsm_inst *fi)
 {
 	switch (fi->T) {
@@ -454,6 +455,7 @@ static void smscb_p_fsm_allstate(struct osmo_fsm_inst *fi, uint32_t event, void 
 {
 	struct cbc_message_peer *mp = (struct cbc_message_peer *) fi->priv;
 	struct osmo_cbsp_decoded *cbsp;
+	int rc;
 
 	switch (event) {
 	case SMSCB_PEER_E_DELETE: /* send KILL to BSC */
@@ -478,8 +480,10 @@ static void smscb_p_fsm_allstate(struct osmo_fsm_inst *fi, uint32_t event, void 
 			OSMO_ASSERT(cbsp->u.kill.channel_ind);
 			*(cbsp->u.kill.channel_ind) = CBSP_CHAN_IND_BASIC;
 		}
-		cbc_cbsp_link_tx(mp->peer->link.cbsp, cbsp);
+		rc = cbc_cbsp_link_tx(mp->peer->link.cbsp, cbsp);
 		osmo_fsm_inst_state_chg(fi, SMSCB_S_WAIT_DELETE_ACK, 10, T_WAIT_DELETE_ACK);
+		if (rc != 0) /* Immediately timeout the message */
+			fi->fsm->timer_cb(fi);
 		break;
 	default:
 		OSMO_ASSERT(0);
@@ -497,7 +501,8 @@ static const struct osmo_fsm_state smscb_p_fsm_states[] = {
 	[SMSCB_S_INIT] = {
 		.name = "INIT",
 		.in_event_mask = S(SMSCB_PEER_E_CREATE),
-		.out_state_mask = S(SMSCB_S_WAIT_WRITE_ACK),
+		.out_state_mask = S(SMSCB_S_WAIT_WRITE_ACK) |
+				  S(SMSCB_S_ACTIVE),
 		.action = smscb_p_fsm_init,
 	},
 	[SMSCB_S_WAIT_WRITE_ACK] = {

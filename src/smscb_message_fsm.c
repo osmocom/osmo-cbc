@@ -84,7 +84,7 @@ static void smscb_fsm_wait_write_ack(struct osmo_fsm_inst *fi, uint32_t event, v
 		/* check if any per-peer children have not yet received the ACK or
 		 * timed out */
 		llist_for_each_entry(peer_fi, &fi->proc.children, proc.child) {
-			if (peer_fi->state == SMSCB_S_WAIT_WRITE_ACK)
+			if (peer_fi->state != SMSCB_S_ACTIVE)
 				return;
 		}
 		rest_it_op_set_http_result(cbcmsg->it_op, 201, "Created"); // FIXME: error cases

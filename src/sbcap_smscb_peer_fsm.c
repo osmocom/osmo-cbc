@@ -116,11 +116,9 @@ static void smscb_p_fsm_init(struct osmo_fsm_inst *fi, uint32_t event, void *dat
 	case SMSCB_PEER_E_CREATE:
 		/* send it to peer */
 		rc = peer_new_cbc_message(mp->peer, mp->cbcmsg);
-		if (rc == 0) {
-			/* wait for peers' response */
-			osmo_fsm_inst_state_chg(fi, SMSCB_S_WAIT_WRITE_ACK, 10,
-						T_WAIT_WRITE_ACK);
-		}
+		osmo_fsm_inst_state_chg(fi, SMSCB_S_WAIT_WRITE_ACK, 10, T_WAIT_WRITE_ACK);
+		if (rc != 0) /* Immediately timeout the message */
+			fi->fsm->timer_cb(fi);
 		break;
 	default:
 		OSMO_ASSERT(0);
@@ -256,6 +254,7 @@ static void smscb_p_fsm_allstate(struct osmo_fsm_inst *fi, uint32_t event, void 
 	SBcAP_SBC_AP_PDU_t *sbcap;
 	A_SEQUENCE_OF(void) *as_pdu;
 	SBcAP_Write_Replace_Warning_Indication_IEs_t *ie;
+	int rc;
 
 	switch (event) {
 	case SMSCB_PEER_E_DELETE: /* send Stop-Warning to MME */
@@ -269,13 +268,16 @@ static void smscb_p_fsm_allstate(struct osmo_fsm_inst *fi, uint32_t event, void 
 			break;
 		}
 		if ((sbcap = sbcap_gen_stop_warning_req(mp->peer, mp->cbcmsg))) {
-			cbc_sbcap_link_tx(mp->peer->link.sbcap, sbcap);
+			rc = cbc_sbcap_link_tx(mp->peer->link.sbcap, sbcap);
 		} else {
 			LOGP(DSBcAP, LOGL_ERROR,
 			     "[%s] Tx SBc-AP Stop-Warning-Request: msg gen failed\n",
 			     mp->peer->name);
+			rc = -1;
 		}
 		osmo_fsm_inst_state_chg(fi, SMSCB_S_WAIT_DELETE_ACK, 10, T_WAIT_DELETE_ACK);
+		if (rc != 0) /* Immediately timeout the message */
+			fi->fsm->timer_cb(fi);
 		break;
 	case SMSCB_PEER_E_SBCAP_WRITE_IND:
 		sbcap = (SBcAP_SBC_AP_PDU_t *)data;
@@ -305,7 +307,8 @@ static const struct osmo_fsm_state smscb_p_fsm_states[] = {
 	[SMSCB_S_INIT] = {
 		.name = "INIT",
 		.in_event_mask = S(SMSCB_PEER_E_CREATE),
-		.out_state_mask = S(SMSCB_S_WAIT_WRITE_ACK),
+		.out_state_mask = S(SMSCB_S_WAIT_WRITE_ACK) |
+				  S(SMSCB_S_ACTIVE),
 		.action = smscb_p_fsm_init,
 	},
 	[SMSCB_S_WAIT_WRITE_ACK] = {
