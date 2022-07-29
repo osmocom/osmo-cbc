@@ -35,6 +35,7 @@
 #include <osmocom/core/utils.h>
 #include <osmocom/core/logging.h>
 #include <osmocom/core/application.h>
+#include <osmocom/core/fsm.h>
 
 #include <osmocom/vty/vty.h>
 #include <osmocom/vty/stats.h>
@@ -268,6 +269,7 @@ int main(int argc, char **argv)
 	log_enable_multithread();
 	sbcap_set_log_area(DSBcAP, DASN1C);
 	osmo_stats_init(tall_cbc_ctx);
+	osmo_fsm_log_timeouts(true);
 	vty_init(&vty_info);
 
 	g_cbc = cbc_alloc(tall_cbc_ctx);
