@@ -41,6 +41,7 @@
 struct cbc_cbsp_link *cbc_cbsp_link_alloc(struct cbc_cbsp_mgr *cbc, struct cbc_peer *peer)
 {
 	struct cbc_cbsp_link *link;
+	char *name;
 
 	link = talloc_zero(cbc, struct cbc_cbsp_link);
 	OSMO_ASSERT(link);
@@ -48,12 +49,15 @@ struct cbc_cbsp_link *cbc_cbsp_link_alloc(struct cbc_cbsp_mgr *cbc, struct cbc_p
 	link->peer = peer;
 	link->is_client = (peer->link_mode == CBC_PEER_LINK_MODE_CLIENT);
 
-	link->fi = osmo_fsm_inst_alloc(&cbsp_link_fsm, link, link, LOGL_DEBUG, NULL);
+	name = talloc_strdup(link, peer->name);
+	osmo_identifier_sanitize_buf(name, NULL, '_');
+	link->fi = osmo_fsm_inst_alloc(&cbsp_link_fsm, link, link, LOGL_DEBUG, name);
 	if (!link->fi) {
 		LOGPCC(link, LOGL_ERROR, "Unable to allocate FSM\n");
 		talloc_free(link);
 		return NULL;
 	}
+	talloc_free(name);
 
 	llist_add_tail(&link->list, &cbc->links);
 	return link;
