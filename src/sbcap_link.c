@@ -420,10 +420,18 @@ void cbc_sbcap_link_close(struct cbc_sbcap_link *link)
 	if (!link->conn)
 		return;
 
-	if (link->is_client)
+	if (link->is_client) {
 		osmo_stream_cli_destroy(link->cli_conn);
-	else
+		osmo_stream_cli_destroy(link->cli_conn);
+		if (link->peer)
+			link->peer->link.sbcap = NULL;
+		link->cli_conn = NULL;
+		if (link->fi)
+			osmo_fsm_inst_dispatch(link->fi, SBcAP_LINK_E_CMD_CLOSE, NULL);
+	} else {
 		osmo_stream_srv_destroy(link->srv_conn);
+		/* Same as waht's done for cli is done for srv in closed_cb() */
+	}
 }
 
 /*
