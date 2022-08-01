@@ -392,7 +392,8 @@ int cbc_sbcap_link_tx(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu)
 	if (!link) {
 		LOGP(DSBcAP, LOGL_NOTICE, "Cannot transmit msg %s: no connection\n",
 		     sbcap_pdu_get_name(pdu));
-		return -ENOLINK;
+		rc = -ENOLINK;
+		goto ret_free;
 	}
 
 	LOGPSBCAPC(link, LOGL_INFO, "Tx msg %s\n",

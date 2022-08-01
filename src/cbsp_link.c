@@ -325,6 +325,7 @@ int cbc_cbsp_link_tx(struct cbc_cbsp_link *link, struct osmo_cbsp_decoded *cbsp)
 	if (!link) {
 		LOGP(DCBSP, LOGL_NOTICE, "Cannot transmit %s: no connection\n",
 			get_value_string(cbsp_msg_type_names, cbsp->msg_type));
+		talloc_free(cbsp);
 		return -ENOLINK;
 	}
 
