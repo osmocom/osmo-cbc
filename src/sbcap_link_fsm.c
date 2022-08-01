@@ -302,12 +302,13 @@ int cbc_sbcap_link_rx_cb(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu)
 			LOGPSBCAPC(link, LOGL_ERROR, "SBcAP initiatingMessage procedure=%ld not implemented?\n",
 				   pdu->choice.initiatingMessage.procedureCode);
 			err_ind_pdu = sbcap_gen_error_ind(link, SBcAP_Cause_valid_message_not_identified, pdu);
-			if (err_ind_pdu)
-				cbc_sbcap_link_tx(link, err_ind_pdu);
-			else
+			if (!err_ind_pdu) {
 				LOGPSBCAPC(link, LOGL_ERROR,
-					   "Tx SBc-AP %s: msg gen failed\n",
-					   sbcap_pdu_get_name(err_ind_pdu));
+					   "Tx SBc-AP Error-Indication: msg gen failed\n");
+			} else if (cbc_sbcap_link_tx(link, err_ind_pdu) < 0) {
+				LOGPSBCAPC(link, LOGL_ERROR,
+					   "Tx SBc-AP Error-Indication failed\n");
+			}
 			return 0;
 		}
 		break;
