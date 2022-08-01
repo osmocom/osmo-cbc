@@ -398,6 +398,11 @@ int cbc_sbcap_link_tx(struct cbc_sbcap_link *link, SBcAP_SBC_AP_PDU_t *pdu)
 		     sbcap_pdu_get_name(pdu));
 		rc = -ENOLINK;
 		goto ret_free;
+	} else if (link->is_client && !osmo_stream_cli_is_connected(link->cli_conn)) {
+		LOGPSBCAPC(link, LOGL_NOTICE, "Cannot transmit msg %s: reconnecting\n",
+		     sbcap_pdu_get_name(pdu));
+		rc = -ENOTCONN;
+		goto ret_free;
 	}
 
 	LOGPSBCAPC(link, LOGL_INFO, "Tx msg %s\n",

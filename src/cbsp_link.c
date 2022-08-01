@@ -331,6 +331,11 @@ int cbc_cbsp_link_tx(struct cbc_cbsp_link *link, struct osmo_cbsp_decoded *cbsp)
 			get_value_string(cbsp_msg_type_names, cbsp->msg_type));
 		talloc_free(cbsp);
 		return -ENOLINK;
+	} else if (link->is_client && !osmo_stream_cli_is_connected(link->cli_conn)) {
+		LOGPCC(link, LOGL_NOTICE, "Cannot transmit %s: reconnecting\n",
+		     get_value_string(cbsp_msg_type_names, cbsp->msg_type));
+		talloc_free(cbsp);
+		return -ENOTCONN;
 	}
 
 	LOGPCC(link, LOGL_INFO, "Transmitting %s\n",
