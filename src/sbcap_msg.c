@@ -223,6 +223,14 @@ SBcAP_SBC_AP_PDU_t *sbcap_gen_write_replace_warning_req(void *ctx, const struct 
 			ptr++;
 		}
 		ASN_SEQUENCE_ADD(as_pdu, ie);
+
+		/* Concurrent Warning Message Indicator
+		 * 3GPP TS 36.413 8.12.1.2 and 9.2.1.72, 3GPP TS 23.041 9.3.32
+		 * static const long asn_VAL_13_SBcAP_id_Concurrent_Warning_Message_Indicator = 20; */
+		ie = sbcap_alloc_Write_Replace_Warning_Request_IE(20, SBcAP_Criticality_reject,
+			SBcAP_Write_Replace_Warning_Request_IEs__value_PR_Concurrent_Warning_Message_Indicator);
+		ie->value.choice.Concurrent_Warning_Message_Indicator = SBcAP_Concurrent_Warning_Message_Indicator_true;
+		ASN_SEQUENCE_ADD(as_pdu, ie);
 	}
 
 	/* Send Write-Replace-Warning-Indication
