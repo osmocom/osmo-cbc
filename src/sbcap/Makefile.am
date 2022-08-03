@@ -376,7 +376,7 @@ libosmo_asn1_sbcap_la_LIBADD=$(ASN1C_LDADD)
 
 sbcap_LIBVERSION=0:0:0
 lib_LTLIBRARIES = libosmo-sbcap.la
-libosmo_sbcap_la_LDFLAGS = $(AM_LDFLAGS) -version-info $(sbcap_LIBVERSION)
+libosmo_sbcap_la_LDFLAGS = $(AM_LDFLAGS) -version-info $(sbcap_LIBVERSION) -no-undefined
 libosmo_sbcap_la_LIBADD = $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS) $(LIBOSMOVTY_LIBS) \
 		                  $(ASN1C_LIBS) libosmo-asn1-sbcap.la
 libosmo_sbcap_la_SOURCES = sbcap_common.c
