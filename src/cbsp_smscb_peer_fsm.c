@@ -221,7 +221,7 @@ static void cci_from_cbsp_fail_ent(struct cbc_message_peer *mp,
 			return;
 		llist_add_tail(&cci->list, &mp->fail_list);
 	}
-	cci->id_discr = cci_discr_from_cell_id(fe->id_discr);
+	cci_from_cbsp(cci, fe->id_discr, &fe->cell_id);
 	cci->fail.cause = fe->cause;
 	LOGPFSML(mp->fi, LOGL_DEBUG, "Appending CellId %s (cause: %u) to Failed list\n",
 		 cbc_cell_id2str(cci), cci->fail.cause);
