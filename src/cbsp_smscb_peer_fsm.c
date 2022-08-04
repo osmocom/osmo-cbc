@@ -171,6 +171,8 @@ static void cci_from_cbsp_compl_ent(struct cbc_message_peer *mp,
 	cci_from_cbsp(cci, id_discr, &ce->cell_id);
 	cci->num_compl.num_compl += ce->num_compl;
 	cci->num_compl.num_bcast_info += ce->num_bcast_info;
+	LOGPFSML(mp->fi, LOGL_DEBUG, "Appending CellId %s to Broadcast Completed list\n",
+		 cbc_cell_id2str(cci));
 }
 static void msg_peer_append_cbsp_compl(struct cbc_message_peer *mp,
 					struct osmo_cbsp_num_compl_list *nclist)
@@ -195,6 +197,8 @@ static void cci_from_cbsp_cell_ent(struct cbc_message_peer *mp,
 		llist_add_tail(&cci->list, &mp->cell_list);
 	}
 	cci_from_cbsp(cci, id_discr, &ce->cell_id);
+	LOGPFSML(mp->fi, LOGL_DEBUG, "Appending CellId %s to Cell list\n",
+		 cbc_cell_id2str(cci));
 }
 static void msg_peer_append_cbsp_cell(struct cbc_message_peer *mp,
 					struct osmo_cbsp_cell_list *clist)
@@ -219,6 +223,8 @@ static void cci_from_cbsp_fail_ent(struct cbc_message_peer *mp,
 	}
 	cci->id_discr = cci_discr_from_cell_id(fe->id_discr);
 	cci->fail.cause = fe->cause;
+	LOGPFSML(mp->fi, LOGL_DEBUG, "Appending CellId %s (cause: %u) to Failed list\n",
+		 cbc_cell_id2str(cci), cci->fail.cause);
 }
 static void msg_peer_append_cbsp_fail(struct cbc_message_peer *mp, struct llist_head *flist)
 {
