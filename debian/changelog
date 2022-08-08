@@ -1,3 +1,106 @@
+osmo-cbc (0.4.0) unstable; urgency=medium
+
+  [ Pau Espin Pedrol ]
+  * Configure libosmocore logging system as multithread
+  * Move peer to DELETED state before signalling parent FSM with DELETE_(N)ACK
+  * Fix typos in error messages
+  * main: remove newline char in perror() call
+  * cbsp_server: Exit process gracefully if binding socket fails
+  * Move header files to include/osmocom/cbc/ dir
+  * Improve error handling when forwarding ECBE msg to CBSP
+  * cbsp: Clean up conn closed paths
+  * rest_api: Fix cbs.data_user_len not set in 'payload_encoded'
+  * Add sbcap library
+  * Add unit tests for sbcap
+  * sbcap: Update asn1c skeleton files
+  * Add initial SBc-AP support to osmo-cbc
+  * doc: user manual: fix typo
+  * doc: Document SBc-AP support and config
+  * Fix printf format in 32bit arch
+  * vty: Fix call to OSMO_STRBUF_PRINTF
+  * sbcap: Update asn1c skeleton files
+  * Improve example osmo-cbc.cfg file
+  * sbcap_server.c: Remove unneeded goto
+  * sbcap_server: Log all sctp notif
+  * sbcap_server: Fix double-free of rx msg if conn is destroyed
+  * Split cbc_peer to its own .c and .h files
+  * cbc_peer: Close SBcAP conn when removing active peer
+  * Move function defined in rest_it_op.c to rest_it_op.h
+  * Move vty stuff to its own header cbc_vty.h
+  * Split cbc_message related code to its own .c and .h file
+  * Get rid of internal.h
+  * sbcap_server.h: Remove unused fields
+  * cbsp_server.c: Drop unused code
+  * Rename CBSP,SABP,SBcAP structs and APIs
+  * Rename {cbsp,sbcap}_server(_fsm).h s/server/link/
+  * Rename fields in cbc_{cbsp,sbcap}_mgr
+  * Use cbc_{cbsp,sbcap}_link_close when possible
+  * cbc_vty: Use value_string to define proto names used in vty
+  * cbc_vty: print correct protocol when writing config
+  * Refactor {cbsp,sbcap}_cbc_accept_cb
+  * cbc_vty: write peer config nodes at the end
+  * Make cbsp,sbcap mgr available in data model
+  * Fix cbc_vty_go_parent() not being called
+  * cbc_main: Fix setting default SBc-AP local address
+  * vty: Define peer proto during 'peer' node cmd
+  * Move struct cbc bring up code to its own file and functions
+  * Split cbsp/sbcap server socket creation from struct allocation
+  * cbc-apitool: Fix port stored in var as a string
+  * cbc-apitool: print usage instead of crashing if no subcmd passed
+  * sbcap: Fix encoding of Warning-Type
+  * cosmetic: smscb_message_fsm.c: Fix typo in comment
+  * Support CBSP/TCP and SBc-AP/SCTP client mode
+  * cbc_vty: Fix missing indent char in dump_one_etws_msg
+  * vty: Fix 'show message' not finding expired messages
+  * vty: Add command to delete expired messages
+  * vty: Print created and expired times for each message
+  * sbcap_msg: Improve spec references for used IEs
+  * vty: Fix typo in vty output
+  * Rearrange cbc_message and cbsp message code
+  * Rename functions generating CBSP/SBc-AP Write-Replace request
+  * sbcap: Fix typo in sbcap_cause_vals
+  * sbcap: Send Error Indication if decoding rx msg fails
+  * sbcap: Drop unused events
+  * sbcap: Improve logging of rx Error Indication
+  * sbcap: Improve logging on non-implemented PWS Restart/Failure Ind
+  * sbcap: Tx Error ind if Rx ProcedureCode is unknown
+  * Move sbcap_as_find_ie() to libsbcap
+  * sbcap: Fix typo in comment
+  * sbcap: Log info about messages received and trasmitted
+  * Move cbc_cell_id2str() and make it public
+  * Move ASN1C enc/dec logging to its own category
+  * sbcap: Request and handle Write Replace Warning Indication
+  * sbcap: Store reported failed TAIs from WriteReplaceResponse in cbc_message_peer
+  * sbcap: Improve handling of WriteReplaceWarnResponse
+  * Introduce logging category smscb
+  * Split event list for smscb_message_fsm and smscb_peer_fsm
+  * Split smscb_peer_fsm into CBSP and SBcAP specific FSMs
+  * cbc_main: Enable logging of fsm timeouts
+  * Propagate error to caller when tx cbsp/sbcap Write-Replace-Req fails
+  * sbcap: Fix NULL pointer dereference
+  * cbsp/sbcap: Fix memleak in error condition (tx without link)
+  * *_smscb_peer_fsm: Immediately NACK if Tx of msg failed
+  * cbsp: Fix heap-use-after-free closing cli conn in connecting state
+  * cbsp/sbcap: Set link fsm id with peer's name
+  * cbsp/sbcap: Fail if trying to Tx on non-connected (connecting) link
+  * sbcap: Add Concurrent-Warning-Message-Indicator IE to Write-Replace-Req
+  * cbsp: Log storing of CellId info received from peers
+  * cbsp: Store content of received Cell Id from Failed List
+
+  [ Oliver Smith ]
+  * gitreview: add new file
+  * checkpatch.conf: ignore sbcap generated files
+  * contrib/osmo-cbc.spec: add libosmo-sbcap0/-dev
+  * debian: add subpackages libosmo-sbcap0/-dev
+  * libosmo-sbcap.pc.in: new file
+
+  [ Vadim Yanitskiy ]
+  * tests/sbcap: fix wrong operator used in OSMO_ASSERT statement
+  * cbc_vty: use install_element[_ve](), not install_lib_element[_ve]()
+  * libosmo-sbcap: add -no-undefined to libosmo_sbcap_la_LDFLAGS
+
+ -- Pau Espin Pedrol <pespin@sysmocom.de>  Mon, 08 Aug 2022 11:42:56 +0200
+
 osmo-cbc (0.3.0) unstable; urgency=medium
 
   [ Vadim Yanitskiy ]
