@@ -51,7 +51,7 @@ autoreconf --install --force
 ./configure --enable-sanitize --enable-werror --enable-external-tests $CONFIG
 $MAKE $PARALLEL_MAKE
 DISTCHECK_CONFIGURE_FLAGS="--enable-external-tests $CONFIG" \
-  $MAKE distcheck \
+  $MAKE $PARALLEL_MAKE distcheck \
   || cat-testlogs.sh
 $MAKE $PARALLEL_MAKE maintainer-clean
 
