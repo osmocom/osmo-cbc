@@ -53,10 +53,10 @@ $MAKE $PARALLEL_MAKE
 DISTCHECK_CONFIGURE_FLAGS="--enable-external-tests $CONFIG" \
   $MAKE $PARALLEL_MAKE distcheck \
   || cat-testlogs.sh
-$MAKE $PARALLEL_MAKE maintainer-clean
 
 if [ "$WITH_MANUALS" = "1" ] && [ "$PUBLISH" = "1" ]; then
 	make -C "$base/doc/manuals" publish
 fi
 
+$MAKE $PARALLEL_MAKE maintainer-clean
 osmo-clean-workspace.sh
