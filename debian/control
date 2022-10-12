@@ -25,7 +25,7 @@ Homepage: https://projects.osmocom.org/projects/osmo-cbc
 Package: osmo-cbc
 Architecture: any
 Multi-Arch: foreign
-Depends: ${misc:Depends}, ${shlibs:Depends}
+Depends: ${misc:Depends}, ${shlibs:Depends}, adduser
 Description: OsmoCBC: Osmocom's Cell Broadcast Center
 
 Package: osmo-cbc-utils

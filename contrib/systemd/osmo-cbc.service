@@ -8,6 +8,8 @@ Type=simple
 StateDirectory=osmocom
 WorkingDirectory=%S/osmocom
 Restart=always
+User=osmocom
+Group=osmocom
 ExecStart=/usr/bin/osmo-cbc -c /etc/osmocom/osmo-cbc.cfg
 RestartSec=2
 
