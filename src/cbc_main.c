@@ -288,7 +288,7 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	rc = telnet_init_dynif(tall_cbc_ctx, NULL, vty_get_bind_addr(), OSMO_VTY_PORT_CBC);
+	rc = telnet_init_default(tall_cbc_ctx, NULL, OSMO_VTY_PORT_CBC);
 	if (rc < 0) {
 		perror("Error binding VTY port");
 		exit(1);
