@@ -1,3 +1,18 @@
+osmo-cbc (0.4.1) unstable; urgency=medium
+
+  [ Vadim Yanitskiy ]
+  * contrib/jenkins.sh: also execute maintainer-clean target
+  * contrib/jenkins.sh: execute 'distcheck' with $PARALLEL_MAKE
+  * contrib/jenkins.sh: fix 'publish' target
+
+  [ Max ]
+  * Set working directory in systemd service file
+
+  [ arehbein ]
+  * osmo-cbc: Transition to use of 'telnet_init_default'
+
+ -- Pau Espin Pedrol <pespin@sysmocom.de>  Tue, 07 Feb 2023 17:39:54 +0100
+
 osmo-cbc (0.4.0) unstable; urgency=medium
 
   [ Pau Espin Pedrol ]
