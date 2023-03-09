@@ -30,10 +30,17 @@ osmo_cbc_SOURCES = \
 	smscb_peer_fsm.c \
 	$(NULL)
 
-osmo_cbc_LDADD = $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS) $(LIBOSMOVTY_LIBS) \
-		 $(LIBOSMONETIF_LIBS) \
-		 $(ULFIUS_LIBS) $(JANSSON_LIBS) $(ORCANIA_LIBS) $(LIBSCTP_LIBS) \
-		 sbcap/libosmo-sbcap.la
+osmo_cbc_LDADD = \
+	sbcap/libosmo-sbcap.la \
+	$(LIBOSMOCORE_LIBS) \
+	$(LIBOSMOGSM_LIBS) \
+	$(LIBOSMOVTY_LIBS) \
+	$(LIBOSMONETIF_LIBS) \
+	$(ULFIUS_LIBS) \
+	$(JANSSON_LIBS) \
+	$(ORCANIA_LIBS) \
+	$(LIBSCTP_LIBS) \
+	$(NULL)
 
 regen:
 	$(MAKE) -C sbcap regen

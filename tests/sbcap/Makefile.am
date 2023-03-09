@@ -34,6 +34,7 @@ sbcap_test_SOURCES = \
 	$(NULL)
 
 sbcap_test_LDADD = \
+	$(top_builddir)/src/sbcap/libosmo-sbcap.la \
 	$(LIBOSMOCORE_LIBS) \
 	$(LIBOSMOGSM_LIBS) \
 	$(LIBOSMOVTY_LIBS) \
@@ -42,5 +43,4 @@ sbcap_test_LDADD = \
 	$(JANSSON_LIBS) \
 	$(ORCANIA_LIBS) \
 	$(LIBSCTP_LIBS) \
-	$(top_builddir)/src/sbcap/libosmo-sbcap.la \
 	$(NULL)
