@@ -37,6 +37,8 @@ typedef struct SBcAP_Stop_Warning_Request {
 
 /* Implementation */
 extern asn_TYPE_descriptor_t asn_DEF_SBcAP_Stop_Warning_Request;
+extern asn_SEQUENCE_specifics_t asn_SPC_SBcAP_Stop_Warning_Request_specs_1;
+extern asn_TYPE_member_t asn_MBR_SBcAP_Stop_Warning_Request_1[2];
 
 #ifdef __cplusplus
 }

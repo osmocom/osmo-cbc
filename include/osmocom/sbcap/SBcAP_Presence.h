@@ -31,12 +31,12 @@ typedef long	 SBcAP_Presence_t;
 /* Implementation */
 extern asn_per_constraints_t asn_PER_type_SBcAP_Presence_constr_1;
 extern asn_TYPE_descriptor_t asn_DEF_SBcAP_Presence;
-extern const asn_INTEGER_specifics_t asn_SPC_Presence_specs_1;
-asn_struct_free_f Presence_free;
-asn_struct_print_f Presence_print;
-asn_constr_check_f Presence_constraint;
-per_type_decoder_f Presence_decode_aper;
-per_type_encoder_f Presence_encode_aper;
+extern const asn_INTEGER_specifics_t asn_SPC_SBcAP_Presence_specs_1;
+asn_struct_free_f SBcAP_Presence_free;
+asn_struct_print_f SBcAP_Presence_print;
+asn_constr_check_f SBcAP_Presence_constraint;
+per_type_decoder_f SBcAP_Presence_decode_aper;
+per_type_encoder_f SBcAP_Presence_encode_aper;
 
 #ifdef __cplusplus
 }

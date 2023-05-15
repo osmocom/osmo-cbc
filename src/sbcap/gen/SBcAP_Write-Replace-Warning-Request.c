@@ -7,7 +7,7 @@
 
 #include <osmocom/sbcap/SBcAP_Write-Replace-Warning-Request.h>
 
-static asn_TYPE_member_t asn_MBR_SBcAP_Write_Replace_Warning_Request_1[] = {
+asn_TYPE_member_t asn_MBR_SBcAP_Write_Replace_Warning_Request_1[] = {
 	{ ATF_NOFLAGS, 0, offsetof(struct SBcAP_Write_Replace_Warning_Request, protocolIEs),
 		(ASN_TAG_CLASS_CONTEXT | (0 << 2)),
 		-1,	/* IMPLICIT tag at current level */
@@ -51,7 +51,7 @@ static const asn_TYPE_tag2member_t asn_MAP_SBcAP_Write_Replace_Warning_Request_t
     { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* protocolIEs */
     { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 } /* protocolExtensions */
 };
-static asn_SEQUENCE_specifics_t asn_SPC_SBcAP_Write_Replace_Warning_Request_specs_1 = {
+asn_SEQUENCE_specifics_t asn_SPC_SBcAP_Write_Replace_Warning_Request_specs_1 = {
 	sizeof(struct SBcAP_Write_Replace_Warning_Request),
 	offsetof(struct SBcAP_Write_Replace_Warning_Request, _asn_ctx),
 	asn_MAP_SBcAP_Write_Replace_Warning_Request_tag2el_1,

@@ -29,12 +29,12 @@ typedef long	 SBcAP_Stop_All_Indicator_t;
 /* Implementation */
 extern asn_per_constraints_t asn_PER_type_SBcAP_Stop_All_Indicator_constr_1;
 extern asn_TYPE_descriptor_t asn_DEF_SBcAP_Stop_All_Indicator;
-extern const asn_INTEGER_specifics_t asn_SPC_Stop_All_Indicator_specs_1;
-asn_struct_free_f Stop_All_Indicator_free;
-asn_struct_print_f Stop_All_Indicator_print;
-asn_constr_check_f Stop_All_Indicator_constraint;
-per_type_decoder_f Stop_All_Indicator_decode_aper;
-per_type_encoder_f Stop_All_Indicator_encode_aper;
+extern const asn_INTEGER_specifics_t asn_SPC_SBcAP_Stop_All_Indicator_specs_1;
+asn_struct_free_f SBcAP_Stop_All_Indicator_free;
+asn_struct_print_f SBcAP_Stop_All_Indicator_print;
+asn_constr_check_f SBcAP_Stop_All_Indicator_constraint;
+per_type_decoder_f SBcAP_Stop_All_Indicator_decode_aper;
+per_type_encoder_f SBcAP_Stop_All_Indicator_encode_aper;
 
 #ifdef __cplusplus
 }

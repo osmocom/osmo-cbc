@@ -33,12 +33,12 @@ typedef long	 SBcAP_TypeOfError_t;
 /* Implementation */
 extern asn_per_constraints_t asn_PER_type_SBcAP_TypeOfError_constr_1;
 extern asn_TYPE_descriptor_t asn_DEF_SBcAP_TypeOfError;
-extern const asn_INTEGER_specifics_t asn_SPC_TypeOfError_specs_1;
-asn_struct_free_f TypeOfError_free;
-asn_struct_print_f TypeOfError_print;
-asn_constr_check_f TypeOfError_constraint;
-per_type_decoder_f TypeOfError_decode_aper;
-per_type_encoder_f TypeOfError_encode_aper;
+extern const asn_INTEGER_specifics_t asn_SPC_SBcAP_TypeOfError_specs_1;
+asn_struct_free_f SBcAP_TypeOfError_free;
+asn_struct_print_f SBcAP_TypeOfError_print;
+asn_constr_check_f SBcAP_TypeOfError_constraint;
+per_type_decoder_f SBcAP_TypeOfError_decode_aper;
+per_type_encoder_f SBcAP_TypeOfError_encode_aper;
 
 #ifdef __cplusplus
 }

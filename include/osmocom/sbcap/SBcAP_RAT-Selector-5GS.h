@@ -29,12 +29,12 @@ typedef long	 SBcAP_RAT_Selector_5GS_t;
 /* Implementation */
 extern asn_per_constraints_t asn_PER_type_SBcAP_RAT_Selector_5GS_constr_1;
 extern asn_TYPE_descriptor_t asn_DEF_SBcAP_RAT_Selector_5GS;
-extern const asn_INTEGER_specifics_t asn_SPC_RAT_Selector_5GS_specs_1;
-asn_struct_free_f RAT_Selector_5GS_free;
-asn_struct_print_f RAT_Selector_5GS_print;
-asn_constr_check_f RAT_Selector_5GS_constraint;
-per_type_decoder_f RAT_Selector_5GS_decode_aper;
-per_type_encoder_f RAT_Selector_5GS_encode_aper;
+extern const asn_INTEGER_specifics_t asn_SPC_SBcAP_RAT_Selector_5GS_specs_1;
+asn_struct_free_f SBcAP_RAT_Selector_5GS_free;
+asn_struct_print_f SBcAP_RAT_Selector_5GS_print;
+asn_constr_check_f SBcAP_RAT_Selector_5GS_constraint;
+per_type_decoder_f SBcAP_RAT_Selector_5GS_decode_aper;
+per_type_encoder_f SBcAP_RAT_Selector_5GS_encode_aper;
 
 #ifdef __cplusplus
 }

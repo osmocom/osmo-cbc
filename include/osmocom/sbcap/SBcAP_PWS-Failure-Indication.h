@@ -37,6 +37,8 @@ typedef struct SBcAP_PWS_Failure_Indication {
 
 /* Implementation */
 extern asn_TYPE_descriptor_t asn_DEF_SBcAP_PWS_Failure_Indication;
+extern asn_SEQUENCE_specifics_t asn_SPC_SBcAP_PWS_Failure_Indication_specs_1;
+extern asn_TYPE_member_t asn_MBR_SBcAP_PWS_Failure_Indication_1[2];
 
 #ifdef __cplusplus
 }

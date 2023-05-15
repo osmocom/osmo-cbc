@@ -7,7 +7,7 @@
 
 #include <osmocom/sbcap/SBcAP_Error-Indication.h>
 
-static asn_TYPE_member_t asn_MBR_SBcAP_Error_Indication_1[] = {
+asn_TYPE_member_t asn_MBR_SBcAP_Error_Indication_1[] = {
 	{ ATF_NOFLAGS, 0, offsetof(struct SBcAP_Error_Indication, protocolIEs),
 		(ASN_TAG_CLASS_CONTEXT | (0 << 2)),
 		-1,	/* IMPLICIT tag at current level */
@@ -32,7 +32,7 @@ static const ber_tlv_tag_t asn_DEF_SBcAP_Error_Indication_tags_1[] = {
 static const asn_TYPE_tag2member_t asn_MAP_SBcAP_Error_Indication_tag2el_1[] = {
     { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 } /* protocolIEs */
 };
-static asn_SEQUENCE_specifics_t asn_SPC_SBcAP_Error_Indication_specs_1 = {
+asn_SEQUENCE_specifics_t asn_SPC_SBcAP_Error_Indication_specs_1 = {
 	sizeof(struct SBcAP_Error_Indication),
 	offsetof(struct SBcAP_Error_Indication, _asn_ctx),
 	asn_MAP_SBcAP_Error_Indication_tag2el_1,
