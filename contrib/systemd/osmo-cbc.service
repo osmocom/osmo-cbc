@@ -1,5 +1,7 @@
 [Unit]
 Description=Osmocom CBC (Cell Broadcasting Centre)
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 Type=simple
