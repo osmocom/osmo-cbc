@@ -108,12 +108,16 @@ static const struct log_info log_info = {
 static int cbc_vty_go_parent(struct vty *vty)
 {
 	switch (vty->node) {
+	case CBSP_NODE:
+		g_cbc->config.cbsp.configured = true;
+		break;
 	case SBcAP_NODE:
 		/* If no local addr set, add a default one: */
 		if (g_cbc->config.sbcap.num_local_host == 0) {
 			g_cbc->config.sbcap.local_host[0] = talloc_strdup(g_cbc, "127.0.0.1");
 				g_cbc->config.sbcap.num_local_host = 1;
 		}
+		g_cbc->config.sbcap.configured = true;
 		vty->node = CONFIG_NODE;
 		vty->index = NULL;
 		break;

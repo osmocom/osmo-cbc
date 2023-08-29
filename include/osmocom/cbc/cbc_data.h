@@ -57,11 +57,13 @@ struct cbc {
 		struct {
 			char *local_host;
 			int local_port;
+			bool configured;
 		} cbsp;
 		struct {
 			char *local_host[CBC_MAX_LOC_ADDRS];
 			unsigned int num_local_host;
 			int local_port;
+			bool configured;
 		} sbcap;
 		struct {
 			char *local_host;

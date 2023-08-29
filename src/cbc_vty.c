@@ -576,6 +576,26 @@ DEFUN(cfg_cbc_peer, cfg_cbc_peer_cmd,
 	enum cbc_peer_protocol proto;
 
 	proto = get_string_value(cbc_peer_proto_name_vty, argv[0]);
+	switch (proto) {
+	case CBC_PEER_PROTO_CBSP:
+		if (!g_cbc->config.cbsp.configured) {
+			vty_out(vty, "%% Node '%s' must be configured before configuring node 'peer'!%s",
+				argv[0], VTY_NEWLINE);
+			return CMD_WARNING;
+		}
+		break;
+	case CBC_PEER_PROTO_SBcAP:
+		if (!g_cbc->config.sbcap.configured) {
+			vty_out(vty, "%% Node '%s' must be configured before configuring node 'peer'!%s",
+				argv[0], VTY_NEWLINE);
+			return CMD_WARNING;
+		}
+		break;
+	case CBC_PEER_PROTO_SABP:
+	default:
+		return CMD_WARNING;
+	}
+
 	peer = cbc_peer_by_name(argv[1]);
 	if (!peer)
 		peer = cbc_peer_create(argv[1], proto);
