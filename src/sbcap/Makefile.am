@@ -374,7 +374,7 @@ noinst_LTLIBRARIES=libosmo-asn1-sbcap.la
 libosmo_asn1_sbcap_la_SOURCES=$(ASN_MODULE_SRC)
 libosmo_asn1_sbcap_la_LIBADD=$(ASN1C_LDADD)
 
-sbcap_LIBVERSION=0:0:0
+sbcap_LIBVERSION=1:0:1
 lib_LTLIBRARIES = libosmo-sbcap.la
 libosmo_sbcap_la_LDFLAGS = $(AM_LDFLAGS) -version-info $(sbcap_LIBVERSION) -no-undefined
 libosmo_sbcap_la_LIBADD = $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS) $(LIBOSMOVTY_LIBS) \

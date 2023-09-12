@@ -1,3 +1,20 @@
+osmo-cbc (0.4.2) unstable; urgency=medium
+
+  [ Vadim Yanitskiy ]
+  * {src,tests/sbcap}/Makefile.am: reorder libraries in LDADD
+  * tests: use -no-install libtool flag to avoid ./lt-* scripts
+
+  [ Oliver Smith ]
+  * debian: set compat level to 10
+  * systemd: depend on networking-online.target
+
+  [ Pau Espin Pedrol ]
+  * sbcap: Update asn1c skeleton files
+  * README.md: Document generation of SBcAP code from ASN.1 files
+  * Catch and forbid configuring peers before configuring main protocol node
+
+ -- Pau Espin Pedrol <pespin@sysmocom.de>  Tue, 12 Sep 2023 17:08:37 +0200
+
 osmo-cbc (0.4.1) unstable; urgency=medium
 
   [ Vadim Yanitskiy ]
