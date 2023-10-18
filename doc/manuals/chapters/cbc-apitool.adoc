@@ -50,6 +50,8 @@ You can create a new CBS message using `cbc-apitool create-cbs`.
 *--payload-data-utf8 PAYLOAD_DATA_UTF8*::
         Payload data (typically text message) in UTF8 encoding.  Will be
         transcoded to 7bit GSM alphabet internally.
+*--character-set {gsm,8bit,ucs2}*::
+        Character set to be used for the message.  Default: gsm
 
 
 ==== `create-etws` Options

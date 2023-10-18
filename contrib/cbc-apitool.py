@@ -63,7 +63,7 @@ def do_create_cbs(args):
             },
             'payload': {
                 'payload_decoded': {
-                    'character_set': "gsm",
+                    'character_set': args.character_set,
                     #'language': 'en',
                     'data_utf8': args.payload_data_utf8,
                     #'data_utf8': "Mahlzeit1 Mahlzeit2 Mahlzeit3 Mahlzeit4 Mahlzeit5 Mahlzeit6 Mahlzeit7 Mahlzeit8"
@@ -126,6 +126,7 @@ def main(argv):
     parser_c_cbs.add_argument("--repetition-period", type=int, help='Repetition Period', default=5)
     parser_c_cbs.add_argument("--num-of-bcast", type=int, help='Number of Broadcasts', default=999)
     parser_c_cbs.add_argument("--payload-data-utf8", type=str, help='Payload Data in UTF8', required=True)
+    parser_c_cbs.add_argument("--character-set", type=str, help='Character Set', default="gsm", choices=["gsm","ucs2","8bit"])
     parser_c_cbs.set_defaults(func=do_create_cbs)
 
     parser_c_etws = subparsers.add_parser('create-etws', help='Create a new ETWS message')
