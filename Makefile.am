@@ -12,6 +12,7 @@ EXTRA_DIST = .version \
 	README.md \
 	git-version-gen \
 	contrib/osmo-cbc.spec.in \
+	debian \
 	cbc.schema.json \
 	smscb.schema.json \
 	$(NULL)
