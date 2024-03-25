@@ -33,6 +33,8 @@ ASN_MODULE_SRC = \
 	gen/constr_SET_OF_print.c \
 	gen/constr_SET_OF_rfill.c \
 	gen/constr_TYPE.c \
+	gen/ENUMERATED.c \
+	gen/ENUMERATED_aper.c \
 	gen/GraphicString.c \
 	gen/INTEGER_aper.c \
 	gen/INTEGER.c \
@@ -348,7 +350,9 @@ SKEL_HEADER_FILES = \
 	skel/constr_TYPE.h \
 	skel/constraints.h \
 	skel/der_encoder.h \
+	skel/jer_decoder.h \
 	skel/jer_encoder.h \
+	skel/jer_support.h \
 	skel/oer_decoder.h \
 	skel/oer_encoder.h \
 	skel/oer_support.h \
