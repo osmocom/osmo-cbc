@@ -1,3 +1,28 @@
+osmo-cbc (0.5.0) unstable; urgency=medium
+
+  [ Harald Welte ]
+  * cbc-apitool: Make character set configurable
+
+  [ Andreas Eversberg ]
+  * Use uniform log format for default config files
+
+  [ Vadim Yanitskiy ]
+  * build: include debian/ into the release tarball
+  * README.md: cosmetic: fix a typo
+
+  [ Pau Espin Pedrol ]
+  * SBcAP: Update as1nc skeleton and generated code
+
+  [ Max ]
+  * .deb/.rpm: add osmocom user during package install
+
+  [ Oliver Smith ]
+  * .deb/.rpm: various fixes related to non-root
+  * contrib: remove rpm spec file
+  * debian/postinst: add checks, be verbose
+
+ -- Oliver Smith <osmith@sysmocom.de>  Thu, 25 Jul 2024 09:46:02 +0200
+
 osmo-cbc (0.4.2) unstable; urgency=medium
 
   [ Vadim Yanitskiy ]

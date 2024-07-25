@@ -11,12 +11,12 @@ Build-Depends: debhelper (>= 10),
                pkg-config,
                python3-minimal,
                libtalloc-dev,
-               libosmocore-dev (>= 1.9.0),
-               libosmo-netif-dev (>= 1.4.0),
+               libosmocore-dev (>= 1.10.0),
+               libosmo-netif-dev (>= 1.5.0),
                libulfius-dev,
                libjansson-dev,
                libsctp-dev,
-               osmo-gsm-manuals-dev
+               osmo-gsm-manuals-dev (>= 1.6.0)
 Standards-Version: 3.9.8
 Vcs-Git: https://gitea.osmocom.org/cellular-infrastructure/osmo-cbc
 Vcs-Browser: https://gitea.osmocom.org/cellular-infrastructure/osmo-cbc
@@ -50,7 +50,7 @@ Description: ${misc:Package} PDF documentation
  Various manuals: user manual, VTY reference manual and/or
  protocol/interface manuals.
 
-Package: libosmo-sbcap0
+Package: libosmo-sbcap2
 Section: libs
 Architecture: any
 Multi-Arch: same
@@ -62,5 +62,5 @@ Package: libosmo-sbcap-dev
 Section: libdevel
 Architecture: any
 Multi-Arch: same
-Depends: libosmo-sbcap0 (= ${binary:Version}), ${misc:Depends}
+Depends: libosmo-sbcap2 (= ${binary:Version}), ${misc:Depends}
 Description: libosmo-sbcap: Osmocom's library to encode/decode SBc-AP messages
