@@ -121,6 +121,7 @@ static int cbc_cbsp_link_cli_read_cb(struct osmo_stream_cli *conn)
 	/* message de-segmentation */
 	rc = osmo_cbsp_recv_buffered(conn, ofd->fd, &msg, &link->rx_msg);
 	if (rc <= 0) {
+		LOGPCC(link, LOGL_NOTICE, "osmo_cbsp_recv_buffered() ret %d\n", rc);
 		if (rc == -EAGAIN || rc == -EINTR) {
 			/* more data needs to be read */
 			return 0;
@@ -205,6 +206,7 @@ static int cbsp_cbc_srv_read_cb(struct osmo_stream_srv *conn)
 	/* message de-segmentation */
 	rc = osmo_cbsp_recv_buffered(conn, ofd->fd, &msg, &link->rx_msg);
 	if (rc <= 0) {
+		LOGPCC(link, LOGL_NOTICE, "osmo_cbsp_recv_buffered() ret %d\n", rc);
 		if (rc == -EAGAIN || rc == -EINTR) {
 			/* more data needs to be read */
 			return 0;
