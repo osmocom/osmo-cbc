@@ -102,6 +102,8 @@ static int cbc_cbsp_link_cli_connect_cb(struct osmo_stream_cli *conn)
 static int cbc_cbsp_link_cli_disconnect_cb(struct osmo_stream_cli *conn)
 {
 	struct cbc_cbsp_link *link = osmo_stream_cli_get_data(conn);
+	if (!link->conn) /* conn is being destroyed by us, we called osmo_stream_cli_destroy() */
+		return 0;
 	LOGPCC(link, LOGL_NOTICE, "Disconnected.\n");
 	LOGPCC(link, LOGL_NOTICE, "Reconnecting...\n");
 	osmo_stream_cli_reconnect(conn);
@@ -364,10 +366,11 @@ void cbc_cbsp_link_close(struct cbc_cbsp_link *link)
 		return;
 
 	if (link->is_client) {
-		osmo_stream_cli_destroy(link->cli_conn);
+		struct osmo_stream_cli *cli_conn = link->cli_conn;
+		link->cli_conn = NULL;
+		osmo_stream_cli_destroy(cli_conn);
 		if (link->peer)
 			link->peer->link.cbsp = NULL;
-		link->cli_conn = NULL;
 		if (link->fi)
 			osmo_fsm_inst_dispatch(link->fi, CBSP_LINK_E_CMD_CLOSE, NULL);
 	} else {
