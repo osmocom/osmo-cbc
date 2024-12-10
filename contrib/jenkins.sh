@@ -31,7 +31,6 @@ export PATH="$inst/bin:$PATH"
 
 osmo-build-dep.sh libosmocore "" --disable-doxygen
 osmo-build-dep.sh libosmo-netif "" --disable-doxygen
-osmo-build-dep.sh libosmo-abis
 
 # Additional configure options and depends
 CONFIG=""
