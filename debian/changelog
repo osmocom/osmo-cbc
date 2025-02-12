@@ -1,3 +1,16 @@
+osmo-cbc (0.5.1) unstable; urgency=medium
+
+  [ Oliver Smith ]
+  * contrib/jenkins: libosmo-abis after libosmo-netif
+
+  [ Pau Espin Pedrol ]
+  * .gitignore: Add *~
+  * cbsp_link: Log unexpected return error codes
+  * abis: Fix reusing link->conn while it is being destroyed
+  * jenkins.sh: Skip building unneeded libosmo-abis
+
+ -- Oliver Smith <osmith@sysmocom.de>  Wed, 12 Feb 2025 14:30:50 +0100
+
 osmo-cbc (0.5.0) unstable; urgency=medium
 
   [ Harald Welte ]
