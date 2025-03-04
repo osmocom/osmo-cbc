@@ -147,7 +147,6 @@ static struct vty_app_info vty_info = {
 	.copyright = cbc_copyright,
 	.go_parent_cb	= cbc_vty_go_parent,
 	.version = PACKAGE_VERSION,
-	.is_config_node = NULL,
 };
 
 static struct {
