@@ -1,4 +1,4 @@
 /etc/osmocom/osmo-cbc.cfg
 lib/systemd/system/osmo-cbc.service
 usr/bin/osmo-cbc
-usr/share/doc/osmo-cbc/examples/osmo-cbc/*.cfg usr/share/doc/osmo-bsc/examples
+usr/share/doc/osmo-cbc/examples/osmo-cbc/*.cfg usr/share/doc/osmo-cbc/examples

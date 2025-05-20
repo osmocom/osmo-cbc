@@ -17,5 +17,5 @@ arguments:
 	Fork the process as a daemon into background.
 *-c, --config-file 'CONFIGFILE'*::
 	Specify the file and path name of the configuration file to be
-	used. If none is specified, use `osmo-bsc.cfg` in the current
+	used. If none is specified, use `osmo-cbc.cfg` in the current
 	working directory.
