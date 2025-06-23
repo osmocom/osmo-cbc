@@ -62,3 +62,4 @@ doc/manuals/vty/cbc_vty_reference.xml
 
 contrib/osmo-cbc.spec
 libosmo-sbcap.pc
+include/osmocom/sbcap/version.h
