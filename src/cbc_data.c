@@ -85,7 +85,9 @@ struct cbc *cbc_alloc(void *ctx)
 	INIT_LLIST_HEAD(&cbc->expired_messages);
 	cbc->config.cbsp.local_host = talloc_strdup(cbc, "127.0.0.1");
 	cbc->config.cbsp.local_port = CBSP_TCP_PORT;
-	/* cbc->config.sbcap local_host set up during VTY (and vty_go_parent) */
+	/* Due to SCTP multi-home support, cbc->config.sbcap.local_host is not set here,
+	 * but through VTY (user or vty_go_parent()), or if not set default is set after
+	 * VTY cfg read, during cbc_start(). */
 	cbc->config.sbcap.local_port = SBcAP_SCTP_PORT;
 	cbc->config.ecbe.local_host = talloc_strdup(cbc, "127.0.0.1");
 	cbc->config.ecbe.local_port = 12345;
@@ -103,6 +105,16 @@ struct cbc *cbc_alloc(void *ctx)
 	return cbc;
 }
 
+/* If no local addr set, add a default one: */
+void cbc_add_sbcap_default_local_host_if_needed(struct cbc *cbc)
+{
+	if (g_cbc->config.sbcap.num_local_host > 0)
+		return;
+
+	g_cbc->config.sbcap.local_host[0] = talloc_strdup(g_cbc, "127.0.0.1");
+	g_cbc->config.sbcap.num_local_host = 1;
+}
+
 int cbc_start(struct cbc *cbc)
 {
 	void *tall_rest_ctx;
@@ -113,6 +125,12 @@ int cbc_start(struct cbc *cbc)
 	if ((rc = cbc_cbsp_mgr_open_srv(cbc->cbsp.mgr)) < 0) {
 		LOGP(DMAIN, LOGL_ERROR, "Error binding CBSP port\n");
 		return rc;
+	}
+
+	/* User didn't configure an SBcAP node with a local address, use default: */
+	if (!cbc->config.sbcap.configured) {
+		cbc_add_sbcap_default_local_host_if_needed(cbc);
+		cbc->config.sbcap.configured = true;
 	}
 
 	if ((rc = cbc_sbcap_mgr_open_srv(cbc->sbcap.mgr)) < 0) {

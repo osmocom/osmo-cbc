@@ -113,10 +113,7 @@ static int cbc_vty_go_parent(struct vty *vty)
 		break;
 	case SBcAP_NODE:
 		/* If no local addr set, add a default one: */
-		if (g_cbc->config.sbcap.num_local_host == 0) {
-			g_cbc->config.sbcap.local_host[0] = talloc_strdup(g_cbc, "127.0.0.1");
-				g_cbc->config.sbcap.num_local_host = 1;
-		}
+		cbc_add_sbcap_default_local_host_if_needed(g_cbc);
 		g_cbc->config.sbcap.configured = true;
 		vty->node = CONFIG_NODE;
 		vty->index = NULL;
