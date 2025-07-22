@@ -551,9 +551,10 @@ DEFUN_DEPRECATED(cfg_cbc_peer_old, cfg_cbc_peer_old_cmd,
 {
 	struct cbc_peer *peer;
 
-	vty_out(vty, "%% This function is deprecated, use "
+	vty_out(vty, "%% '%s' is deprecated, use "
 		"'peer " CBC_PEER_PROTO_NAME_VTY_CMD " NAME' instead. "
-		"Assuming 'cbsp' for peers being created%s", VTY_NEWLINE);
+		"Assuming 'cbsp' for peers being created%s",
+		self->string, VTY_NEWLINE);
 
 	peer = cbc_peer_by_name(argv[0]);
 	if (!peer)
@@ -629,8 +630,9 @@ DEFUN_DEPRECATED(cfg_peer_proto, cfg_peer_proto_cmd,
 	"Configure Protocol of Peer\n"
 	CBC_PEER_PROTO_NAME_VTY_STR)
 {
-	vty_out(vty, "%% This function is deprecated and does nothing, use "
-		"'peer " CBC_PEER_PROTO_NAME_VTY_CMD " NAME' instead%s", VTY_NEWLINE);
+	vty_out(vty, "%% '%s' is deprecated and does nothing, use "
+		"'peer " CBC_PEER_PROTO_NAME_VTY_CMD " NAME' instead%s",
+		self->string, VTY_NEWLINE);
 	return CMD_SUCCESS;
 }
 
