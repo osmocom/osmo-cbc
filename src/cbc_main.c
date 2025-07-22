@@ -270,6 +270,8 @@ int main(int argc, char **argv)
 	sbcap_set_log_area(DSBcAP, DASN1C);
 	osmo_stats_init(tall_cbc_ctx);
 	osmo_fsm_log_timeouts(true);
+
+	vty_info.tall_ctx = tall_cbc_ctx;
 	vty_init(&vty_info);
 
 	g_cbc = cbc_alloc(tall_cbc_ctx);
@@ -280,6 +282,8 @@ int main(int argc, char **argv)
 
 	logging_vty_add_cmds();
 	osmo_fsm_vty_add_cmds();
+	osmo_stats_vty_add_cmds();
+	osmo_talloc_vty_add_cmds();
 
 	rc = vty_read_config_file(cmdline_config.config_file, NULL);
 	if (rc < 0) {
