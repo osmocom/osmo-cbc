@@ -112,7 +112,8 @@ void cbc_add_sbcap_default_local_host_if_needed(struct cbc *cbc)
 		return;
 
 	g_cbc->config.sbcap.local_host[0] = talloc_strdup(g_cbc, "127.0.0.1");
-	g_cbc->config.sbcap.num_local_host = 1;
+	g_cbc->config.sbcap.local_host[1] = talloc_strdup(g_cbc, "::1");
+	g_cbc->config.sbcap.num_local_host = 2;
 }
 
 int cbc_start(struct cbc *cbc)
