@@ -1,3 +1,20 @@
+osmo-cbc (0.5.2) unstable; urgency=medium
+
+  [ Pau Espin Pedrol ]
+  * Drop unnecessary static initialization to NULL
+  * Set default SBcAP local host when no VTY cfg sbcap node provided
+  * sbcap: Listen on (127.0.0.1|::1) by default
+
+  [ Oliver Smith ]
+  * Fix typo osmo-bsc -> osmo-cbc
+  * Generate a version.h file
+
+  [ Vadim Yanitskiy ]
+  * vty: clarify deprecation messages
+  * vty: register talloc / stats introspection commands
+
+ -- Pau Espin Pedrol <pespin@sysmocom.de>  Wed, 03 Dec 2025 19:58:47 +0100
+
 osmo-cbc (0.5.1) unstable; urgency=medium
 
   [ Oliver Smith ]
