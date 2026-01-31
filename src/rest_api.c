@@ -348,8 +348,9 @@ static int json2payload(struct smscb_message *out, json_t *in, const char **errs
 				return -EINVAL;
 			}
 			hexstr = json_string_value(jpage);
-			if (strlen(hexstr) > 88 * 2) {
-				*errstr = "'pages' array must contain strings up to 88 hex nibbles";
+			/* The total page length is 88, but the header is 6 bytes length */
+			if (strlen(hexstr) > sizeof(out->cbs.data[i]) * 2) {
+				*errstr = "'pages' actual data array must contain strings up to 82 hex nibbles";
 				return -EINVAL;
 			}
 			len = osmo_hexparse(hexstr, out->cbs.data[i], sizeof(out->cbs.data[i]));
