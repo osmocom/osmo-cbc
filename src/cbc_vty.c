@@ -1,4 +1,4 @@
-/* Osmocom CBC (Cell Broacast Centre) */
+/* Osmocom CBC (Cell Broadcast Centre) */
 
 /* (C) 2019-2021 by Harald Welte <laforge@gnumonks.org>
  * All Rights Reserved

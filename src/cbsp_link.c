@@ -375,7 +375,7 @@ void cbc_cbsp_link_close(struct cbc_cbsp_link *link)
 			osmo_fsm_inst_dispatch(link->fi, CBSP_LINK_E_CMD_CLOSE, NULL);
 	} else {
 		osmo_stream_srv_destroy(link->srv_conn);
-		/* Same as waht's done for cli is done for srv in closed_cb() */
+		/* Same as what's done for cli is done for srv in closed_cb() */
 	}
 }
 

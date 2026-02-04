@@ -1,4 +1,4 @@
-/* Osmocom CBC (Cell Broacast Centre) */
+/* Osmocom CBC (Cell Broadcast Centre) */
 
 /* (C) 2022 by sysmocom - s.f.m.c. GmbH <info@sysmocom.de>
  * All Rights Reserved

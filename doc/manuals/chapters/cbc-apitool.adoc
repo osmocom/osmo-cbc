@@ -5,7 +5,7 @@
 to demonstrate the use of the ECBE REST interface (<<ecbe>>) from the
 command line.
 
-It uses the python3 standard librariy `requests` in order to issue ECBE
+It uses the python3 standard library `requests` in order to issue ECBE
 API request over HTTP towards osmo-cbc.
 
 `cbc-apitool.py` has a couple of sub-commands, each of which offer

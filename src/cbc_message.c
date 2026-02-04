@@ -1,4 +1,4 @@
-/* Osmocom CBC (Cell Broacast Centre) */
+/* Osmocom CBC (Cell Broadcast Centre) */
 
 /* (C) 2019 by Harald Welte <laforge@gnumonks.org>
  * All Rights Reserved
@@ -45,7 +45,7 @@ static bool is_peer_in_scope(const struct cbc_peer *peer, const struct cbc_messa
 	switch (cbcmsg->scope) {
 	case CBC_MSG_SCOPE_PLMN:
 		return true;
-	/* FIXME: differnt scopes */
+	/* FIXME: different scopes */
 	default:
 		OSMO_ASSERT(0);
 	}

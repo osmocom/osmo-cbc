@@ -134,7 +134,7 @@ static void cbsp_from_cci(union gsm0808_cell_id_u *u, const struct cbc_cell_id *
 		break;
 	case CBC_CELL_ID_CGI:
 		u->global = cci->u.cgi;
-		printf("u->gobal: %s\n", osmo_hexdump((uint8_t *) &u->global, sizeof(u->global)));
+		printf("u->global: %s\n", osmo_hexdump((uint8_t *) &u->global, sizeof(u->global)));
 		break;
 	case CBC_CELL_ID_LAC_CI:
 		u->lac_and_ci = cci->u.lac_and_ci;

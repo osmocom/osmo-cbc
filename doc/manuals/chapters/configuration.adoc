@@ -87,7 +87,7 @@ know the CBC IP address, but not vice-versa.
 The default port number for the SBc-AP server is 29168, according to the SBc-AP
 specification. It uses SCTP payload protocol identifier 24.
 
-In order to make use of SCTP muti-homing capabilitites, simply configure several
+In order to make use of SCTP multi-homing capabilities, simply configure several
 IP addresses when configuring SBc-AP.
 
 .Example: Configure SCTP server mode and allow arbitrary MMEs to connect

@@ -72,7 +72,7 @@ https://gerrit.osmocom.org/#/q/project:osmo-cbc+status:open
 Generating asn1c code
 ---------------------
 
-Upstream master as1nc from [vlm](https://github.com/vlm/asn1c) [doesn't support
+Upstream master asn1c from [vlm](https://github.com/vlm/asn1c) [doesn't support
 APER encoding](https://github.com/vlm/asn1c/issues/452). Nevertheless, the
 upstream fork maintained by a big contributor
 [mouse07410](https://github.com/mouse07410/asn1c) does support it, and it is
@@ -85,11 +85,11 @@ mouse07410 (usually `vlm_master` branch). Last generated code was built using
 commit hash 08b293e8aa342d465d26805d1d66f3595b2ce261.
 
 Then, do the usual `autoreconf -fi && ./configure`, using a buildir != srcdir
-(important, in order to avoid ending up with tempotary files in srcdir and
+(important, in order to avoid ending up with temporary files in srcdir and
 making it difficult to stash the relevant changes).
 
 Finally, run `make -C src/ regen`, which will regenerate the files and copy over
-the skeletons, with git possibily showing changes in the following paths:
+the skeletons, with git possibly showing changes in the following paths:
 - include/osmocom/sbcap/
 - src/sbcap/gen/
 - src/sbcap/skel/
