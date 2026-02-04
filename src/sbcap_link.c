@@ -431,7 +431,6 @@ void cbc_sbcap_link_close(struct cbc_sbcap_link *link)
 
 	if (link->is_client) {
 		osmo_stream_cli_destroy(link->cli_conn);
-		osmo_stream_cli_destroy(link->cli_conn);
 		if (link->peer)
 			link->peer->link.sbcap = NULL;
 		link->cli_conn = NULL;
